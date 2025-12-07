@@ -12,3 +12,12 @@
 /captures
 .externalNativeBuild
 .cxx
+
+# Checksums and binary artifacts
+*.bin
+*.md5
+*.sha1
+
+# Error reports
+hs_err_pid*
+replay_pid*
