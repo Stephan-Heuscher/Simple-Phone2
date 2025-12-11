@@ -62,38 +62,7 @@ fun AppScaffold(
                 }
             )
         },
-        bottomBar = {
-            BottomAppBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(0.dp) // Ensure full width
-            ) {
-                val navBackStackEntry = navController.currentBackStackEntryAsState()
-                val currentRoute = navBackStackEntry.value?.destination?.route
-
-                val items = listOf(
-                    Screen.Recents,
-                    Screen.Favorites,
-                    Screen.PhoneBook
-                )
-
-                items.forEach { screen ->
-                    NavigationBarItem(
-                        icon = { Icon(screen.icon, contentDescription = null, modifier = Modifier.size(36.dp)) },
-                        label = { Text(screen.title, style = MaterialTheme.typography.labelLarge) },
-                        selected = currentRoute == screen.route,
-                        onClick = {
-                            if (currentRoute != screen.route) {
-                                navController.navigate(screen.route) {
-                                    popUpTo(navController.graph.startDestinationId)
-                                    launchSingleTop = true
-                                }
-                            }
-                        }
-                    )
-                }
-            }
-        }
+        // Bottom bar removed as per request to have everything on one page
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             content(Modifier)

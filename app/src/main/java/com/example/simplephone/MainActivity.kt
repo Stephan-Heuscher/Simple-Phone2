@@ -22,6 +22,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.simplephone.ui.components.AppScaffold
 import com.example.simplephone.ui.components.Screen
 import com.example.simplephone.ui.screens.FavoritesScreen
+import com.example.simplephone.ui.screens.MainScreen
 import com.example.simplephone.ui.screens.PhoneBookScreen
 import com.example.simplephone.ui.screens.RecentsScreen
 import com.example.simplephone.ui.screens.SettingsScreen
@@ -49,9 +50,6 @@ fun SimplePhoneApp(widthSizeClass: WindowWidthSizeClass) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val currentTitle = when(currentRoute) {
-        Screen.Favorites.route -> Screen.Favorites.title
-        Screen.Recents.route -> Screen.Recents.title
-        Screen.PhoneBook.route -> Screen.PhoneBook.title
         Screen.Settings.route -> Screen.Settings.title
         else -> "Simple Phone"
     }
@@ -61,20 +59,11 @@ fun SimplePhoneApp(widthSizeClass: WindowWidthSizeClass) {
         color = MaterialTheme.colorScheme.background
     ) {
         AppScaffold(navController = navController, currentScreenTitle = currentTitle) {
-            NavHost(navController = navController, startDestination = Screen.Favorites.route) {
-                composable(Screen.Favorites.route) {
-                    val isExpanded = widthSizeClass == WindowWidthSizeClass.Expanded || widthSizeClass == WindowWidthSizeClass.Medium
-                    FavoritesScreen(
+            NavHost(navController = navController, startDestination = Screen.Home.route) {
+                composable(Screen.Home.route) {
+                    MainScreen(
                         onCallClick = { /* Simulate Call */ },
-                        isExpandedScreen = isExpanded // Adaptive Layout
-                    )
-                }
-                composable(Screen.Recents.route) {
-                    RecentsScreen(filterHours = filterHours)
-                }
-                composable(Screen.PhoneBook.route) {
-                    PhoneBookScreen(
-                        onContactClick = { /* Simulate Call */ }
+                        onContactClick = { /* Simulate Contact View */ }
                     )
                 }
                 composable(Screen.Settings.route) {
