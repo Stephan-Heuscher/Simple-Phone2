@@ -6,13 +6,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.CallMissed
+import androidx.compose.material.icons.automirrored.filled.CallReceived
 import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.CallMissed
-import androidx.compose.material.icons.filled.CallReceived
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -62,9 +63,9 @@ fun RecentsScreen(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                          val icon = when (call.type) {
-                            CallType.INCOMING -> Icons.Filled.CallReceived
+                            CallType.INCOMING -> Icons.AutoMirrored.Filled.CallReceived
                             CallType.OUTGOING -> Icons.Filled.Call
-                            CallType.MISSED -> Icons.Filled.CallMissed
+                            CallType.MISSED -> Icons.AutoMirrored.Filled.CallMissed
                         }
                         val tint = if (call.type == CallType.MISSED) Color.Red else MaterialTheme.colorScheme.onSurface
                         
@@ -85,7 +86,7 @@ fun RecentsScreen(
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
-                Divider()
+                HorizontalDivider()
             }
         }
     }
