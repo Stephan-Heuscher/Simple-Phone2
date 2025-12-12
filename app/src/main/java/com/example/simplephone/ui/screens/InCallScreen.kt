@@ -97,37 +97,33 @@ fun InCallScreen(
             )
         }
 
-        // Middle section: Audio output options (only show if more than one option available)
-        if (availableAudioOutputs.size > 1) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "Audio Output",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+        // Middle section: Audio output options - always show since we have Phone + Speaker at minimum
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = "Audio Output",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
 
-                // Audio output buttons in a row
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    items(availableAudioOutputs) { audioOutput ->
-                        AudioOutputButton(
-                            audioOutput = audioOutput,
-                            isSelected = audioOutput == currentAudioOutput,
-                            onClick = { onAudioOutputChange(audioOutput) }
-                        )
-                    }
+            // Audio output buttons in a row
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp)
+            ) {
+                items(availableAudioOutputs) { audioOutput ->
+                    AudioOutputButton(
+                        audioOutput = audioOutput,
+                        isSelected = audioOutput == currentAudioOutput,
+                        onClick = { onAudioOutputChange(audioOutput) }
+                    )
                 }
             }
-        } else {
-            // Spacer when only one audio output is available
-            Spacer(modifier = Modifier.weight(1f))
         }
 
         // Bottom section: Hangup button

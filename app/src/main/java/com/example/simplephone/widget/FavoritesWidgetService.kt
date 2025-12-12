@@ -159,11 +159,13 @@ class FavoritesRemoteViewsFactory(private val context: Context) : RemoteViewsSer
             isFilterBitmap = true
         }
         
-        // Draw circle
+        // Draw rounded rectangle (16dp corner radius scaled to bitmap size)
+        // 16dp radius for 64dp size = 25% of size
+        val cornerRadius = size * 0.25f
         val rect = RectF(0f, 0f, size.toFloat(), size.toFloat())
-        canvas.drawRoundRect(rect, size / 2f, size / 2f, paint)
+        canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
         
-        // Draw bitmap with SRC_IN to clip to circle
+        // Draw bitmap with SRC_IN to clip to rounded rectangle
         paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
         
         // Center crop the bitmap
@@ -188,8 +190,10 @@ class FavoritesRemoteViewsFactory(private val context: Context) : RemoteViewsSer
             style = Paint.Style.FILL
         }
         
-        // Draw circle background
-        canvas.drawCircle(sizePx / 2f, sizePx / 2f, sizePx / 2f, bgPaint)
+        // Draw rounded rectangle background (16dp corner radius scaled = 25% of size)
+        val cornerRadius = sizePx * 0.25f
+        val rect = RectF(0f, 0f, sizePx.toFloat(), sizePx.toFloat())
+        canvas.drawRoundRect(rect, cornerRadius, cornerRadius, bgPaint)
         
         // Text paint
         val textPaint = Paint().apply {

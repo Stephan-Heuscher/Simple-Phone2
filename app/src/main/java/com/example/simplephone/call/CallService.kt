@@ -1,11 +1,21 @@
 package com.example.simplephone.call
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
+import android.graphics.Rect
+import android.graphics.RectF
+import android.net.Uri
 import android.os.Build
 import android.telecom.Call
 import android.telecom.CallAudioState
 import android.telecom.InCallService
 import android.util.Log
+import com.example.simplephone.data.ContactRepository
 
 /**
  * InCallService that handles incoming and outgoing calls.
@@ -170,6 +180,35 @@ class CallService : InCallService() {
             number
         }
         
+        // Try to get contact photo
+        val contactRepository = ContactRepository(context)
+        val contacts = contactRepository.getContacts()
+        val normalizedNumber = number.replace(Regex("[^0-9+]"), "")
+        val contact = contacts.find { 
+            val normalizedContactNumber = it.number.replace(Regex("[^0-9+]"), "")
+            if (normalizedNumber.length > 6 && normalizedContactNumber.length > 6) {
+                normalizedNumber.endsWith(normalizedContactNumber) || normalizedContactNumber.endsWith(normalizedNumber)
+            } else {
+                normalizedNumber == normalizedContactNumber
+            }
+        }
+        
+        // Load contact photo bitmap
+        var contactBitmap: Bitmap? = null
+        if (contact?.imageUri != null) {
+            try {
+                val inputStream = context.contentResolver.openInputStream(Uri.parse(contact.imageUri))
+                contactBitmap = BitmapFactory.decodeStream(inputStream)
+                inputStream?.close()
+                // Make it circular for the notification
+                contactBitmap = createCircularBitmap(contactBitmap!!)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to load contact photo", e)
+            }
+        }
+        
+        val displayName = contact?.name ?: name
+        
         val intent = Intent(context, com.example.simplephone.MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
@@ -178,16 +217,50 @@ class CallService : InCallService() {
             android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT
         )
         
-        val notification = androidx.core.app.NotificationCompat.Builder(context, channelId)
+        val notificationBuilder = androidx.core.app.NotificationCompat.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.sym_call_missed)
             .setContentTitle("Missed Call")
-            .setContentText(name)
+            .setContentText(displayName)
             .setPriority(androidx.core.app.NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
-            .build()
+        
+        // Add large icon (contact photo) if available
+        if (contactBitmap != null) {
+            notificationBuilder.setLargeIcon(contactBitmap)
+        }
+        
+        val notification = notificationBuilder.build()
             
         notificationManager.notify(number.hashCode(), notification)
+    }
+    
+    private fun createCircularBitmap(bitmap: Bitmap): Bitmap {
+        val size = minOf(bitmap.width, bitmap.height)
+        val output = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(output)
+        
+        val paint = Paint().apply {
+            isAntiAlias = true
+            isFilterBitmap = true
+        }
+        
+        // Draw circle
+        val rect = RectF(0f, 0f, size.toFloat(), size.toFloat())
+        canvas.drawRoundRect(rect, size / 2f, size / 2f, paint)
+        
+        // Draw bitmap with SRC_IN to clip to circle
+        paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
+        
+        // Center crop the bitmap
+        val srcLeft = (bitmap.width - size) / 2
+        val srcTop = (bitmap.height - size) / 2
+        val srcRect = Rect(srcLeft, srcTop, srcLeft + size, srcTop + size)
+        val dstRect = Rect(0, 0, size, size)
+        
+        canvas.drawBitmap(bitmap, srcRect, dstRect, paint)
+        
+        return output
     }
     
     override fun onCallAudioStateChanged(audioState: CallAudioState?) {

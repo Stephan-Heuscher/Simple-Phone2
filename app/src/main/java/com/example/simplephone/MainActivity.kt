@@ -516,9 +516,9 @@ fun SimplePhoneApp(
                 }
                 composable(Screen.InCall.route) {
                     currentCallContact?.let { contact ->
-                        // Detect available audio outputs
+                        // Detect available audio outputs - refresh on each recomposition
                         val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-                        val availableOutputs = remember {
+                        val availableOutputs = remember(currentCallContact) {
                             mutableListOf<AudioOutput>().apply {
                                 add(AudioOutput.EARPIECE) // Always available
                                 add(AudioOutput.SPEAKER) // Always available
@@ -541,10 +541,15 @@ fun SimplePhoneApp(
                             }
                         }
                         
+                        // Always show at least EARPIECE and SPEAKER
+                        val outputsToShow = if (availableOutputs.size >= 2) availableOutputs else {
+                            mutableListOf(AudioOutput.EARPIECE, AudioOutput.SPEAKER)
+                        }
+                        
                         InCallScreen(
                             contact = contact,
                             currentAudioOutput = currentAudioOutput,
-                            availableAudioOutputs = availableOutputs,
+                            availableAudioOutputs = outputsToShow,
                             onHangup = handleHangup,
                             onAudioOutputChange = { output ->
                                 currentAudioOutput = output
