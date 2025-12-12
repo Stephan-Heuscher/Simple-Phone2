@@ -111,6 +111,20 @@ class MainActivity : ComponentActivity() {
         
         setContent {
             val useDarkMode = remember { mutableStateOf(settingsRepository.useDarkMode) }
+            var isDefaultDialer by remember { mutableStateOf(checkIsDefaultDialer()) }
+            val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+            
+            DisposableEffect(lifecycleOwner) {
+                val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+                    if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                        isDefaultDialer = checkIsDefaultDialer()
+                    }
+                }
+                lifecycleOwner.lifecycle.addObserver(observer)
+                onDispose {
+                    lifecycleOwner.lifecycle.removeObserver(observer)
+                }
+            }
             
             SimplePhoneTheme(darkTheme = useDarkMode.value) {
                 val windowSize = calculateWindowSizeClass(this)
@@ -125,6 +139,7 @@ class MainActivity : ComponentActivity() {
                     settingsRepository = settingsRepository,
                     contactRepository = contactRepository,
                     onDarkModeChange = { useDarkMode.value = it },
+                    isDefaultDialer = isDefaultDialer,
                     onSetDefaultDialer = { requestDefaultDialerRole() }
                 )
             }
@@ -195,28 +210,30 @@ class MainActivity : ComponentActivity() {
     }
     
     private fun offerReplacingDefaultDialer() {
+        if (!checkIsDefaultDialer()) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                try {
+                    android.util.Log.d("MainActivity", "Requesting to be default dialer")
+                    val intent = Intent(android.telecom.TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
+                        putExtra(android.telecom.TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, packageName)
+                    }
+                    startActivityForResult(intent, REQUEST_CODE_SET_DEFAULT_DIALER)
+                } catch (e: Exception) {
+                    android.util.Log.e("MainActivity", "Failed to show default dialer prompt", e)
+                }
+            }
+        } else {
+            android.util.Log.d("MainActivity", "Already default dialer")
+            android.widget.Toast.makeText(this, "Already default dialer", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun checkIsDefaultDialer(): Boolean {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             val telecomManager = getSystemService(android.telecom.TelecomManager::class.java)
-            if (telecomManager != null) {
-                android.util.Log.d("MainActivity", "Checking default dialer. Current: ${telecomManager.defaultDialerPackage}, My Package: $packageName")
-                if (telecomManager.defaultDialerPackage != packageName) {
-                    try {
-                        android.util.Log.d("MainActivity", "Requesting to be default dialer")
-                        val intent = Intent(android.telecom.TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
-                            putExtra(android.telecom.TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, packageName)
-                        }
-                        startActivityForResult(intent, REQUEST_CODE_SET_DEFAULT_DIALER)
-                    } catch (e: Exception) {
-                        android.util.Log.e("MainActivity", "Failed to show default dialer prompt", e)
-                    }
-                } else {
-                    android.util.Log.d("MainActivity", "Already default dialer")
-                    android.widget.Toast.makeText(this, "Already default dialer", android.widget.Toast.LENGTH_SHORT).show()
-                }
-            } else {
-                android.util.Log.e("MainActivity", "TelecomManager is null")
-            }
+            return telecomManager?.defaultDialerPackage == packageName
         }
+        return false
     }
     
     private fun initiatePhoneCall(phoneNumber: String) {
@@ -279,6 +296,7 @@ fun SimplePhoneApp(
     settingsRepository: SettingsRepository,
     contactRepository: ContactRepository,
     onDarkModeChange: (Boolean) -> Unit = {},
+    isDefaultDialer: Boolean = false,
     onSetDefaultDialer: () -> Unit = {}
 ) {
     val navController = rememberNavController()
@@ -466,6 +484,7 @@ fun SimplePhoneApp(
                                 if (newIndex >= 0) contact.copy(sortOrder = newIndex) else contact
                             }.sortedWith(compareBy({ !it.isFavorite }, { it.sortOrder }))
                         },
+                        isDefaultDialer = isDefaultDialer,
                         onSetDefaultDialer = onSetDefaultDialer,
                         onBackClick = { navController.popBackStack() }
                     )
@@ -502,7 +521,30 @@ fun SimplePhoneApp(
                             currentAudioOutput = currentAudioOutput,
                             availableAudioOutputs = availableOutputs,
                             onHangup = handleHangup,
-                            onAudioOutputChange = { currentAudioOutput = it }
+                            onAudioOutputChange = { output ->
+                                currentAudioOutput = output
+                                // Apply audio routing
+                                when (output) {
+                                    AudioOutput.SPEAKER -> {
+                                        audioManager.mode = AudioManager.MODE_IN_CALL
+                                        audioManager.isSpeakerphoneOn = true
+                                        audioManager.stopBluetoothSco()
+                                        audioManager.isBluetoothScoOn = false
+                                    }
+                                    AudioOutput.BLUETOOTH -> {
+                                        audioManager.mode = AudioManager.MODE_IN_CALL
+                                        audioManager.isSpeakerphoneOn = false
+                                        audioManager.startBluetoothSco()
+                                        audioManager.isBluetoothScoOn = true
+                                    }
+                                    else -> { // Earpiece, Wired Headset, Hearing Aid
+                                        audioManager.mode = AudioManager.MODE_IN_CALL
+                                        audioManager.isSpeakerphoneOn = false
+                                        audioManager.stopBluetoothSco()
+                                        audioManager.isBluetoothScoOn = false
+                                    }
+                                }
+                            }
                         )
                     }
                 }

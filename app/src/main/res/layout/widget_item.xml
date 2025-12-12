@@ -34,7 +34,7 @@
         android:id="@+id/widget_item_call"
         android:layout_width="64dp"
         android:layout_height="64dp"
-        android:src="@android:drawable/ic_menu_call"
+        android:src="@drawable/ic_call_24"
         android:background="@drawable/circle_green_background"
         android:padding="16dp"
         android:scaleType="centerInside"

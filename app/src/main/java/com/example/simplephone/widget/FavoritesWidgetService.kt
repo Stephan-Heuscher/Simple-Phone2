@@ -61,20 +61,30 @@ class FavoritesRemoteViewsFactory(private val context: Context) : RemoteViewsSer
 
         val contact = favorites[position]
         val views = RemoteViews(context.packageName, R.layout.widget_item)
+        
+        // Check if huge text is enabled
+        val useHugeText = settingsRepository.useHugeText
+        val textSize = if (useHugeText) 32f else 24f
+        views.setTextViewTextSize(R.id.widget_item_name, android.util.TypedValue.COMPLEX_UNIT_SP, textSize)
         views.setTextViewText(R.id.widget_item_name, contact.name)
         
         // Load contact photo if available
+        var bitmap: Bitmap? = null
         if (contact.imageUri != null) {
             try {
                 val inputStream = context.contentResolver.openInputStream(Uri.parse(contact.imageUri))
-                val bitmap = BitmapFactory.decodeStream(inputStream)
+                bitmap = BitmapFactory.decodeStream(inputStream)
                 inputStream?.close()
-                if (bitmap != null) {
-                    views.setImageViewBitmap(R.id.widget_item_icon, bitmap)
-                }
             } catch (e: Exception) {
                 // Fallback to default icon
             }
+        }
+        
+        if (bitmap != null) {
+            views.setImageViewBitmap(R.id.widget_item_icon, bitmap)
+        } else {
+            // Set default icon if no image
+            views.setImageViewResource(R.id.widget_item_icon, R.mipmap.ic_launcher)
         }
         
         // Set up click intent to call this contact directly
@@ -85,6 +95,7 @@ class FavoritesRemoteViewsFactory(private val context: Context) : RemoteViewsSer
         
         // Tapping anywhere on the row should also trigger call
         views.setOnClickFillInIntent(R.id.widget_item_icon, callIntent)
+        views.setOnClickFillInIntent(R.id.widget_item_name, callIntent)
 
         return views
     }

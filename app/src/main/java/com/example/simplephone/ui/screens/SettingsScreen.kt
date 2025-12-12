@@ -68,6 +68,7 @@ fun SettingsScreen(
     onVoiceAnnouncementsChange: (Boolean) -> Unit = {},
     favorites: List<Contact> = emptyList(),
     onFavoritesReorder: (List<Contact>) -> Unit = {},
+    isDefaultDialer: Boolean = false,
     onSetDefaultDialer: () -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
@@ -79,6 +80,36 @@ fun SettingsScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
+        // --- Default Dialer Section ---
+        if (!isDefaultDialer) {
+            item {
+                Text(
+                    "Default Phone App",
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    "Set this app as your default phone app:",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .padding(top = 16.dp, bottom = 32.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    SettingsButton(
+                        text = "SET DEFAULT",
+                        onClick = onSetDefaultDialer
+                    )
+                }
+                HorizontalDivider(modifier = Modifier.padding(bottom = 24.dp))
+            }
+        }
+
         // --- Text Size Section ---
         item {
             Text(
@@ -322,34 +353,6 @@ fun SettingsScreen(
             HorizontalDivider(thickness = 2.dp, modifier = Modifier.padding(vertical = 24.dp))
         }
 
-        // --- Default Phone App Section ---
-        item {
-            Text(
-                "Default Phone App",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                "Set this app as your default phone app:",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(top = 16.dp, bottom = 32.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                SettingsButton(
-                    text = "SET DEFAULT",
-                    onClick = onSetDefaultDialer
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(48.dp))
-        }
     }
 }
 

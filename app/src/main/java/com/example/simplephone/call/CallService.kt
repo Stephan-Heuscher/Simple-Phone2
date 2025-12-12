@@ -121,6 +121,20 @@ class CallService : InCallService() {
     override fun onCallRemoved(call: Call) {
         Log.d(TAG, "Call removed")
         call.unregisterCallback(callCallback)
+        
+        // Check for missed call
+        if (call.details.callDirection == Call.Details.DIRECTION_INCOMING && 
+            (call.details.disconnectCause.code == android.telecom.DisconnectCause.MISSED || 
+             call.details.disconnectCause.code == android.telecom.DisconnectCause.REJECTED)) {
+             
+             // Only show notification if it was actually missed (not rejected by user)
+             // But some phones report rejected as missed, so we might need to be careful
+             // For now, let's trust the disconnect cause
+             if (call.details.disconnectCause.code == android.telecom.DisconnectCause.MISSED) {
+                 showMissedCallNotification(call)
+             }
+        }
+        
         if (currentCall == call) {
             currentCall = null
             callState = Call.STATE_DISCONNECTED
@@ -128,6 +142,52 @@ class CallService : InCallService() {
             callerName = null
             notifyCallStateChanged()
         }
+    }
+    
+    private fun showMissedCallNotification(call: Call) {
+        val context = this
+        val notificationManager = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+        val channelId = "missed_calls"
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = android.app.NotificationChannel(
+                channelId,
+                "Missed Calls",
+                android.app.NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = "Notifications for missed calls"
+                enableLights(true)
+                lightColor = android.graphics.Color.RED
+            }
+            notificationManager.createNotificationChannel(channel)
+        }
+        
+        val handle = call.details.handle
+        val number = handle?.schemeSpecificPart ?: "Unknown"
+        val name = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            call.details.contactDisplayName ?: number
+        } else {
+            number
+        }
+        
+        val intent = Intent(context, com.example.simplephone.MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        val pendingIntent = android.app.PendingIntent.getActivity(
+            context, 0, intent, 
+            android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        
+        val notification = androidx.core.app.NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(android.R.drawable.sym_call_missed)
+            .setContentTitle("Missed Call")
+            .setContentText(name)
+            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .build()
+            
+        notificationManager.notify(number.hashCode(), notification)
     }
     
     override fun onCallAudioStateChanged(audioState: CallAudioState?) {
