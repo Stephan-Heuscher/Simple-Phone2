@@ -144,6 +144,16 @@ class MainActivity : ComponentActivity() {
             != PackageManager.PERMISSION_GRANTED) {
             permissionsNeeded.add(Manifest.permission.READ_CALL_LOG)
         }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) 
+            != PackageManager.PERMISSION_GRANTED) {
+            permissionsNeeded.add(Manifest.permission.READ_PHONE_STATE)
+        }
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ANSWER_PHONE_CALLS) 
+                != PackageManager.PERMISSION_GRANTED) {
+                permissionsNeeded.add(Manifest.permission.ANSWER_PHONE_CALLS)
+            }
+        }
         
         if (permissionsNeeded.isNotEmpty()) {
             ActivityCompat.requestPermissions(
@@ -151,6 +161,21 @@ class MainActivity : ComponentActivity() {
                 permissionsNeeded.toTypedArray(),
                 CONTACTS_PERMISSION_REQUEST
             )
+        }
+        
+        // Prompt user to set this app as default phone app
+        offerReplacingDefaultDialer()
+    }
+    
+    private fun offerReplacingDefaultDialer() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            val telecomManager = getSystemService(android.telecom.TelecomManager::class.java)
+            if (telecomManager?.defaultDialerPackage != packageName) {
+                val intent = Intent(android.telecom.TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
+                    putExtra(android.telecom.TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, packageName)
+                }
+                startActivity(intent)
+            }
         }
     }
     
