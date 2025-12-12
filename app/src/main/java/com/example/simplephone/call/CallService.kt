@@ -1,5 +1,7 @@
 package com.example.simplephone.call
 
+import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -9,10 +11,14 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.Rect
 import android.graphics.RectF
+import android.media.AudioAttributes
 import android.media.Ringtone
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.telecom.Call
 import android.telecom.CallAudioState
 import android.telecom.InCallService
@@ -26,8 +32,13 @@ import com.example.simplephone.data.ContactRepository
 class CallService : InCallService() {
 
     private var ringtone: Ringtone? = null
+    private var vibrator: Vibrator? = null
+    private var isVibrating = false
 
     companion object {
+        // Track recent callers for repeat caller exception (number -> timestamp)
+        private val recentCallers = mutableMapOf<String, Long>()
+        private const val REPEAT_CALLER_WINDOW_MS = 15 * 60 * 1000L // 15 minutes
         private const val TAG = "CallService"
         private var instance: CallService? = null
         
@@ -119,6 +130,14 @@ class CallService : InCallService() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+        // Initialize vibrator
+        vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            vibratorManager.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        }
     }
 
     override fun onDestroy() {
@@ -127,7 +146,79 @@ class CallService : InCallService() {
         stopRinging()
     }
 
-    private fun startRinging() {
+    /**
+     * Check if we should ring based on DND settings
+     * Returns true if we should ring, false if DND blocks it
+     */
+    private fun shouldRingForCall(callerNumber: String?): Boolean {
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        
+        // Check DND status
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val interruptionFilter = notificationManager.currentInterruptionFilter
+            
+            // If DND is off (INTERRUPTION_FILTER_ALL), always ring
+            if (interruptionFilter == NotificationManager.INTERRUPTION_FILTER_ALL) {
+                return true
+            }
+            
+            // If DND is on but allows alarms only or none, don't ring
+            if (interruptionFilter == NotificationManager.INTERRUPTION_FILTER_ALARMS ||
+                interruptionFilter == NotificationManager.INTERRUPTION_FILTER_NONE) {
+                return false
+            }
+            
+            // INTERRUPTION_FILTER_PRIORITY - check if this is a repeat caller
+            if (interruptionFilter == NotificationManager.INTERRUPTION_FILTER_PRIORITY) {
+                // Check for repeat caller exception
+                if (callerNumber != null) {
+                    val normalizedNumber = callerNumber.replace(Regex("[^0-9+]"), "")
+                    val lastCallTime = recentCallers[normalizedNumber]
+                    val now = System.currentTimeMillis()
+                    
+                    if (lastCallTime != null && (now - lastCallTime) <= REPEAT_CALLER_WINDOW_MS) {
+                        // This is a repeat caller within 15 minutes - ring anyway
+                        Log.d(TAG, "Repeat caller detected, allowing ring despite DND")
+                        return true
+                    }
+                    
+                    // Record this call for repeat caller detection
+                    recentCallers[normalizedNumber] = now
+                    
+                    // Clean up old entries
+                    val cutoff = now - REPEAT_CALLER_WINDOW_MS
+                    recentCallers.entries.removeIf { it.value < cutoff }
+                }
+                
+                // DND is on and this is not a repeat caller - respect DND
+                // The system's DND policy will determine if we should ring
+                // We'll check if calls are allowed in priority mode
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    val policy = notificationManager.notificationPolicy
+                    if (policy.priorityCategories and NotificationManager.Policy.PRIORITY_CATEGORY_CALLS != 0) {
+                        // Calls are allowed in priority mode
+                        return true
+                    }
+                    if (policy.priorityCategories and NotificationManager.Policy.PRIORITY_CATEGORY_REPEAT_CALLERS != 0) {
+                        // Repeat callers are allowed but this isn't one
+                        return false
+                    }
+                }
+                return false
+            }
+        }
+        
+        return true
+    }
+
+    private fun startRinging(callerNumber: String?) {
+        // Check DND settings first
+        if (!shouldRingForCall(callerNumber)) {
+            Log.d(TAG, "Not ringing due to DND settings")
+            return
+        }
+        
+        // Start ringtone
         if (ringtone == null) {
             val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
             ringtone = RingtoneManager.getRingtone(applicationContext, uri)
@@ -135,12 +226,42 @@ class CallService : InCallService() {
         if (ringtone?.isPlaying == false) {
             ringtone?.play()
         }
+        
+        // Start vibration
+        startVibrating()
+    }
+
+    private fun startVibrating() {
+        if (isVibrating) return
+        
+        vibrator?.let { vib ->
+            if (vib.hasVibrator()) {
+                isVibrating = true
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    // Vibration pattern: wait 0ms, vibrate 500ms, wait 500ms, repeat
+                    val pattern = longArrayOf(0, 500, 500, 500, 500)
+                    vib.vibrate(VibrationEffect.createWaveform(pattern, 0)) // 0 = repeat from index 0
+                } else {
+                    @Suppress("DEPRECATION")
+                    val pattern = longArrayOf(0, 500, 500, 500, 500)
+                    vib.vibrate(pattern, 0) // 0 = repeat from index 0
+                }
+            }
+        }
+    }
+
+    private fun stopVibrating() {
+        if (isVibrating) {
+            vibrator?.cancel()
+            isVibrating = false
+        }
     }
 
     private fun stopRinging() {
         if (ringtone?.isPlaying == true) {
             ringtone?.stop()
         }
+        stopVibrating()
     }
     
     private fun updateCallInfo(call: Call) {
@@ -165,7 +286,7 @@ class CallService : InCallService() {
         notifyCallStateChanged()
         
         if (call.state == Call.STATE_RINGING) {
-            startRinging()
+            startRinging(callerNumber)
         }
         
         // Launch the incoming call activity
@@ -183,18 +304,9 @@ class CallService : InCallService() {
         call.unregisterCallback(callCallback)
         stopRinging()
         
-        // Check for missed call
-        if (call.details.callDirection == Call.Details.DIRECTION_INCOMING && 
-            (call.details.disconnectCause.code == android.telecom.DisconnectCause.MISSED || 
-             call.details.disconnectCause.code == android.telecom.DisconnectCause.REJECTED)) {
-             
-             // Only show notification if it was actually missed (not rejected by user)
-             // But some phones report rejected as missed, so we might need to be careful
-             // For now, let's trust the disconnect cause
-             if (call.details.disconnectCause.code == android.telecom.DisconnectCause.MISSED) {
-                 showMissedCallNotification(call)
-             }
-        }
+        // Note: We don't show our own missed call notification because the system
+        // already shows one. Showing a second notification would be confusing.
+        // The system's missed call notification already has call back functionality.
         
         if (currentCall == call) {
             currentCall = null

@@ -69,6 +69,7 @@ import com.example.simplephone.ui.components.Screen
 import com.example.simplephone.ui.screens.FavoritesScreen
 import com.example.simplephone.ui.screens.InCallScreen
 import com.example.simplephone.ui.screens.MainScreen
+import com.example.simplephone.ui.screens.OnboardingScreen
 import com.example.simplephone.ui.screens.PhoneBookScreen
 import com.example.simplephone.ui.screens.RecentsScreen
 import com.example.simplephone.ui.screens.SettingsScreen
@@ -112,6 +113,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val darkModeOption = remember { mutableStateOf(settingsRepository.darkModeOption) }
             var isDefaultDialer by remember { mutableStateOf(checkIsDefaultDialer()) }
+            var showOnboarding by remember { mutableStateOf(!settingsRepository.onboardingCompleted) }
             val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
             
             DisposableEffect(lifecycleOwner) {
@@ -127,21 +129,30 @@ class MainActivity : ComponentActivity() {
             }
             
             SimplePhoneTheme(darkThemeOption = darkModeOption.value) {
-                val windowSize = calculateWindowSizeClass(this)
-                SimplePhoneApp(
-                    widthSizeClass = windowSize.widthSizeClass,
-                    onMakeCall = { phoneNumber, contactName -> 
-                        if (settingsRepository.useVoiceAnnouncements) {
-                            textToSpeech?.speak("Calling $contactName", TextToSpeech.QUEUE_FLUSH, null, null)
+                if (showOnboarding) {
+                    OnboardingScreen(
+                        onComplete = {
+                            settingsRepository.onboardingCompleted = true
+                            showOnboarding = false
                         }
-                        initiatePhoneCall(phoneNumber) 
-                    },
-                    settingsRepository = settingsRepository,
-                    contactRepository = contactRepository,
-                    onDarkModeOptionChange = { darkModeOption.value = it },
-                    isDefaultDialer = isDefaultDialer,
-                    onSetDefaultDialer = { requestDefaultDialerRole() }
-                )
+                    )
+                } else {
+                    val windowSize = calculateWindowSizeClass(this)
+                    SimplePhoneApp(
+                        widthSizeClass = windowSize.widthSizeClass,
+                        onMakeCall = { phoneNumber, contactName -> 
+                            if (settingsRepository.useVoiceAnnouncements) {
+                                textToSpeech?.speak("Calling $contactName", TextToSpeech.QUEUE_FLUSH, null, null)
+                            }
+                            initiatePhoneCall(phoneNumber) 
+                        },
+                        settingsRepository = settingsRepository,
+                        contactRepository = contactRepository,
+                        onDarkModeOptionChange = { darkModeOption.value = it },
+                        isDefaultDialer = isDefaultDialer,
+                        onSetDefaultDialer = { requestDefaultDialerRole() }
+                    )
+                }
             }
         }
     }

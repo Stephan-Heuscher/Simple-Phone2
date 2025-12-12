@@ -22,6 +22,7 @@ class SettingsRepository(context: Context) {
         private const val KEY_USE_HAPTIC_FEEDBACK = "use_haptic_feedback"
         private const val KEY_USE_VOICE_ANNOUNCEMENTS = "use_voice_announcements"
         private const val KEY_FAVORITES_ORDER = "favorites_order"
+        private const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
         
         private const val DEFAULT_FILTER_HOURS = 2
         private const val DEFAULT_MISSED_CALLS_HOURS = 24
@@ -81,4 +82,8 @@ class SettingsRepository(context: Context) {
     var useVoiceAnnouncements: Boolean
         get() = prefs.getBoolean(KEY_USE_VOICE_ANNOUNCEMENTS, false)
         set(value) = prefs.edit().putBoolean(KEY_USE_VOICE_ANNOUNCEMENTS, value).apply()
+
+    var onboardingCompleted: Boolean
+        get() = prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false)
+        set(value) = prefs.edit().putBoolean(KEY_ONBOARDING_COMPLETED, value).apply()
 }
