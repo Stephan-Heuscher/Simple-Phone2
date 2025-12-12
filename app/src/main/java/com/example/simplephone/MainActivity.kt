@@ -178,24 +178,34 @@ class MainActivity : ComponentActivity() {
     private fun offerReplacingDefaultDialer() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             val telecomManager = getSystemService(android.telecom.TelecomManager::class.java)
-            if (telecomManager != null && telecomManager.defaultDialerPackage != packageName) {
-                try {
-                    val intent = Intent(android.telecom.TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
-                        putExtra(android.telecom.TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, packageName)
+            if (telecomManager != null) {
+                android.util.Log.d("MainActivity", "Checking default dialer. Current: ${telecomManager.defaultDialerPackage}, My Package: $packageName")
+                if (telecomManager.defaultDialerPackage != packageName) {
+                    try {
+                        android.util.Log.d("MainActivity", "Requesting to be default dialer")
+                        val intent = Intent(android.telecom.TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
+                            putExtra(android.telecom.TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, packageName)
+                        }
+                        startActivity(intent)
+                    } catch (e: Exception) {
+                        android.util.Log.e("MainActivity", "Failed to show default dialer prompt", e)
                     }
-                    startActivity(intent)
-                } catch (e: Exception) {
-                    android.util.Log.e("MainActivity", "Failed to show default dialer prompt", e)
+                } else {
+                    android.util.Log.d("MainActivity", "Already default dialer")
                 }
+            } else {
+                android.util.Log.e("MainActivity", "TelecomManager is null")
             }
         }
     }
     
     private fun initiatePhoneCall(phoneNumber: String) {
+        android.util.Log.d("MainActivity", "Initiating phone call to $phoneNumber")
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) 
             == PackageManager.PERMISSION_GRANTED) {
             makePhoneCall(phoneNumber)
         } else {
+            android.util.Log.d("MainActivity", "Requesting CALL_PHONE permission")
             pendingPhoneNumber = phoneNumber
             ActivityCompat.requestPermissions(
                 this,

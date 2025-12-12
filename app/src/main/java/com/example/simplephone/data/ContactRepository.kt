@@ -11,48 +11,56 @@ class ContactRepository(private val context: Context) {
     fun getContacts(): List<Contact> {
         val contacts = mutableListOf<Contact>()
         val contentResolver: ContentResolver = context.contentResolver
-        val cursor: Cursor? = contentResolver.query(
-            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-            arrayOf(
-                ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
-                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-                ContactsContract.CommonDataKinds.Phone.NUMBER,
-                ContactsContract.CommonDataKinds.Phone.PHOTO_URI,
-                ContactsContract.CommonDataKinds.Phone.STARRED
-            ),
-            null,
-            null,
-            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC"
-        )
+        
+        try {
+            val cursor: Cursor? = contentResolver.query(
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                arrayOf(
+                    ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
+                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                    ContactsContract.CommonDataKinds.Phone.NUMBER,
+                    ContactsContract.CommonDataKinds.Phone.PHOTO_URI,
+                    ContactsContract.CommonDataKinds.Phone.STARRED
+                ),
+                null,
+                null,
+                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC"
+            )
 
-        cursor?.use {
-            val idIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID)
-            val nameIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
-            val numberIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
-            val photoUriIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.PHOTO_URI)
-            val starredIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.STARRED)
+            cursor?.use {
+                val idIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID)
+                val nameIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+                val numberIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                val photoUriIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.PHOTO_URI)
+                val starredIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.STARRED)
 
-            while (it.moveToNext()) {
-                val id = it.getString(idIndex)
-                val name = it.getString(nameIndex)
-                val number = it.getString(numberIndex)
-                val photoUri = it.getString(photoUriIndex)
-                val isStarred = it.getInt(starredIndex) == 1
+                while (it.moveToNext()) {
+                    val id = it.getString(idIndex)
+                    val name = it.getString(nameIndex)
+                    val number = it.getString(numberIndex)
+                    val photoUri = it.getString(photoUriIndex)
+                    val isStarred = it.getInt(starredIndex) == 1
 
-                // Filter out contacts without numbers (already handled by querying CommonDataKinds.Phone, but good to be safe)
-                if (!number.isNullOrBlank()) {
-                    contacts.add(
-                        Contact(
-                            id = id,
-                            name = name ?: "Unknown",
-                            number = number,
-                            isFavorite = isStarred,
-                            imageUri = photoUri
+                    // Filter out contacts without numbers (already handled by querying CommonDataKinds.Phone, but good to be safe)
+                    if (!number.isNullOrBlank()) {
+                        contacts.add(
+                            Contact(
+                                id = id,
+                                name = name ?: "Unknown",
+                                number = number,
+                                isFavorite = isStarred,
+                                imageUri = photoUri
+                            )
                         )
-                    )
+                    }
                 }
             }
+        } catch (e: SecurityException) {
+            android.util.Log.e("ContactRepository", "Permission denied reading contacts", e)
+        } catch (e: Exception) {
+            android.util.Log.e("ContactRepository", "Error reading contacts", e)
         }
+        
         // Remove duplicates if any (same contact multiple numbers) - for simplicity, we might keep them or distinct by ID
         // The user requirement: "only display contacts, if a phone number is present"
         // CommonDataKinds.Phone query only returns contacts with phone numbers.

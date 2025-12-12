@@ -217,7 +217,6 @@ fun ContactRow(
 /**
  * Clickable avatar that triggers on press
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ClickableAvatar(
     contact: Contact,
@@ -227,14 +226,7 @@ fun ClickableAvatar(
 ) {
     Box(
         modifier = Modifier
-            .pointerInteropFilter { event ->
-                if (event.action == MotionEvent.ACTION_DOWN) {
-                    onClick()
-                    true
-                } else {
-                    false
-                }
-            }
+            .clickable(onClick = onClick)
     ) {
         ContactAvatar(
             contact = contact,
@@ -247,7 +239,6 @@ fun ClickableAvatar(
 /**
  * Green circular call button - triggers on press for accessibility
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun GreenCallIcon(
     onClick: () -> Unit,
@@ -260,14 +251,7 @@ fun GreenCallIcon(
             .size(size.dp)
             .clip(CircleShape)
             .background(GreenCall)
-            .pointerInteropFilter { event ->
-                if (event.action == MotionEvent.ACTION_DOWN) {
-                    onClick()
-                    true
-                } else {
-                    false
-                }
-            },
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(

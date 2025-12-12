@@ -28,10 +28,13 @@ class FavoritesRemoteViewsFactory(private val context: Context) : RemoteViewsSer
     }
 
     override fun onDataSetChanged() {
+        android.util.Log.d("FavoritesWidgetService", "onDataSetChanged called")
         favorites.clear()
         // Use real contacts from ContactRepository
         val allContacts = contactRepository.getContacts()
+        android.util.Log.d("FavoritesWidgetService", "Loaded ${allContacts.size} contacts")
         val favContacts = allContacts.filter { it.isFavorite }
+        android.util.Log.d("FavoritesWidgetService", "Found ${favContacts.size} favorites")
         
         // Apply saved order
         val savedOrder = settingsRepository.getFavoritesOrder()
