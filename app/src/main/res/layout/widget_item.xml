@@ -12,10 +12,9 @@
         android:id="@+id/widget_item_icon"
         android:layout_width="64dp"
         android:layout_height="64dp"
-        android:src="@android:drawable/ic_menu_myplaces"
+        android:src="@mipmap/ic_launcher"
         android:scaleType="centerCrop"
         android:layout_marginEnd="16dp"
-        android:background="@android:drawable/picture_frame"
         android:contentDescription="Tap to call"/>
 
     <!-- Contact name in middle -->
@@ -24,7 +23,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textSize="32sp"
+        android:textSize="24sp"
         android:textColor="#000000"
         android:textStyle="bold"
         android:singleLine="true"
@@ -36,7 +35,7 @@
         android:layout_width="64dp"
         android:layout_height="64dp"
         android:src="@android:drawable/ic_menu_call"
-        android:background="#00C853"
+        android:background="@drawable/circle_green_background"
         android:padding="16dp"
         android:scaleType="centerInside"
         android:contentDescription="Call contact"/>

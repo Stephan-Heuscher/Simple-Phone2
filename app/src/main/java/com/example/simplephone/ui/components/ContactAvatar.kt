@@ -1,10 +1,13 @@
 package com.example.simplephone.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
@@ -28,6 +31,7 @@ import com.example.simplephone.ui.theme.AvatarOrange
 import com.example.simplephone.ui.theme.AvatarPurple
 import com.example.simplephone.ui.theme.AvatarTeal
 import com.example.simplephone.ui.theme.FavoriteGold
+import com.example.simplephone.ui.theme.HighContrastBlue
 
 /**
  * Generates a consistent color based on the contact's name
@@ -49,18 +53,22 @@ fun ContactAvatar(
     size: Dp = 72.dp,
     showFavoriteStar: Boolean = true
 ) {
+    // Slightly rounded square shape
+    val avatarShape = RoundedCornerShape(16.dp)
+    
     Box(
         modifier = modifier.size(size),
         contentAlignment = Alignment.Center
     ) {
-        // Main avatar circle - show photo if available, otherwise initials
+        // Main avatar - show photo if available, otherwise initials
         if (contact.imageUri != null) {
             AsyncImage(
                 model = contact.imageUri,
                 contentDescription = "Photo of ${contact.name}",
                 modifier = Modifier
                     .size(size)
-                    .clip(CircleShape),
+                    .clip(avatarShape)
+                    .border(BorderStroke(3.dp, HighContrastBlue), avatarShape),
                 contentScale = ContentScale.Crop
             )
         } else {
@@ -68,8 +76,9 @@ fun ContactAvatar(
             Box(
                 modifier = Modifier
                     .size(size)
-                    .clip(CircleShape)
-                    .background(getAvatarColor(contact.name)),
+                    .clip(avatarShape)
+                    .background(getAvatarColor(contact.name))
+                    .border(BorderStroke(3.dp, HighContrastBlue), avatarShape),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
