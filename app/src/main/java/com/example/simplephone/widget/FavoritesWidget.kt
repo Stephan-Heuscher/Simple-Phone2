@@ -8,7 +8,6 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.RemoteViews
 import com.example.simplephone.R
-import com.example.simplephone.MainActivity
 
 class FavoritesWidget : AppWidgetProvider() {
 
@@ -38,11 +37,15 @@ class FavoritesWidget : AppWidgetProvider() {
                 setEmptyView(R.id.widget_list, R.id.empty_view)
             }
             
-            val toastIntent = Intent(context, MainActivity::class.java)
-            val toastPendingIntent = PendingIntent.getActivity(
-                context, 0, toastIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            // Set up pending intent template for call actions
+            val callIntent = Intent(Intent.ACTION_CALL)
+            val callPendingIntent = PendingIntent.getActivity(
+                context, 
+                0, 
+                callIntent, 
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
             )
-            views.setPendingIntentTemplate(R.id.widget_list, toastPendingIntent)
+            views.setPendingIntentTemplate(R.id.widget_list, callPendingIntent)
 
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }

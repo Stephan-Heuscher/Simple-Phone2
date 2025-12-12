@@ -3,34 +3,42 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:padding="12dp"
-    android:minHeight="64dp"
+    android:minHeight="80dp"
     android:gravity="center_vertical"
     android:background="?android:attr/selectableItemBackground">
 
+    <!-- Contact photo/avatar on left -->
     <ImageView
         android:id="@+id/widget_item_icon"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:src="@android:drawable/star_on"
-        android:layout_marginEnd="12dp"
-        android:contentDescription="Favorite contact"/>
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:src="@android:drawable/ic_menu_myplaces"
+        android:scaleType="centerCrop"
+        android:layout_marginEnd="16dp"
+        android:background="@android:drawable/picture_frame"
+        android:contentDescription="Tap to call"/>
 
+    <!-- Contact name in middle -->
     <TextView
         android:id="@+id/widget_item_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textSize="20sp"
+        android:textSize="22sp"
         android:textColor="#000000"
-        android:textStyle="bold"/>
+        android:textStyle="bold"
+        android:singleLine="true"
+        android:ellipsize="end"/>
 
+    <!-- Green call button on right -->
     <ImageView
         android:id="@+id/widget_item_call"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
         android:src="@android:drawable/ic_menu_call"
         android:background="#00C853"
-        android:padding="8dp"
+        android:padding="16dp"
+        android:scaleType="centerInside"
         android:contentDescription="Call contact"/>
 
 </LinearLayout>

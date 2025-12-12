@@ -1,9 +1,15 @@
 package com.example.simplephone
 
 import android.Manifest
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothProfile
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.AudioDeviceInfo
+import android.media.AudioManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
@@ -34,9 +40,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -196,7 +205,6 @@ fun SimplePhoneApp(
     val hapticFeedback = LocalHapticFeedback.current
     
     // Settings state
-    var filterHours by remember { mutableStateOf(settingsRepository.filterHours) }
     var useHugeText by remember { mutableStateOf(settingsRepository.useHugeText) }
     var missedCallsHours by remember { mutableStateOf(settingsRepository.missedCallsHours) }
     var useDarkMode by remember { mutableStateOf(settingsRepository.useDarkMode) }
@@ -251,9 +259,7 @@ fun SimplePhoneApp(
         if (useHapticFeedback) {
             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
         }
-        currentCallContact = contact
-        isInCall = true
-        navController.navigate(Screen.InCall.route)
+        // Just make the call directly - system dialer will handle the UI
         onMakeCall(contact.number, contact.name)
     }
 
@@ -326,11 +332,6 @@ fun SimplePhoneApp(
                 }
                 composable(Screen.Settings.route) {
                     SettingsScreen(
-                        filterHours = filterHours,
-                        onFilterChange = { 
-                            filterHours = it
-                            settingsRepository.filterHours = it
-                        },
                         useHugeText = useHugeText,
                         onHugeTextChange = {
                             useHugeText = it
@@ -362,21 +363,48 @@ fun SimplePhoneApp(
                             useVoiceAnnouncements = it
                             settingsRepository.useVoiceAnnouncements = it
                         },
+                        favorites = contacts.filter { it.isFavorite },
+                        onFavoritesReorder = { newOrder ->
+                            // Update the contacts list with new favorites order
+                            contacts = contacts.map { contact ->
+                                val newIndex = newOrder.indexOfFirst { it.id == contact.id }
+                                if (newIndex >= 0) contact.copy(sortOrder = newIndex) else contact
+                            }.sortedWith(compareBy({ !it.isFavorite }, { it.sortOrder }))
+                        },
                         onBackClick = { navController.popBackStack() }
                     )
                 }
                 composable(Screen.InCall.route) {
                     currentCallContact?.let { contact ->
+                        // Detect available audio outputs
+                        val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                        val availableOutputs = remember {
+                            mutableListOf<AudioOutput>().apply {
+                                add(AudioOutput.EARPIECE) // Always available
+                                add(AudioOutput.SPEAKER) // Always available
+                                
+                                // Check for Bluetooth devices
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                    val devices = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+                                    if (devices.any { it.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP || 
+                                                       it.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO }) {
+                                        add(AudioOutput.BLUETOOTH)
+                                    }
+                                    if (devices.any { it.type == AudioDeviceInfo.TYPE_WIRED_HEADSET ||
+                                                       it.type == AudioDeviceInfo.TYPE_WIRED_HEADPHONES }) {
+                                        add(AudioOutput.WIRED_HEADSET)
+                                    }
+                                    if (devices.any { it.type == AudioDeviceInfo.TYPE_HEARING_AID }) {
+                                        add(AudioOutput.HEARING_AID)
+                                    }
+                                }
+                            }
+                        }
+                        
                         InCallScreen(
                             contact = contact,
-                            callDuration = "00:00",
                             currentAudioOutput = currentAudioOutput,
-                            availableAudioOutputs = listOf(
-                                AudioOutput.EARPIECE,
-                                AudioOutput.SPEAKER,
-                                AudioOutput.BLUETOOTH,
-                                AudioOutput.HEARING_AID
-                            ),
+                            availableAudioOutputs = availableOutputs,
                             onHangup = handleHangup,
                             onAudioOutputChange = { currentAudioOutput = it }
                         )
@@ -390,6 +418,7 @@ fun SimplePhoneApp(
 /**
  * Large, accessible call confirmation dialog
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun CallConfirmationDialog(
     contactName: String,
@@ -421,44 +450,50 @@ fun CallConfirmationDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Cancel button
+                    // No button
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .height(80.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(HighContrastBlue)
-                            .padding(16.dp),
+                            .pointerInteropFilter { event ->
+                                if (event.action == android.view.MotionEvent.ACTION_DOWN) {
+                                    onDismiss()
+                                    true
+                                } else false
+                            },
                         contentAlignment = Alignment.Center
                     ) {
-                        androidx.compose.material3.TextButton(onClick = onDismiss) {
-                            Text(
-                                "Cancel",
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = androidx.compose.ui.graphics.Color.White
-                            )
-                        }
+                        Text(
+                            "No",
+                            style = MaterialTheme.typography.displaySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
                     }
                     
-                    // Confirm button
+                    // Yes button
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .height(80.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(GreenCall)
-                            .padding(16.dp),
+                            .pointerInteropFilter { event ->
+                                if (event.action == android.view.MotionEvent.ACTION_DOWN) {
+                                    onConfirm()
+                                    true
+                                } else false
+                            },
                         contentAlignment = Alignment.Center
                     ) {
-                        androidx.compose.material3.TextButton(onClick = onConfirm) {
-                            Text(
-                                "Yes, Call",
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = androidx.compose.ui.graphics.Color.White
-                            )
-                        }
+                        Text(
+                            "Yes",
+                            style = MaterialTheme.typography.displaySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
                     }
                 }
             }

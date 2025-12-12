@@ -56,17 +56,15 @@ import com.example.simplephone.ui.theme.SpeakerInactive
 
 /**
  * In-call screen UI - ultra accessible with large buttons and high contrast
+ * Shows only available audio outputs (speaker, bluetooth devices if connected)
  */
 @Composable
 fun InCallScreen(
     contact: Contact,
-    callDuration: String = "00:00",
     currentAudioOutput: AudioOutput = AudioOutput.EARPIECE,
     availableAudioOutputs: List<AudioOutput> = listOf(
         AudioOutput.EARPIECE,
-        AudioOutput.SPEAKER,
-        AudioOutput.BLUETOOTH,
-        AudioOutput.HEARING_AID
+        AudioOutput.SPEAKER
     ),
     onHangup: () -> Unit,
     onAudioOutputChange: (AudioOutput) -> Unit
@@ -97,43 +95,39 @@ fun InCallScreen(
                 color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center
             )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Call duration
-            Text(
-                text = callDuration,
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-            )
         }
 
-        // Middle section: Audio output options
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(
-                text = "Audio Output",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            // Audio output buttons in a row
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+        // Middle section: Audio output options (only show if more than one option available)
+        if (availableAudioOutputs.size > 1) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                items(availableAudioOutputs) { audioOutput ->
-                    AudioOutputButton(
-                        audioOutput = audioOutput,
-                        isSelected = audioOutput == currentAudioOutput,
-                        onClick = { onAudioOutputChange(audioOutput) }
-                    )
+                Text(
+                    text = "Audio Output",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                // Audio output buttons in a row
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(availableAudioOutputs) { audioOutput ->
+                        AudioOutputButton(
+                            audioOutput = audioOutput,
+                            isSelected = audioOutput == currentAudioOutput,
+                            onClick = { onAudioOutputChange(audioOutput) }
+                        )
+                    }
                 }
             }
+        } else {
+            // Spacer when only one audio output is available
+            Spacer(modifier = Modifier.weight(1f))
         }
 
         // Bottom section: Hangup button

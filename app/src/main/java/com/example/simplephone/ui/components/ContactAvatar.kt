@@ -15,10 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.simplephone.model.Contact
 import com.example.simplephone.ui.theme.AvatarBlue
 import com.example.simplephone.ui.theme.AvatarGreen
@@ -38,7 +40,7 @@ private fun getAvatarColor(name: String): Color {
 
 /**
  * A large, accessible contact avatar with optional favorite star overlay.
- * Shows initials on a colored background.
+ * Shows contact photo if available, otherwise shows initials on a colored background.
  */
 @Composable
 fun ContactAvatar(
@@ -51,20 +53,32 @@ fun ContactAvatar(
         modifier = modifier.size(size),
         contentAlignment = Alignment.Center
     ) {
-        // Main avatar circle
-        Box(
-            modifier = Modifier
-                .size(size)
-                .clip(CircleShape)
-                .background(getAvatarColor(contact.name)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = contact.initial.toString(),
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = (size.value * 0.45f).sp
+        // Main avatar circle - show photo if available, otherwise initials
+        if (contact.imageUri != null) {
+            AsyncImage(
+                model = contact.imageUri,
+                contentDescription = "Photo of ${contact.name}",
+                modifier = Modifier
+                    .size(size)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
             )
+        } else {
+            // Fallback to initials
+            Box(
+                modifier = Modifier
+                    .size(size)
+                    .clip(CircleShape)
+                    .background(getAvatarColor(contact.name)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = contact.initial.toString(),
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = (size.value * 0.45f).sp
+                )
+            }
         }
 
         // Favorite star overlay (bottom-right corner) - 50% of avatar size for better visibility

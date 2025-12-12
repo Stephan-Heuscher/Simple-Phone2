@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Simple Phone</string>
+    <string name="widget_description">Quick access to your favorite contacts. Tap photo or green button to call directly.</string>
 </resources>

@@ -45,7 +45,6 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.simplephone.data.MockData
 import com.example.simplephone.model.Contact
 import com.example.simplephone.ui.components.ContactAvatar
 import com.example.simplephone.ui.theme.HighContrastBlue
@@ -53,8 +52,6 @@ import com.example.simplephone.ui.theme.GreenCall
 
 @Composable
 fun SettingsScreen(
-    filterHours: Int,
-    onFilterChange: (Int) -> Unit,
     useHugeText: Boolean = false,
     onHugeTextChange: (Boolean) -> Unit = {},
     missedCallsHours: Int = 24,
@@ -67,10 +64,12 @@ fun SettingsScreen(
     onHapticFeedbackChange: (Boolean) -> Unit = {},
     useVoiceAnnouncements: Boolean = false,
     onVoiceAnnouncementsChange: (Boolean) -> Unit = {},
+    favorites: List<Contact> = emptyList(),
+    onFavoritesReorder: (List<Contact>) -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
     // Remember favorites order for reordering
-    val favorites = remember { mutableStateListOf(*MockData.getFavoritesOrdered().toTypedArray()) }
+    val mutableFavorites = remember(favorites) { mutableStateListOf(*favorites.toTypedArray()) }
 
     LazyColumn(
         modifier = Modifier
@@ -276,51 +275,6 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(24.dp))
         }
 
-        // --- Recents Filter Section ---
-        item {
-            Text(
-                "Recents Filter",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                "Hide calls older than:",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(top = 16.dp, bottom = 32.dp)
-                    .fillMaxWidth()
-            ) {
-                BigIconButton(
-                    icon = Icons.Filled.Remove,
-                    contentDescription = "Decrease hours",
-                    onClick = { if (filterHours > 1) onFilterChange(filterHours - 1) },
-                    modifier = Modifier.weight(1f)
-                )
-
-                Text(
-                    "$filterHours hours",
-                    style = MaterialTheme.typography.displayMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-
-                BigIconButton(
-                    icon = Icons.Filled.Add,
-                    contentDescription = "Increase hours",
-                    onClick = { onFilterChange(filterHours + 1) },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            HorizontalDivider(thickness = 2.dp)
-            Spacer(modifier = Modifier.height(24.dp))
-        }
-
         // --- Favorites Order Section ---
         item {
             Text(
@@ -335,27 +289,27 @@ fun SettingsScreen(
             )
         }
 
-        itemsIndexed(favorites) { index, contact ->
+        itemsIndexed(mutableFavorites) { index, contact ->
             FavoriteReorderRow(
                 contact = contact,
                 canMoveUp = index > 0,
-                canMoveDown = index < favorites.size - 1,
+                canMoveDown = index < mutableFavorites.size - 1,
                 onMoveUp = {
                     if (index > 0) {
-                        val item = favorites.removeAt(index)
-                        favorites.add(index - 1, item)
-                        MockData.moveFavoriteUp(contact.id)
+                        val item = mutableFavorites.removeAt(index)
+                        mutableFavorites.add(index - 1, item)
+                        onFavoritesReorder(mutableFavorites.toList())
                     }
                 },
                 onMoveDown = {
-                    if (index < favorites.size - 1) {
-                        val item = favorites.removeAt(index)
-                        favorites.add(index + 1, item)
-                        MockData.moveFavoriteDown(contact.id)
+                    if (index < mutableFavorites.size - 1) {
+                        val item = mutableFavorites.removeAt(index)
+                        mutableFavorites.add(index + 1, item)
+                        onFavoritesReorder(mutableFavorites.toList())
                     }
                 }
             )
-            if (index < favorites.size - 1) {
+            if (index < mutableFavorites.size - 1) {
                 HorizontalDivider()
             }
         }
