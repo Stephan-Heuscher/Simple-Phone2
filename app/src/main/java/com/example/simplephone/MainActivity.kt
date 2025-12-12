@@ -84,6 +84,7 @@ class MainActivity : ComponentActivity() {
     companion object {
         private const val CALL_PHONE_PERMISSION_REQUEST = 1001
         private const val CONTACTS_PERMISSION_REQUEST = 1002
+        private const val REQUEST_CODE_SET_DEFAULT_DIALER = 1003
     }
     
     private var pendingPhoneNumber: String? = null
@@ -124,7 +125,7 @@ class MainActivity : ComponentActivity() {
                     settingsRepository = settingsRepository,
                     contactRepository = contactRepository,
                     onDarkModeChange = { useDarkMode.value = it },
-                    onSetDefaultDialer = { offerReplacingDefaultDialer() }
+                    onSetDefaultDialer = { requestDefaultDialerRole() }
                 )
             }
         }
@@ -133,7 +134,8 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         // Prompt user to set this app as default phone app if not already
-        offerReplacingDefaultDialer()
+        // We don't do this automatically on resume anymore to avoid annoying the user
+        // offerReplacingDefaultDialer()
         
         // Refresh widget in case contacts or permissions changed
         FavoritesWidget.sendRefreshBroadcast(this)
@@ -143,6 +145,22 @@ class MainActivity : ComponentActivity() {
         textToSpeech?.stop()
         textToSpeech?.shutdown()
         super.onDestroy()
+    }
+    
+    private fun requestDefaultDialerRole() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val roleManager = getSystemService(android.app.role.RoleManager::class.java)
+            if (roleManager.isRoleAvailable(android.app.role.RoleManager.ROLE_DIALER) &&
+                !roleManager.isRoleHeld(android.app.role.RoleManager.ROLE_DIALER)) {
+                val intent = roleManager.createRequestRoleIntent(android.app.role.RoleManager.ROLE_DIALER)
+                startActivityForResult(intent, REQUEST_CODE_SET_DEFAULT_DIALER)
+            } else {
+                // Already default or role not available
+                android.widget.Toast.makeText(this, "Already default dialer or not available", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            offerReplacingDefaultDialer()
+        }
     }
     
     private fun requestPermissionsIfNeeded() {
@@ -184,16 +202,16 @@ class MainActivity : ComponentActivity() {
                 if (telecomManager.defaultDialerPackage != packageName) {
                     try {
                         android.util.Log.d("MainActivity", "Requesting to be default dialer")
-                        android.widget.Toast.makeText(this, "Please set Simple Phone as default", android.widget.Toast.LENGTH_LONG).show()
                         val intent = Intent(android.telecom.TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
                             putExtra(android.telecom.TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, packageName)
                         }
-                        startActivity(intent)
+                        startActivityForResult(intent, REQUEST_CODE_SET_DEFAULT_DIALER)
                     } catch (e: Exception) {
                         android.util.Log.e("MainActivity", "Failed to show default dialer prompt", e)
                     }
                 } else {
                     android.util.Log.d("MainActivity", "Already default dialer")
+                    android.widget.Toast.makeText(this, "Already default dialer", android.widget.Toast.LENGTH_SHORT).show()
                 }
             } else {
                 android.util.Log.e("MainActivity", "TelecomManager is null")
@@ -237,6 +255,19 @@ class MainActivity : ComponentActivity() {
                 pendingPhoneNumber?.let { makePhoneCall(it) }
             }
             pendingPhoneNumber = null
+        }
+    }
+    
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        @Suppress("DEPRECATION")
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE_SET_DEFAULT_DIALER) {
+            if (resultCode == android.app.Activity.RESULT_OK) {
+                android.widget.Toast.makeText(this, "App is now the default dialer!", android.widget.Toast.LENGTH_SHORT).show()
+            } else {
+                android.widget.Toast.makeText(this, "Default dialer request declined.", android.widget.Toast.LENGTH_SHORT).show()
+            }
         }
     }
 }
