@@ -1,7 +1,7 @@
 package com.example.simplephone.ui.screens
 
-import android.view.MotionEvent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,19 +24,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -150,7 +144,6 @@ fun MainScreen(
  * A single contact row with avatar, name, and green call button.
  * Accessible: reacts on press, large touch targets.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ContactRow(
     contact: Contact,
@@ -221,7 +214,6 @@ fun ContactRow(
 /**
  * Clickable avatar that triggers on press
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ClickableAvatar(
     contact: Contact,
@@ -229,32 +221,18 @@ fun ClickableAvatar(
     showFavoriteStar: Boolean,
     onClick: () -> Unit
 ) {
-    var isPressed by remember { mutableStateOf(false) }
-    
     Box(
         modifier = Modifier
-            .semantics {
-                contentDescription = "Tap to call ${contact.name}"
-                role = Role.Button
-            }
-            .pointerInteropFilter { event ->
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        isPressed = true
-                        onClick()
-                        true
-                    }
-                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                        isPressed = false
-                        true
-                    }
-                    else -> false
-                }
+            .clickable(
+                role = Role.Button,
+                onClickLabel = "Tap to call ${contact.name}"
+            ) {
+                onClick()
             }
     ) {
         ContactAvatar(
             contact = contact,
-            size = if (isPressed) size * 0.95f else size,
+            size = size,
             showFavoriteStar = showFavoriteStar
         )
     }
@@ -263,7 +241,6 @@ fun ClickableAvatar(
 /**
  * Green circular call button - triggers on press for accessibility
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun GreenCallIcon(
     onClick: () -> Unit,
@@ -271,36 +248,22 @@ fun GreenCallIcon(
     modifier: Modifier = Modifier,
     size: Int = 56
 ) {
-    var isPressed by remember { mutableStateOf(false) }
-    
     Box(
         modifier = modifier
             .size(size.dp)
             .clip(CircleShape)
-            .background(if (isPressed) GreenCall.copy(alpha = 0.7f) else GreenCall)
-            .semantics {
-                this.contentDescription = contentDescription
-                role = Role.Button
-            }
-            .pointerInteropFilter { event ->
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        isPressed = true
-                        onClick()
-                        true
-                    }
-                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                        isPressed = false
-                        true
-                    }
-                    else -> false
-                }
+            .background(GreenCall)
+            .clickable(
+                role = Role.Button,
+                onClickLabel = contentDescription
+            ) {
+                onClick()
             },
         contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = Icons.Filled.Call,
-            contentDescription = null,
+            contentDescription = contentDescription,
             tint = Color.White,
             modifier = Modifier.size((size * 0.5).dp)
         )
