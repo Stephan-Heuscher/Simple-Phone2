@@ -304,9 +304,12 @@ class CallService : InCallService() {
         call.unregisterCallback(callCallback)
         stopRinging()
         
-        // Note: We don't show our own missed call notification because the system
-        // already shows one. Showing a second notification would be confusing.
-        // The system's missed call notification already has call back functionality.
+        // Show our own missed call notification since we are the default dialer.
+        // The system won't show one when we handle calls.
+        if (call.details.callDirection == Call.Details.DIRECTION_INCOMING && 
+            call.details.disconnectCause.code == android.telecom.DisconnectCause.MISSED) {
+            showMissedCallNotification(call)
+        }
         
         if (currentCall == call) {
             currentCall = null
