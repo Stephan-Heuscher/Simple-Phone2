@@ -20,6 +20,8 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"
@@ -30,6 +32,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.SimplePhone"
+        android:directBootAware="true"
         tools:targetApi="31">
         
         <!-- Main Activity -->
@@ -37,7 +40,10 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.SimplePhone">
+            android:theme="@style/Theme.SimplePhone"
+            android:directBootAware="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -60,11 +66,6 @@
                 <data android:scheme="tel" />
             </intent-filter>
             <intent-filter>
-                <action android:name="android.intent.action.CALL" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="tel" />
-            </intent-filter>
-            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <action android:name="android.intent.action.PICK" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -78,6 +79,7 @@
             android:name=".call.IncomingCallActivity"
             android:exported="true"
             android:launchMode="singleTop"
+            android:directBootAware="true"
             android:showOnLockScreen="true"
             android:showWhenLocked="true"
             android:turnScreenOn="true"
@@ -88,6 +90,7 @@
             android:name=".call.CallService"
             android:permission="android.permission.BIND_INCALL_SERVICE"
             android:exported="true"
+            android:directBootAware="true"
             android:foregroundServiceType="phoneCall">
             <meta-data
                 android:name="android.telecom.IN_CALL_SERVICE_UI"

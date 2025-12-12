@@ -461,7 +461,9 @@ fun SimplePhoneApp(
                         missedCalls = missedCalls,
                         missedCallsHours = missedCallsHours,
                         useHugeText = useHugeText,
-                        contacts = contacts.ifEmpty { MockData.contacts }
+                        contacts = contacts.ifEmpty { MockData.contacts },
+                        isDefaultDialer = isDefaultDialer,
+                        onSetDefaultDialer = onSetDefaultDialer
                     )
                 }
                 composable(Screen.Settings.route) {

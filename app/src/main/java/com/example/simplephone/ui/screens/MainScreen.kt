@@ -51,12 +51,42 @@ fun MainScreen(
     missedCalls: List<CallLogEntry> = emptyList(),
     missedCallsHours: Int = 24,
     useHugeText: Boolean = false,
-    contacts: List<Contact> = MockData.contacts
+    contacts: List<Contact> = MockData.contacts,
+    isDefaultDialer: Boolean = true,
+    onSetDefaultDialer: () -> Unit = {}
 ) {
     val favorites = remember(contacts) { contacts.filter { it.isFavorite }.sortedBy { it.sortOrder } }
     val allContacts = remember(contacts) { contacts.sortedBy { it.name } }
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
+
+        // --- Default Dialer Warning Banner ---
+        if (!isDefaultDialer) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFFF6B00))
+                        .clickable { onSetDefaultDialer() }
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "⚠️ Not set as default phone app",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Text(
+                            text = "Tap here to enable call handling & notifications",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+        }
 
         // --- Missed Calls Section (always shown) ---
         item {
