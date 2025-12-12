@@ -21,6 +21,7 @@ class FavoritesRemoteViewsFactory(private val context: Context) : RemoteViewsSer
 
     private val favorites = mutableListOf<Contact>()
     private val contactRepository = ContactRepository(context)
+    private val settingsRepository = com.example.simplephone.data.SettingsRepository(context)
 
     override fun onCreate() {
         // Initialize data
@@ -30,7 +31,20 @@ class FavoritesRemoteViewsFactory(private val context: Context) : RemoteViewsSer
         favorites.clear()
         // Use real contacts from ContactRepository
         val allContacts = contactRepository.getContacts()
-        favorites.addAll(allContacts.filter { it.isFavorite }.sortedBy { it.sortOrder })
+        val favContacts = allContacts.filter { it.isFavorite }
+        
+        // Apply saved order
+        val savedOrder = settingsRepository.getFavoritesOrder()
+        val orderedFavorites = if (savedOrder.isNotEmpty()) {
+            favContacts.map { contact ->
+                val savedIndex = savedOrder.indexOf(contact.id)
+                if (savedIndex >= 0) contact.copy(sortOrder = savedIndex) else contact.copy(sortOrder = Int.MAX_VALUE)
+            }.sortedBy { it.sortOrder }
+        } else {
+            favContacts.sortedBy { it.name }
+        }
+        
+        favorites.addAll(orderedFavorites)
     }
 
     override fun onDestroy() {

@@ -1,28 +1,8 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="#FFFFFF"
-    android:padding="8dp">
-
-    <TextView
-        android:id="@+id/widget_title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Quick Call Favorites"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="#003882"
-        android:paddingBottom="4dp"/>
-
-    <TextView
-        android:id="@+id/widget_subtitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Tap photo or green button to call"
-        android:textSize="16sp"
-        android:textColor="#666666"
-        android:paddingBottom="8dp"/>
+    android:padding="4dp">
 
     <ListView
         android:id="@+id/widget_list"
@@ -39,10 +19,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
-        android:text="No favorites yet. Mark contacts as favorites in your phone's contacts app."
-        android:textSize="22sp"
-        android:textColor="#424242"
-        android:padding="16dp"
+        android:text=""
         android:visibility="gone" />
 
-</LinearLayout>
+</FrameLayout>

@@ -176,13 +176,17 @@ class MainActivity : ComponentActivity() {
     }
     
     private fun offerReplacingDefaultDialer() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             val telecomManager = getSystemService(android.telecom.TelecomManager::class.java)
-            if (telecomManager?.defaultDialerPackage != packageName) {
-                val intent = Intent(android.telecom.TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
-                    putExtra(android.telecom.TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, packageName)
+            if (telecomManager != null && telecomManager.defaultDialerPackage != packageName) {
+                try {
+                    val intent = Intent(android.telecom.TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
+                        putExtra(android.telecom.TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, packageName)
+                    }
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    android.util.Log.e("MainActivity", "Failed to show default dialer prompt", e)
                 }
-                startActivity(intent)
             }
         }
     }
@@ -260,7 +264,19 @@ fun SimplePhoneApp(
     // Load contacts and call logs
     LaunchedEffect(Unit) {
         val loadedContacts = contactRepository.getContacts()
-        contacts = loadedContacts
+        
+        // Apply saved favorites order
+        val savedOrder = settingsRepository.getFavoritesOrder()
+        val orderedContacts = if (savedOrder.isNotEmpty()) {
+            loadedContacts.map { contact ->
+                val savedIndex = savedOrder.indexOf(contact.id)
+                if (savedIndex >= 0) contact.copy(sortOrder = savedIndex) else contact.copy(sortOrder = Int.MAX_VALUE)
+            }.sortedWith(compareBy({ !it.isFavorite }, { it.sortOrder }, { it.name }))
+        } else {
+            loadedContacts
+        }
+        
+        contacts = orderedContacts
         if (loadedContacts.isEmpty()) {
             showPermissionMessage = true
             permissionMessageText = "Please grant contacts permission to see your contacts"
@@ -398,6 +414,8 @@ fun SimplePhoneApp(
                         },
                         favorites = contacts.filter { it.isFavorite },
                         onFavoritesReorder = { newOrder ->
+                            // Save the order to preferences
+                            settingsRepository.saveFavoritesOrder(newOrder.map { it.id })
                             // Update the contacts list with new favorites order
                             contacts = contacts.map { contact ->
                                 val newIndex = newOrder.indexOfFirst { it.id == contact.id }

@@ -21,9 +21,25 @@ class SettingsRepository(context: Context) {
         private const val KEY_CONFIRM_BEFORE_CALL = "confirm_before_call"
         private const val KEY_USE_HAPTIC_FEEDBACK = "use_haptic_feedback"
         private const val KEY_USE_VOICE_ANNOUNCEMENTS = "use_voice_announcements"
+        private const val KEY_FAVORITES_ORDER = "favorites_order"
         
         private const val DEFAULT_FILTER_HOURS = 2
         private const val DEFAULT_MISSED_CALLS_HOURS = 24
+    }
+    
+    /**
+     * Save favorites order as comma-separated contact IDs
+     */
+    fun saveFavoritesOrder(contactIds: List<String>) {
+        prefs.edit().putString(KEY_FAVORITES_ORDER, contactIds.joinToString(",")).apply()
+    }
+    
+    /**
+     * Get saved favorites order as list of contact IDs
+     */
+    fun getFavoritesOrder(): List<String> {
+        val orderString = prefs.getString(KEY_FAVORITES_ORDER, null) ?: return emptyList()
+        return orderString.split(",").filter { it.isNotBlank() }
     }
     
     var filterHours: Int

@@ -217,6 +217,7 @@ fun ContactRow(
 /**
  * Clickable avatar that triggers on press
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ClickableAvatar(
     contact: Contact,
@@ -226,11 +227,13 @@ fun ClickableAvatar(
 ) {
     Box(
         modifier = Modifier
-            .clickable(
-                role = Role.Button,
-                onClickLabel = "Tap to call ${contact.name}"
-            ) {
-                onClick()
+            .pointerInteropFilter { event ->
+                if (event.action == MotionEvent.ACTION_DOWN) {
+                    onClick()
+                    true
+                } else {
+                    false
+                }
             }
     ) {
         ContactAvatar(
