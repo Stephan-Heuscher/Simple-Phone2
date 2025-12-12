@@ -77,6 +77,8 @@ import com.example.simplephone.ui.theme.HighContrastBlue
 import com.example.simplephone.ui.theme.SimplePhoneTheme
 import java.util.Locale
 
+import com.example.simplephone.widget.FavoritesWidget
+
 class MainActivity : ComponentActivity() {
     
     companion object {
@@ -127,6 +129,15 @@ class MainActivity : ComponentActivity() {
         }
     }
     
+    override fun onResume() {
+        super.onResume()
+        // Prompt user to set this app as default phone app if not already
+        offerReplacingDefaultDialer()
+        
+        // Refresh widget in case contacts or permissions changed
+        FavoritesWidget.sendRefreshBroadcast(this)
+    }
+    
     override fun onDestroy() {
         textToSpeech?.stop()
         textToSpeech?.shutdown()
@@ -162,9 +173,6 @@ class MainActivity : ComponentActivity() {
                 CONTACTS_PERMISSION_REQUEST
             )
         }
-        
-        // Prompt user to set this app as default phone app
-        offerReplacingDefaultDialer()
     }
     
     private fun offerReplacingDefaultDialer() {

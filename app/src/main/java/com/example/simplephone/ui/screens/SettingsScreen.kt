@@ -2,6 +2,8 @@ package com.example.simplephone.ui.screens
 
 import android.view.MotionEvent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -294,6 +296,7 @@ fun SettingsScreen(
                 contact = contact,
                 canMoveUp = index > 0,
                 canMoveDown = index < mutableFavorites.size - 1,
+                useHugeText = useHugeText,
                 onMoveUp = {
                     if (index > 0) {
                         val item = mutableFavorites.removeAt(index)
@@ -324,6 +327,7 @@ fun FavoriteReorderRow(
     contact: Contact,
     canMoveUp: Boolean,
     canMoveDown: Boolean,
+    useHugeText: Boolean,
     onMoveUp: () -> Unit,
     onMoveDown: () -> Unit
 ) {
@@ -347,11 +351,26 @@ fun FavoriteReorderRow(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            Text(
-                text = contact.name,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Medium
-            )
+            val textStyle = if (useHugeText) {
+                MaterialTheme.typography.displayMedium
+            } else {
+                MaterialTheme.typography.headlineMedium
+            }
+
+            Box(
+                modifier = Modifier.weight(1f)
+            ) {
+                val scrollState = androidx.compose.foundation.rememberScrollState()
+                Text(
+                    text = contact.name,
+                    style = textStyle,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(scrollState)
+                )
+            }
         }
 
         // Right side: Big Up/Down arrows with 16dp spacing for better accessibility

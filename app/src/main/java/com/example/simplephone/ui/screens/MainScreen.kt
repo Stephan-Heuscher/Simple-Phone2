@@ -35,6 +35,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.input.pointer.pointerInteropFilter
+import android.view.MotionEvent
 import com.example.simplephone.data.MockData
 import com.example.simplephone.model.CallLogEntry
 import com.example.simplephone.model.Contact
@@ -241,6 +244,7 @@ fun ClickableAvatar(
 /**
  * Green circular call button - triggers on press for accessibility
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun GreenCallIcon(
     onClick: () -> Unit,
@@ -253,11 +257,13 @@ fun GreenCallIcon(
             .size(size.dp)
             .clip(CircleShape)
             .background(GreenCall)
-            .clickable(
-                role = Role.Button,
-                onClickLabel = contentDescription
-            ) {
-                onClick()
+            .pointerInteropFilter { event ->
+                if (event.action == MotionEvent.ACTION_DOWN) {
+                    onClick()
+                    true
+                } else {
+                    false
+                }
             },
         contentAlignment = Alignment.Center
     ) {
