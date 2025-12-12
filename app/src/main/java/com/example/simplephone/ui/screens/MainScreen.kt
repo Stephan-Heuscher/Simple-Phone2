@@ -85,8 +85,18 @@ fun MainScreen(
         } else {
             items(missedCalls) { callEntry ->
                 // Try to find contact by number
-                val contact = allContacts.find { it.number == callEntry.contactId }
-                    ?: Contact(
+                // Normalize numbers for comparison (remove spaces, dashes, etc.)
+                val normalizedCallNumber = callEntry.contactId.replace(Regex("[^0-9+]"), "")
+                
+                val contact = allContacts.find { 
+                    val normalizedContactNumber = it.number.replace(Regex("[^0-9+]"), "")
+                    // Check if one ends with the other (to handle country codes roughly)
+                    if (normalizedCallNumber.length > 6 && normalizedContactNumber.length > 6) {
+                        normalizedCallNumber.endsWith(normalizedContactNumber) || normalizedContactNumber.endsWith(normalizedCallNumber)
+                    } else {
+                        normalizedCallNumber == normalizedContactNumber
+                    }
+                } ?: Contact(
                         id = callEntry.id,
                         name = callEntry.contactId, // Show number as name
                         number = callEntry.contactId

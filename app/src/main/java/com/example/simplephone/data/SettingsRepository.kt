@@ -17,7 +17,7 @@ class SettingsRepository(context: Context) {
         private const val KEY_FILTER_HOURS = "filter_hours"
         private const val KEY_USE_HUGE_TEXT = "use_huge_text"
         private const val KEY_MISSED_CALLS_HOURS = "missed_calls_hours"
-        private const val KEY_USE_DARK_MODE = "use_dark_mode"
+        private const val KEY_DARK_MODE_OPTION = "dark_mode_option" // Changed key
         private const val KEY_CONFIRM_BEFORE_CALL = "confirm_before_call"
         private const val KEY_USE_HAPTIC_FEEDBACK = "use_haptic_feedback"
         private const val KEY_USE_VOICE_ANNOUNCEMENTS = "use_voice_announcements"
@@ -25,6 +25,11 @@ class SettingsRepository(context: Context) {
         
         private const val DEFAULT_FILTER_HOURS = 2
         private const val DEFAULT_MISSED_CALLS_HOURS = 24
+        
+        // Dark Mode Options
+        const val DARK_MODE_SYSTEM = 0
+        const val DARK_MODE_LIGHT = 1
+        const val DARK_MODE_DARK = 2
     }
     
     /**
@@ -54,9 +59,16 @@ class SettingsRepository(context: Context) {
         get() = prefs.getInt(KEY_MISSED_CALLS_HOURS, DEFAULT_MISSED_CALLS_HOURS)
         set(value) = prefs.edit().putInt(KEY_MISSED_CALLS_HOURS, value).apply()
     
+    var darkModeOption: Int
+        get() = prefs.getInt(KEY_DARK_MODE_OPTION, DARK_MODE_SYSTEM)
+        set(value) = prefs.edit().putInt(KEY_DARK_MODE_OPTION, value).apply()
+    
+    // Deprecated boolean property, mapped to new int option for compatibility if needed
     var useDarkMode: Boolean
-        get() = prefs.getBoolean(KEY_USE_DARK_MODE, false)
-        set(value) = prefs.edit().putBoolean(KEY_USE_DARK_MODE, value).apply()
+        get() = darkModeOption == DARK_MODE_DARK
+        set(value) {
+            darkModeOption = if (value) DARK_MODE_DARK else DARK_MODE_LIGHT
+        }
     
     var confirmBeforeCall: Boolean
         get() = prefs.getBoolean(KEY_CONFIRM_BEFORE_CALL, false)

@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -44,6 +45,7 @@ import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -58,8 +60,8 @@ fun SettingsScreen(
     onHugeTextChange: (Boolean) -> Unit = {},
     missedCallsHours: Int = 24,
     onMissedCallsHoursChange: (Int) -> Unit = {},
-    useDarkMode: Boolean = false,
-    onDarkModeChange: (Boolean) -> Unit = {},
+    darkModeOption: Int = 0, // 0=System, 1=Light, 2=Dark
+    onDarkModeOptionChange: (Int) -> Unit = {},
     confirmBeforeCall: Boolean = false,
     onConfirmBeforeCallChange: (Boolean) -> Unit = {},
     useHapticFeedback: Boolean = true,
@@ -148,23 +150,46 @@ fun SettingsScreen(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                "Use high-contrast dark theme:",
+                "Choose app appearance:",
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(top = 8.dp)
             )
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+            Column(
                 modifier = Modifier
                     .padding(top = 16.dp, bottom = 32.dp)
                     .fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                SettingsToggleButton(
-                    isEnabled = useDarkMode,
-                    onToggle = { onDarkModeChange(!useDarkMode) },
-                    label = if (useDarkMode) "DARK" else "LIGHT"
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // System Default
+                    SettingsOptionButton(
+                        text = "SYSTEM",
+                        isSelected = darkModeOption == 0,
+                        onClick = { onDarkModeOptionChange(0) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    
+                    // Light
+                    SettingsOptionButton(
+                        text = "LIGHT",
+                        isSelected = darkModeOption == 1,
+                        onClick = { onDarkModeOptionChange(1) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    
+                    // Dark
+                    SettingsOptionButton(
+                        text = "DARK",
+                        isSelected = darkModeOption == 2,
+                        onClick = { onDarkModeOptionChange(2) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
 
             HorizontalDivider(thickness = 2.dp)
@@ -534,6 +559,61 @@ fun BigIconButton(
             contentDescription = null,
             tint = Color.White,
             modifier = Modifier.size(48.dp)
+        )
+    }
+}
+
+/**
+ * Option button for settings (like Dark Mode)
+ */
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun SettingsOptionButton(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isPressed by remember { mutableStateOf(false) }
+
+    val backgroundColor = when {
+        isPressed -> if (isSelected) GreenCall.copy(alpha = 0.7f) else Color.Gray
+        isSelected -> GreenCall
+        else -> Color.LightGray
+    }
+    
+    val textColor = if (isSelected) Color.White else Color.Black
+
+    Box(
+        modifier = modifier
+            .height(60.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(backgroundColor)
+            .semantics {
+                role = Role.RadioButton
+                this.selected = isSelected
+            }
+            .pointerInteropFilter { event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        isPressed = true
+                        onClick()
+                        true
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        isPressed = false
+                        true
+                    }
+                    else -> false
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelLarge,
+            color = textColor,
+            fontWeight = FontWeight.Bold
         )
     }
 }

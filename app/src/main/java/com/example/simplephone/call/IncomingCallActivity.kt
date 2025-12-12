@@ -71,7 +71,7 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
         CallService.addCallStateListener(this)
         
         setContent {
-            SimplePhoneTheme(darkTheme = true) {
+            SimplePhoneTheme(darkThemeOption = 2) { // Force Dark Mode for calls
                 CallScreen(
                     callerNumber = callerNumber,
                     callerName = callerName ?: callerNumber ?: "Unknown",

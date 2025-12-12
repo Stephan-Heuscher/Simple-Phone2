@@ -61,18 +61,25 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun SimplePhoneTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkThemeOption: Int = 0, // 0=System, 1=Light, 2=Dark
     useHighContrastDark: Boolean = true, // Use high contrast dark mode
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = false, // DISABLED for consistent High Contrast
     content: @Composable () -> Unit
 ) {
+    val systemDark = isSystemInDarkTheme()
+    val isDark = when (darkThemeOption) {
+        1 -> false // Force Light
+        2 -> true  // Force Dark
+        else -> systemDark // Follow System
+    }
+
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-        darkTheme -> if (useHighContrastDark) HighContrastDarkColorScheme else DarkColorScheme
+        isDark -> if (useHighContrastDark) HighContrastDarkColorScheme else DarkColorScheme
         else -> LightColorScheme
     }
     val view = LocalView.current
@@ -80,7 +87,7 @@ fun SimplePhoneTheme(
         SideEffect {
             val window = (view.context as Activity).window
             window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !isDark
         }
     }
 

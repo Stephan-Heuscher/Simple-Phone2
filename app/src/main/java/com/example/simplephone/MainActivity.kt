@@ -110,7 +110,7 @@ class MainActivity : ComponentActivity() {
         requestPermissionsIfNeeded()
         
         setContent {
-            val useDarkMode = remember { mutableStateOf(settingsRepository.useDarkMode) }
+            val darkModeOption = remember { mutableStateOf(settingsRepository.darkModeOption) }
             var isDefaultDialer by remember { mutableStateOf(checkIsDefaultDialer()) }
             val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
             
@@ -126,7 +126,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
             
-            SimplePhoneTheme(darkTheme = useDarkMode.value) {
+            SimplePhoneTheme(darkThemeOption = darkModeOption.value) {
                 val windowSize = calculateWindowSizeClass(this)
                 SimplePhoneApp(
                     widthSizeClass = windowSize.widthSizeClass,
@@ -138,7 +138,7 @@ class MainActivity : ComponentActivity() {
                     },
                     settingsRepository = settingsRepository,
                     contactRepository = contactRepository,
-                    onDarkModeChange = { useDarkMode.value = it },
+                    onDarkModeOptionChange = { darkModeOption.value = it },
                     isDefaultDialer = isDefaultDialer,
                     onSetDefaultDialer = { requestDefaultDialerRole() }
                 )
@@ -295,7 +295,7 @@ fun SimplePhoneApp(
     onMakeCall: (String, String) -> Unit,
     settingsRepository: SettingsRepository,
     contactRepository: ContactRepository,
-    onDarkModeChange: (Boolean) -> Unit = {},
+    onDarkModeOptionChange: (Int) -> Unit = {},
     isDefaultDialer: Boolean = false,
     onSetDefaultDialer: () -> Unit = {}
 ) {
@@ -306,7 +306,7 @@ fun SimplePhoneApp(
     // Settings state
     var useHugeText by remember { mutableStateOf(settingsRepository.useHugeText) }
     var missedCallsHours by remember { mutableStateOf(settingsRepository.missedCallsHours) }
-    var useDarkMode by remember { mutableStateOf(settingsRepository.useDarkMode) }
+    var darkModeOption by remember { mutableStateOf(settingsRepository.darkModeOption) }
     var confirmBeforeCall by remember { mutableStateOf(settingsRepository.confirmBeforeCall) }
     var useHapticFeedback by remember { mutableStateOf(settingsRepository.useHapticFeedback) }
     var useVoiceAnnouncements by remember { mutableStateOf(settingsRepository.useVoiceAnnouncements) }
@@ -325,25 +325,48 @@ fun SimplePhoneApp(
     
     // Load contacts and call logs
     LaunchedEffect(Unit) {
-        val loadedContacts = contactRepository.getContacts()
-        
-        // Apply saved favorites order
-        val savedOrder = settingsRepository.getFavoritesOrder()
-        val orderedContacts = if (savedOrder.isNotEmpty()) {
-            loadedContacts.map { contact ->
-                val savedIndex = savedOrder.indexOf(contact.id)
-                if (savedIndex >= 0) contact.copy(sortOrder = savedIndex) else contact.copy(sortOrder = Int.MAX_VALUE)
-            }.sortedWith(compareBy({ !it.isFavorite }, { it.sortOrder }, { it.name }))
-        } else {
-            loadedContacts
+        fun loadData() {
+            val loadedContacts = contactRepository.getContacts()
+            
+            // Apply saved favorites order
+            val savedOrder = settingsRepository.getFavoritesOrder()
+            val orderedContacts = if (savedOrder.isNotEmpty()) {
+                loadedContacts.map { contact ->
+                    val savedIndex = savedOrder.indexOf(contact.id)
+                    if (savedIndex >= 0) contact.copy(sortOrder = savedIndex) else contact.copy(sortOrder = Int.MAX_VALUE)
+                }.sortedWith(compareBy({ !it.isFavorite }, { it.sortOrder }, { it.name }))
+            } else {
+                loadedContacts
+            }
+            
+            contacts = orderedContacts
+            if (loadedContacts.isEmpty()) {
+                showPermissionMessage = true
+                permissionMessageText = "Please grant contacts permission to see your contacts"
+            }
+            missedCalls = contactRepository.getMissedCallsInLastHours(missedCallsHours)
         }
         
-        contacts = orderedContacts
-        if (loadedContacts.isEmpty()) {
-            showPermissionMessage = true
-            permissionMessageText = "Please grant contacts permission to see your contacts"
+        loadData()
+        
+        // Register content observer for contact changes
+        val observer = object : android.database.ContentObserver(android.os.Handler(android.os.Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean) {
+                loadData()
+            }
         }
-        missedCalls = contactRepository.getMissedCallsInLastHours(missedCallsHours)
+        context.contentResolver.registerContentObserver(
+            android.provider.ContactsContract.Contacts.CONTENT_URI, 
+            true, 
+            observer
+        )
+        
+        // Also listen for call log changes
+        context.contentResolver.registerContentObserver(
+            android.provider.CallLog.Calls.CONTENT_URI,
+            true,
+            observer
+        )
     }
     
     // Refresh missed calls when hours change
@@ -453,11 +476,11 @@ fun SimplePhoneApp(
                             missedCallsHours = it
                             settingsRepository.missedCallsHours = it
                         },
-                        useDarkMode = useDarkMode,
-                        onDarkModeChange = {
-                            useDarkMode = it
-                            settingsRepository.useDarkMode = it
-                            onDarkModeChange(it)
+                        darkModeOption = darkModeOption,
+                        onDarkModeOptionChange = {
+                            darkModeOption = it
+                            settingsRepository.darkModeOption = it
+                            onDarkModeOptionChange(it)
                         },
                         confirmBeforeCall = confirmBeforeCall,
                         onConfirmBeforeCallChange = {

@@ -61,6 +61,13 @@ fun ContactAvatar(
         contentAlignment = Alignment.Center
     ) {
         // Main avatar - show photo if available, otherwise initials
+        // Only show border if it's a favorite
+        val borderModifier = if (contact.isFavorite) {
+            Modifier.border(BorderStroke(4.dp, FavoriteGold), avatarShape)
+        } else {
+            Modifier
+        }
+
         if (contact.imageUri != null) {
             AsyncImage(
                 model = contact.imageUri,
@@ -68,7 +75,7 @@ fun ContactAvatar(
                 modifier = Modifier
                     .size(size)
                     .clip(avatarShape)
-                    .border(BorderStroke(3.dp, HighContrastBlue), avatarShape),
+                    .then(borderModifier),
                 contentScale = ContentScale.Crop
             )
         } else {
@@ -78,7 +85,7 @@ fun ContactAvatar(
                     .size(size)
                     .clip(avatarShape)
                     .background(getAvatarColor(contact.name))
-                    .border(BorderStroke(3.dp, HighContrastBlue), avatarShape),
+                    .then(borderModifier),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -90,22 +97,23 @@ fun ContactAvatar(
             }
         }
 
-        // Favorite star overlay (bottom-right corner) - 50% of avatar size for better visibility
+        // Favorite star overlay (top-right corner) - minimized collision
         if (showFavoriteStar && contact.isFavorite) {
             Box(
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .offset(x = 4.dp, y = 4.dp)
-                    .size(size * 0.5f)
+                    .align(Alignment.TopEnd)
+                    .offset(x = 6.dp, y = (-6).dp) // Push it out a bit
+                    .size(size * 0.4f)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surface),
+                    .background(MaterialTheme.colorScheme.surface)
+                    .border(1.dp, FavoriteGold, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Filled.Star,
                     contentDescription = "Favorite",
                     tint = FavoriteGold,
-                    modifier = Modifier.size(size * 0.4f)
+                    modifier = Modifier.size(size * 0.3f)
                 )
             }
         }
