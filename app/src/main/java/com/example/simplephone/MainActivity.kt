@@ -5,29 +5,55 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.simplephone.data.ContactRepository
 import com.example.simplephone.data.MockData
+import com.example.simplephone.data.SettingsRepository
 import com.example.simplephone.model.AudioOutput
+import com.example.simplephone.model.CallLogEntry
 import com.example.simplephone.model.Contact
 import com.example.simplephone.ui.components.AppScaffold
 import com.example.simplephone.ui.components.Screen
@@ -37,27 +63,85 @@ import com.example.simplephone.ui.screens.MainScreen
 import com.example.simplephone.ui.screens.PhoneBookScreen
 import com.example.simplephone.ui.screens.RecentsScreen
 import com.example.simplephone.ui.screens.SettingsScreen
+import com.example.simplephone.ui.theme.GreenCall
+import com.example.simplephone.ui.theme.HighContrastBlue
 import com.example.simplephone.ui.theme.SimplePhoneTheme
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     
     companion object {
         private const val CALL_PHONE_PERMISSION_REQUEST = 1001
+        private const val CONTACTS_PERMISSION_REQUEST = 1002
     }
     
     private var pendingPhoneNumber: String? = null
+    private lateinit var settingsRepository: SettingsRepository
+    private lateinit var contactRepository: ContactRepository
+    private var textToSpeech: TextToSpeech? = null
     
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        settingsRepository = SettingsRepository(this)
+        contactRepository = ContactRepository(this)
+        
+        // Initialize Text-to-Speech
+        textToSpeech = TextToSpeech(this) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                textToSpeech?.language = Locale.getDefault()
+            }
+        }
+        
+        // Request permissions at startup
+        requestPermissionsIfNeeded()
+        
         setContent {
-            SimplePhoneTheme {
+            val useDarkMode = remember { mutableStateOf(settingsRepository.useDarkMode) }
+            
+            SimplePhoneTheme(darkTheme = useDarkMode.value) {
                 val windowSize = calculateWindowSizeClass(this)
                 SimplePhoneApp(
                     widthSizeClass = windowSize.widthSizeClass,
-                    onMakeCall = { phoneNumber -> initiatePhoneCall(phoneNumber) }
+                    onMakeCall = { phoneNumber, contactName -> 
+                        if (settingsRepository.useVoiceAnnouncements) {
+                            textToSpeech?.speak("Calling $contactName", TextToSpeech.QUEUE_FLUSH, null, null)
+                        }
+                        initiatePhoneCall(phoneNumber) 
+                    },
+                    settingsRepository = settingsRepository,
+                    contactRepository = contactRepository,
+                    onDarkModeChange = { useDarkMode.value = it }
                 )
             }
+        }
+    }
+    
+    override fun onDestroy() {
+        textToSpeech?.stop()
+        textToSpeech?.shutdown()
+        super.onDestroy()
+    }
+    
+    private fun requestPermissionsIfNeeded() {
+        val permissionsNeeded = mutableListOf<String>()
+        
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) 
+            != PackageManager.PERMISSION_GRANTED) {
+            permissionsNeeded.add(Manifest.permission.READ_CONTACTS)
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG) 
+            != PackageManager.PERMISSION_GRANTED) {
+            permissionsNeeded.add(Manifest.permission.READ_CALL_LOG)
+        }
+        
+        if (permissionsNeeded.isNotEmpty()) {
+            ActivityCompat.requestPermissions(
+                this,
+                permissionsNeeded.toTypedArray(),
+                CONTACTS_PERMISSION_REQUEST
+            )
         }
     }
     
@@ -102,10 +186,51 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun SimplePhoneApp(
     widthSizeClass: WindowWidthSizeClass,
-    onMakeCall: (String) -> Unit
+    onMakeCall: (String, String) -> Unit,
+    settingsRepository: SettingsRepository,
+    contactRepository: ContactRepository,
+    onDarkModeChange: (Boolean) -> Unit = {}
 ) {
     val navController = rememberNavController()
-    var filterHours by remember { mutableStateOf(2) } // State lifted up
+    val context = LocalContext.current
+    val hapticFeedback = LocalHapticFeedback.current
+    
+    // Settings state
+    var filterHours by remember { mutableStateOf(settingsRepository.filterHours) }
+    var useHugeText by remember { mutableStateOf(settingsRepository.useHugeText) }
+    var missedCallsHours by remember { mutableStateOf(settingsRepository.missedCallsHours) }
+    var useDarkMode by remember { mutableStateOf(settingsRepository.useDarkMode) }
+    var confirmBeforeCall by remember { mutableStateOf(settingsRepository.confirmBeforeCall) }
+    var useHapticFeedback by remember { mutableStateOf(settingsRepository.useHapticFeedback) }
+    var useVoiceAnnouncements by remember { mutableStateOf(settingsRepository.useVoiceAnnouncements) }
+    
+    // Permission denied messages
+    var showPermissionMessage by remember { mutableStateOf(false) }
+    var permissionMessageText by remember { mutableStateOf("") }
+    
+    // Call confirmation dialog state
+    var showCallConfirmDialog by remember { mutableStateOf(false) }
+    var pendingCallContact by remember { mutableStateOf<Contact?>(null) }
+    
+    // Contacts and call logs from device
+    var contacts by remember { mutableStateOf<List<Contact>>(emptyList()) }
+    var missedCalls by remember { mutableStateOf<List<CallLogEntry>>(emptyList()) }
+    
+    // Load contacts and call logs
+    LaunchedEffect(Unit) {
+        val loadedContacts = contactRepository.getContacts()
+        contacts = loadedContacts
+        if (loadedContacts.isEmpty()) {
+            showPermissionMessage = true
+            permissionMessageText = "Please grant contacts permission to see your contacts"
+        }
+        missedCalls = contactRepository.getMissedCallsInLastHours(missedCallsHours)
+    }
+    
+    // Refresh missed calls when hours change
+    LaunchedEffect(missedCallsHours) {
+        missedCalls = contactRepository.getMissedCallsInLastHours(missedCallsHours)
+    }
     
     // In-call state
     var isInCall by remember { mutableStateOf(false) }
@@ -121,15 +246,32 @@ fun SimplePhoneApp(
         else -> "Simple Phone"
     }
 
-    // Function to handle call initiation
-    val handleCall: (String) -> Unit = { phoneNumber ->
-        // Find contact by phone number
-        val contact = MockData.contacts.find { it.number == phoneNumber }
-            ?: Contact(id = "unknown", name = phoneNumber, number = phoneNumber)
+    // Function to actually make the call
+    val executeCall: (Contact) -> Unit = { contact ->
+        if (useHapticFeedback) {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+        }
         currentCallContact = contact
         isInCall = true
         navController.navigate(Screen.InCall.route)
-        onMakeCall(phoneNumber)
+        onMakeCall(contact.number, contact.name)
+    }
+
+    // Function to handle call initiation (with optional confirmation)
+    val handleCall: (String) -> Unit = { phoneNumber ->
+        val contact = contacts.find { it.number == phoneNumber }
+            ?: Contact(id = "unknown", name = phoneNumber, number = phoneNumber)
+        
+        if (useHapticFeedback) {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+        }
+        
+        if (confirmBeforeCall) {
+            pendingCallContact = contact
+            showCallConfirmDialog = true
+        } else {
+            executeCall(contact)
+        }
     }
     
     // Function to handle hangup
@@ -137,6 +279,30 @@ fun SimplePhoneApp(
         isInCall = false
         currentCallContact = null
         navController.popBackStack()
+    }
+    
+    // Call confirmation dialog
+    if (showCallConfirmDialog && pendingCallContact != null) {
+        CallConfirmationDialog(
+            contactName = pendingCallContact!!.name,
+            onConfirm = {
+                showCallConfirmDialog = false
+                pendingCallContact?.let { executeCall(it) }
+                pendingCallContact = null
+            },
+            onDismiss = {
+                showCallConfirmDialog = false
+                pendingCallContact = null
+            }
+        )
+    }
+    
+    // Permission message dialog
+    if (showPermissionMessage) {
+        PermissionMessageDialog(
+            message = permissionMessageText,
+            onDismiss = { showPermissionMessage = false }
+        )
     }
 
     Surface(
@@ -149,15 +315,53 @@ fun SimplePhoneApp(
                     MainScreen(
                         onCallClick = handleCall,
                         onContactClick = { contactId -> 
-                            val contact = MockData.getContactById(contactId)
+                            val contact = contacts.find { it.id == contactId }
                             contact?.let { handleCall(it.number) }
-                        }
+                        },
+                        missedCalls = missedCalls,
+                        missedCallsHours = missedCallsHours,
+                        useHugeText = useHugeText,
+                        contacts = contacts.ifEmpty { MockData.contacts }
                     )
                 }
                 composable(Screen.Settings.route) {
                     SettingsScreen(
                         filterHours = filterHours,
-                        onFilterChange = { filterHours = it },
+                        onFilterChange = { 
+                            filterHours = it
+                            settingsRepository.filterHours = it
+                        },
+                        useHugeText = useHugeText,
+                        onHugeTextChange = {
+                            useHugeText = it
+                            settingsRepository.useHugeText = it
+                        },
+                        missedCallsHours = missedCallsHours,
+                        onMissedCallsHoursChange = {
+                            missedCallsHours = it
+                            settingsRepository.missedCallsHours = it
+                        },
+                        useDarkMode = useDarkMode,
+                        onDarkModeChange = {
+                            useDarkMode = it
+                            settingsRepository.useDarkMode = it
+                            onDarkModeChange(it)
+                        },
+                        confirmBeforeCall = confirmBeforeCall,
+                        onConfirmBeforeCallChange = {
+                            confirmBeforeCall = it
+                            settingsRepository.confirmBeforeCall = it
+                        },
+                        useHapticFeedback = useHapticFeedback,
+                        onHapticFeedbackChange = {
+                            useHapticFeedback = it
+                            settingsRepository.useHapticFeedback = it
+                        },
+                        useVoiceAnnouncements = useVoiceAnnouncements,
+                        onVoiceAnnouncementsChange = {
+                            useVoiceAnnouncements = it
+                            settingsRepository.useVoiceAnnouncements = it
+                        },
                         onBackClick = { navController.popBackStack() }
                     )
                 }
@@ -175,6 +379,144 @@ fun SimplePhoneApp(
                             ),
                             onHangup = handleHangup,
                             onAudioOutputChange = { currentAudioOutput = it }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Large, accessible call confirmation dialog
+ */
+@Composable
+fun CallConfirmationDialog(
+    contactName: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp)),
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            Column(
+                modifier = Modifier.padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Call $contactName?",
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                Spacer(modifier = Modifier.height(32.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Cancel button
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(80.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(HighContrastBlue)
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        androidx.compose.material3.TextButton(onClick = onDismiss) {
+                            Text(
+                                "Cancel",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = androidx.compose.ui.graphics.Color.White
+                            )
+                        }
+                    }
+                    
+                    // Confirm button
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(80.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(GreenCall)
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        androidx.compose.material3.TextButton(onClick = onConfirm) {
+                            Text(
+                                "Yes, Call",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = androidx.compose.ui.graphics.Color.White
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Permission message dialog for friendly error messages
+ */
+@Composable
+fun PermissionMessageDialog(
+    message: String,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp)),
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            Column(
+                modifier = Modifier.padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Permission Needed",
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(HighContrastBlue),
+                    contentAlignment = Alignment.Center
+                ) {
+                    androidx.compose.material3.TextButton(onClick = onDismiss) {
+                        Text(
+                            "OK",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = androidx.compose.ui.graphics.Color.White
                         )
                     }
                 }

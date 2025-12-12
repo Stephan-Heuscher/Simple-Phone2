@@ -49,11 +49,24 @@ import com.example.simplephone.data.MockData
 import com.example.simplephone.model.Contact
 import com.example.simplephone.ui.components.ContactAvatar
 import com.example.simplephone.ui.theme.HighContrastBlue
+import com.example.simplephone.ui.theme.GreenCall
 
 @Composable
 fun SettingsScreen(
     filterHours: Int,
     onFilterChange: (Int) -> Unit,
+    useHugeText: Boolean = false,
+    onHugeTextChange: (Boolean) -> Unit = {},
+    missedCallsHours: Int = 24,
+    onMissedCallsHoursChange: (Int) -> Unit = {},
+    useDarkMode: Boolean = false,
+    onDarkModeChange: (Boolean) -> Unit = {},
+    confirmBeforeCall: Boolean = false,
+    onConfirmBeforeCallChange: (Boolean) -> Unit = {},
+    useHapticFeedback: Boolean = true,
+    onHapticFeedbackChange: (Boolean) -> Unit = {},
+    useVoiceAnnouncements: Boolean = false,
+    onVoiceAnnouncementsChange: (Boolean) -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
     // Remember favorites order for reordering
@@ -64,6 +77,205 @@ fun SettingsScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
+        // --- Text Size Section ---
+        item {
+            Text(
+                "Text Size",
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "Make contact names very large (same size as picture):",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                HugeTextToggleButton(
+                    isEnabled = useHugeText,
+                    onToggle = { onHugeTextChange(!useHugeText) }
+                )
+            }
+
+            HorizontalDivider(thickness = 2.dp)
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // --- Dark Mode Section ---
+        item {
+            Text(
+                "Dark Mode",
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "Use high-contrast dark theme:",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                SettingsToggleButton(
+                    isEnabled = useDarkMode,
+                    onToggle = { onDarkModeChange(!useDarkMode) },
+                    label = if (useDarkMode) "DARK" else "LIGHT"
+                )
+            }
+
+            HorizontalDivider(thickness = 2.dp)
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // --- Call Confirmation Section ---
+        item {
+            Text(
+                "Call Confirmation",
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "Ask before making a call (prevents accidental calls):",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                SettingsToggleButton(
+                    isEnabled = confirmBeforeCall,
+                    onToggle = { onConfirmBeforeCallChange(!confirmBeforeCall) },
+                    label = if (confirmBeforeCall) "ON" else "OFF"
+                )
+            }
+
+            HorizontalDivider(thickness = 2.dp)
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // --- Haptic Feedback Section ---
+        item {
+            Text(
+                "Vibration Feedback",
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "Vibrate when buttons are pressed:",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                SettingsToggleButton(
+                    isEnabled = useHapticFeedback,
+                    onToggle = { onHapticFeedbackChange(!useHapticFeedback) },
+                    label = if (useHapticFeedback) "ON" else "OFF"
+                )
+            }
+
+            HorizontalDivider(thickness = 2.dp)
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // --- Voice Announcements Section ---
+        item {
+            Text(
+                "Voice Announcements",
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "Speak contact names when calling:",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                SettingsToggleButton(
+                    isEnabled = useVoiceAnnouncements,
+                    onToggle = { onVoiceAnnouncementsChange(!useVoiceAnnouncements) },
+                    label = if (useVoiceAnnouncements) "ON" else "OFF"
+                )
+            }
+
+            HorizontalDivider(thickness = 2.dp)
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // --- Missed Calls Section ---
+        item {
+            Text(
+                "Missed Calls Display",
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "Show missed calls from the last:",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth()
+            ) {
+                BigIconButton(
+                    icon = Icons.Filled.Remove,
+                    contentDescription = "Decrease hours",
+                    onClick = { if (missedCallsHours > 1) onMissedCallsHoursChange(missedCallsHours - 1) },
+                    modifier = Modifier.weight(1f)
+                )
+
+                Text(
+                    "$missedCallsHours hours",
+                    style = MaterialTheme.typography.displayMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+
+                BigIconButton(
+                    icon = Icons.Filled.Add,
+                    contentDescription = "Increase hours",
+                    onClick = { onMissedCallsHoursChange(missedCallsHours + 1) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            HorizontalDivider(thickness = 2.dp)
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
         // --- Recents Filter Section ---
         item {
             Text(
@@ -117,7 +329,7 @@ fun SettingsScreen(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                "Drag to reorder your favorites:",
+                "Use the arrows to reorder your favorites:",
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
             )
@@ -188,9 +400,9 @@ fun FavoriteReorderRow(
             )
         }
 
-        // Right side: Big Up/Down arrows
+        // Right side: Big Up/Down arrows with 16dp spacing for better accessibility
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             BigArrowButton(
                 icon = Icons.Filled.KeyboardArrowUp,
@@ -312,6 +524,111 @@ fun BigIconButton(
             contentDescription = null,
             tint = Color.White,
             modifier = Modifier.size(48.dp)
+        )
+    }
+}
+
+/**
+ * Large toggle button for huge text setting - triggers on press
+ */
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun HugeTextToggleButton(
+    isEnabled: Boolean,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isPressed by remember { mutableStateOf(false) }
+
+    val backgroundColor = when {
+        isPressed -> if (isEnabled) GreenCall.copy(alpha = 0.7f) else HighContrastBlue.copy(alpha = 0.7f)
+        isEnabled -> GreenCall
+        else -> HighContrastBlue
+    }
+
+    Box(
+        modifier = modifier
+            .size(width = 160.dp, height = 80.dp)
+            .clip(CircleShape)
+            .background(backgroundColor)
+            .semantics {
+                contentDescription = if (isEnabled) "Huge text is ON, tap to turn off" else "Huge text is OFF, tap to turn on"
+                role = Role.Switch
+            }
+            .pointerInteropFilter { event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        isPressed = true
+                        onToggle()
+                        true
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        isPressed = false
+                        true
+                    }
+                    else -> false
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = if (isEnabled) "ON" else "OFF",
+            color = Color.White,
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+/**
+ * Generic toggle button for settings - triggers on press
+ */
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun SettingsToggleButton(
+    isEnabled: Boolean,
+    onToggle: () -> Unit,
+    label: String,
+    modifier: Modifier = Modifier
+) {
+    var isPressed by remember { mutableStateOf(false) }
+
+    val backgroundColor = when {
+        isPressed -> if (isEnabled) GreenCall.copy(alpha = 0.7f) else HighContrastBlue.copy(alpha = 0.7f)
+        isEnabled -> GreenCall
+        else -> HighContrastBlue
+    }
+
+    Box(
+        modifier = modifier
+            .size(width = 160.dp, height = 80.dp)
+            .clip(CircleShape)
+            .background(backgroundColor)
+            .semantics {
+                contentDescription = "$label is ${if (isEnabled) "ON" else "OFF"}, tap to toggle"
+                role = Role.Switch
+            }
+            .pointerInteropFilter { event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        isPressed = true
+                        onToggle()
+                        true
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        isPressed = false
+                        true
+                    }
+                    else -> false
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            color = Color.White,
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Bold
         )
     }
 }

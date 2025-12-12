@@ -67,13 +67,13 @@ fun ContactAvatar(
             )
         }
 
-        // Favorite star overlay (bottom-right corner)
+        // Favorite star overlay (bottom-right corner) - 50% of avatar size for better visibility
         if (showFavoriteStar && contact.isFavorite) {
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .offset(x = 4.dp, y = 4.dp)
-                    .size(size * 0.4f)
+                    .size(size * 0.5f)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surface),
                 contentAlignment = Alignment.Center
@@ -82,7 +82,7 @@ fun ContactAvatar(
                     imageVector = Icons.Filled.Star,
                     contentDescription = "Favorite",
                     tint = FavoriteGold,
-                    modifier = Modifier.size(size * 0.32f)
+                    modifier = Modifier.size(size * 0.4f)
                 )
             }
         }

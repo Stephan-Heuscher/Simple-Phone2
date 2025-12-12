@@ -9,12 +9,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material3.HorizontalDivider
@@ -37,8 +40,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.simplephone.data.MockData
+import com.example.simplephone.model.CallLogEntry
 import com.example.simplephone.model.Contact
 import com.example.simplephone.ui.components.ContactAvatar
 import com.example.simplephone.ui.theme.GreenCall
@@ -46,32 +51,57 @@ import com.example.simplephone.ui.theme.GreenCall
 @Composable
 fun MainScreen(
     onCallClick: (String) -> Unit,
-    onContactClick: (String) -> Unit
+    onContactClick: (String) -> Unit,
+    missedCalls: List<CallLogEntry> = emptyList(),
+    missedCallsHours: Int = 24,
+    useHugeText: Boolean = false,
+    contacts: List<Contact> = MockData.contacts
 ) {
-    // Get only the last MISSED call (not any call)
-    val lastMissedCall = remember { MockData.getLastMissedCall() }
-    val favorites = remember { MockData.getFavoritesOrdered() }
-    val allContacts = remember { MockData.contacts.sortedBy { it.name } }
+    val favorites = remember(contacts) { contacts.filter { it.isFavorite }.sortedBy { it.sortOrder } }
+    val allContacts = remember(contacts) { contacts.sortedBy { it.name } }
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
 
-        // --- Last Missed Call Section (displayed like a contact) ---
-        if (lastMissedCall != null) {
-            item {
-                SectionHeader(title = "Missed Call")
-            }
+        // --- Missed Calls Section (always shown) ---
+        item {
+            SectionHeader(title = "Missed Calls (last $missedCallsHours hrs)")
+        }
 
+        if (missedCalls.isEmpty()) {
+            // Show green background with "No missed calls" message
             item {
-                val contact = MockData.getContactById(lastMissedCall.contactId)
-                if (contact != null) {
-                    // Display as a simple contact row (no phone number or time shown)
-                    ContactRow(
-                        contact = contact,
-                        onCallClick = { onCallClick(contact.number) },
-                        showFavoriteStar = false // Don't show star for missed call section
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(GreenCall.copy(alpha = 0.3f))
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No missed calls",
+                        style = if (useHugeText) MaterialTheme.typography.displaySmall else MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = GreenCall
                     )
-                    HorizontalDivider(thickness = 2.dp)
                 }
+                HorizontalDivider(thickness = 2.dp)
+            }
+        } else {
+            items(missedCalls) { callEntry ->
+                // Try to find contact by number
+                val contact = allContacts.find { it.number == callEntry.contactId }
+                    ?: Contact(
+                        id = callEntry.id,
+                        name = callEntry.contactId, // Show number as name
+                        number = callEntry.contactId
+                    )
+                ContactRow(
+                    contact = contact,
+                    onCallClick = { onCallClick(contact.number) },
+                    showFavoriteStar = false,
+                    useHugeText = useHugeText
+                )
+                HorizontalDivider()
             }
         }
 
@@ -93,7 +123,8 @@ fun MainScreen(
                 ContactRow(
                     contact = contact,
                     onCallClick = { onCallClick(contact.number) },
-                    showFavoriteStar = true
+                    showFavoriteStar = true,
+                    useHugeText = useHugeText
                 )
                 HorizontalDivider()
             }
@@ -108,7 +139,8 @@ fun MainScreen(
             ContactRow(
                 contact = contact,
                 onCallClick = { onCallClick(contact.number) },
-                showFavoriteStar = true
+                showFavoriteStar = true,
+                useHugeText = useHugeText
             )
             HorizontalDivider()
         }
@@ -125,24 +157,92 @@ fun ContactRow(
     contact: Contact,
     onCallClick: () -> Unit,
     showFavoriteStar: Boolean = true,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    useHugeText: Boolean = false
 ) {
-    var isPressed by remember { mutableStateOf(false) }
-    
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(if (isPressed) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else Color.Transparent)
             .semantics {
-                contentDescription = "Contact ${contact.name}, tap green button to call"
+                contentDescription = "Contact ${contact.name}, tap picture or green button to call"
+            }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        // Left side: Avatar (clickable) + Name
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
+        ) {
+            // Avatar is clickable
+            ClickableAvatar(
+                contact = contact,
+                size = 64.dp,
+                showFavoriteStar = showFavoriteStar,
+                onClick = onCallClick
+            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            // Contact name with vertical scrolling and permanent scrollbar
+            // Text size is 25% bigger (headlineMedium vs headlineSmall), or huge if setting is on
+            val textStyle = if (useHugeText) {
+                MaterialTheme.typography.displayMedium // Same visual weight as avatar
+            } else {
+                MaterialTheme.typography.headlineMedium // 25% bigger than headlineSmall
+            }
+            
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(max = 80.dp)
+            ) {
+                val scrollState = androidx.compose.foundation.rememberScrollState()
+                Text(
+                    text = contact.name,
+                    style = textStyle,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(scrollState)
+                )
+            }
+        }
+
+        // Right side: Green call button (clickable)
+        GreenCallIcon(
+            onClick = onCallClick,
+            contentDescription = "Call ${contact.name}"
+        )
+    }
+}
+
+/**
+ * Clickable avatar that triggers on press
+ */
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun ClickableAvatar(
+    contact: Contact,
+    size: Dp,
+    showFavoriteStar: Boolean,
+    onClick: () -> Unit
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    
+    Box(
+        modifier = Modifier
+            .semantics {
+                contentDescription = "Tap to call ${contact.name}"
                 role = Role.Button
             }
             .pointerInteropFilter { event ->
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> {
                         isPressed = true
-                        // Full row press calls the contact
-                        onCallClick()
+                        onClick()
                         true
                     }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
@@ -152,35 +252,11 @@ fun ContactRow(
                     else -> false
                 }
             }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        // Left side: Avatar + Name
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(1f)
-        ) {
-            ContactAvatar(
-                contact = contact,
-                size = 64.dp,
-                showFavoriteStar = showFavoriteStar
-            )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Text(
-                text = contact.name,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-        }
-
-        // Right side: Green call button
-        GreenCallIcon(
-            onClick = onCallClick,
-            contentDescription = "Call ${contact.name}"
+        ContactAvatar(
+            contact = contact,
+            size = if (isPressed) size * 0.95f else size,
+            showFavoriteStar = showFavoriteStar
         )
     }
 }

@@ -10,10 +10,27 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+
+// High contrast dark mode colors for better accessibility
+private val HighContrastDarkColorScheme = darkColorScheme(
+    primary = Color(0xFF4FC3F7), // Lighter blue for dark mode
+    onPrimary = AccessibleBlack,
+    secondary = Color(0xFFB0BEC5),
+    tertiary = Color(0xFFCE93D8),
+    background = AccessibleBlack,
+    onBackground = AccessibleWhite,
+    surface = Color(0xFF1E1E1E),
+    onSurface = AccessibleWhite,
+    surfaceVariant = Color(0xFF2D2D2D),
+    onSurfaceVariant = Color(0xFFE0E0E0),
+    outline = Color(0xFF757575),
+    outlineVariant = Color(0xFF424242) // Darker gray for disabled states
+)
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -33,7 +50,8 @@ private val LightColorScheme = lightColorScheme(
     background = AccessibleWhite,
     onBackground = AccessibleBlack,
     surface = AccessibleWhite,
-    onSurface = AccessibleBlack
+    onSurface = AccessibleBlack,
+    outlineVariant = Color(0xFF424242) // Darker gray for disabled states (was light gray)
 
     /* Other default colors to override
     surfaceStart = ...
@@ -44,6 +62,7 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun SimplePhoneTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    useHighContrastDark: Boolean = true, // Use high contrast dark mode
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = false, // DISABLED for consistent High Contrast
     content: @Composable () -> Unit
@@ -53,7 +72,7 @@ fun SimplePhoneTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-        darkTheme -> DarkColorScheme
+        darkTheme -> if (useHighContrastDark) HighContrastDarkColorScheme else DarkColorScheme
         else -> LightColorScheme
     }
     val view = LocalView.current
@@ -61,7 +80,7 @@ fun SimplePhoneTheme(
         SideEffect {
             val window = (view.context as Activity).window
             window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }
 

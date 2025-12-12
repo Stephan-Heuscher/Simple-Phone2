@@ -2,23 +2,28 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@android:color/white"
-    android:padding="8dp">
+    android:background="#FFFFFF"
+    android:padding="12dp">
 
     <TextView
         android:id="@+id/widget_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Favorites"
-        android:textSize="18sp"
+        android:textSize="24sp"
         android:textStyle="bold"
-        android:textColor="@android:color/black"
-        android:paddingBottom="8dp"/>
+        android:textColor="#003882"
+        android:paddingBottom="12dp"/>
 
     <ListView
         android:id="@+id/widget_list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:divider="#E0E0E0"
+        android:dividerHeight="2dp"
+        android:scrollbars="vertical"
+        android:scrollbarAlwaysDrawVerticalTrack="true"
+        android:scrollbarSize="8dp"/>
 
     <TextView
         android:id="@+id/empty_view"
@@ -26,6 +31,8 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:text="No favorites"
+        android:textSize="18sp"
+        android:textColor="#424242"
         android:visibility="gone" />
 
 </LinearLayout>
