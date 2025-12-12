@@ -16,6 +16,7 @@ class FavoritesWidget : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
+        android.util.Log.d("FavoritesWidget", "onUpdate called for ${appWidgetIds.size} widgets")
         for (appWidgetId in appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId)
         }
@@ -27,6 +28,7 @@ class FavoritesWidget : AppWidgetProvider() {
             appWidgetManager: AppWidgetManager,
             appWidgetId: Int
         ) {
+            android.util.Log.d("FavoritesWidget", "Updating widget $appWidgetId")
             val intent = Intent(context, FavoritesWidgetService::class.java).apply {
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
                 data = Uri.parse(toUri(Intent.URI_INTENT_SCHEME))
@@ -39,11 +41,17 @@ class FavoritesWidget : AppWidgetProvider() {
             
             // Set up pending intent template for call actions
             val callIntent = Intent(Intent.ACTION_CALL)
+            
+            var flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                flags = flags or PendingIntent.FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT
+            }
+            
             val callPendingIntent = PendingIntent.getActivity(
                 context, 
                 0, 
                 callIntent, 
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+                flags
             )
             views.setPendingIntentTemplate(R.id.widget_list, callPendingIntent)
 

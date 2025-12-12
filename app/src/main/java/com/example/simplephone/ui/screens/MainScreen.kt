@@ -226,7 +226,10 @@ fun ClickableAvatar(
 ) {
     Box(
         modifier = Modifier
-            .clickable(onClick = onClick)
+            .clickable { 
+                android.util.Log.d("MainScreen", "Avatar clicked for ${contact.name}")
+                onClick() 
+            }
     ) {
         ContactAvatar(
             contact = contact,
@@ -251,7 +254,10 @@ fun GreenCallIcon(
             .size(size.dp)
             .clip(CircleShape)
             .background(GreenCall)
-            .clickable(onClick = onClick),
+            .clickable {
+                android.util.Log.d("MainScreen", "Green call button clicked")
+                onClick()
+            },
         contentAlignment = Alignment.Center
     ) {
         Icon(

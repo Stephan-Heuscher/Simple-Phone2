@@ -68,6 +68,7 @@ fun SettingsScreen(
     onVoiceAnnouncementsChange: (Boolean) -> Unit = {},
     favorites: List<Contact> = emptyList(),
     onFavoritesReorder: (List<Contact>) -> Unit = {},
+    onSetDefaultDialer: () -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
     // Remember favorites order for reordering
@@ -315,6 +316,39 @@ fun SettingsScreen(
             if (index < mutableFavorites.size - 1) {
                 HorizontalDivider()
             }
+        }
+
+        item {
+            HorizontalDivider(thickness = 2.dp, modifier = Modifier.padding(vertical = 24.dp))
+        }
+
+        // --- Default Phone App Section ---
+        item {
+            Text(
+                "Default Phone App",
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "Set this app as your default phone app:",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                SettingsButton(
+                    text = "SET DEFAULT",
+                    onClick = onSetDefaultDialer
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(48.dp))
         }
     }
 }
@@ -601,6 +635,54 @@ fun SettingsToggleButton(
             text = label,
             color = Color.White,
             style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+/**
+ * Generic button for settings actions - triggers on press
+ */
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun SettingsButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isPressed by remember { mutableStateOf(false) }
+
+    val backgroundColor = if (isPressed) HighContrastBlue.copy(alpha = 0.7f) else HighContrastBlue
+
+    Box(
+        modifier = modifier
+            .size(width = 240.dp, height = 80.dp)
+            .clip(CircleShape)
+            .background(backgroundColor)
+            .semantics {
+                contentDescription = "$text button"
+                role = Role.Button
+            }
+            .pointerInteropFilter { event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        isPressed = true
+                        onClick()
+                        true
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        isPressed = false
+                        true
+                    }
+                    else -> false
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            color = Color.White,
+            style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
     }

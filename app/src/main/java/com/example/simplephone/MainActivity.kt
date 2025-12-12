@@ -123,7 +123,8 @@ class MainActivity : ComponentActivity() {
                     },
                     settingsRepository = settingsRepository,
                     contactRepository = contactRepository,
-                    onDarkModeChange = { useDarkMode.value = it }
+                    onDarkModeChange = { useDarkMode.value = it },
+                    onSetDefaultDialer = { offerReplacingDefaultDialer() }
                 )
             }
         }
@@ -183,6 +184,7 @@ class MainActivity : ComponentActivity() {
                 if (telecomManager.defaultDialerPackage != packageName) {
                     try {
                         android.util.Log.d("MainActivity", "Requesting to be default dialer")
+                        android.widget.Toast.makeText(this, "Please set Simple Phone as default", android.widget.Toast.LENGTH_LONG).show()
                         val intent = Intent(android.telecom.TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
                             putExtra(android.telecom.TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, packageName)
                         }
@@ -245,7 +247,8 @@ fun SimplePhoneApp(
     onMakeCall: (String, String) -> Unit,
     settingsRepository: SettingsRepository,
     contactRepository: ContactRepository,
-    onDarkModeChange: (Boolean) -> Unit = {}
+    onDarkModeChange: (Boolean) -> Unit = {},
+    onSetDefaultDialer: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
@@ -432,6 +435,7 @@ fun SimplePhoneApp(
                                 if (newIndex >= 0) contact.copy(sortOrder = newIndex) else contact
                             }.sortedWith(compareBy({ !it.isFavorite }, { it.sortOrder }))
                         },
+                        onSetDefaultDialer = onSetDefaultDialer,
                         onBackClick = { navController.popBackStack() }
                     )
                 }
