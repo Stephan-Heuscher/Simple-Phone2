@@ -24,6 +24,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.simplephone.ui.theme.GreenCall
 import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 
 data class OnboardingPage(
     val title: String,
@@ -72,10 +74,18 @@ val onboardingPages = listOf(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun OnboardingScreen(
-    onComplete: () -> Unit
+    onComplete: () -> Unit,
+    useHapticFeedback: Boolean = true
 ) {
     val pagerState = rememberPagerState(pageCount = { onboardingPages.size })
     val coroutineScope = rememberCoroutineScope()
+    val hapticFeedback = LocalHapticFeedback.current
+    
+    fun vibrate() {
+        if (useHapticFeedback) {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+        }
+    }
     
     Column(
         modifier = Modifier
@@ -88,7 +98,7 @@ fun OnboardingScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
         ) {
-            TextButton(onClick = onComplete) {
+            TextButton(onClick = { vibrate(); onComplete() }) {
                 Text(
                     text = "Skip",
                     style = MaterialTheme.typography.titleMedium,
@@ -144,6 +154,7 @@ fun OnboardingScreen(
             ) {
                 OutlinedButton(
                     onClick = {
+                        vibrate()
                         coroutineScope.launch {
                             pagerState.animateScrollToPage(pagerState.currentPage - 1)
                         }
@@ -166,6 +177,7 @@ fun OnboardingScreen(
             // Next/Get Started button
             Button(
                 onClick = {
+                    vibrate()
                     if (pagerState.currentPage == onboardingPages.size - 1) {
                         onComplete()
                     } else {

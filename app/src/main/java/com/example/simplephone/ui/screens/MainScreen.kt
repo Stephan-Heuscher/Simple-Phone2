@@ -41,6 +41,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -66,7 +69,8 @@ fun MainScreen(
     useHugeText: Boolean = false,
     contacts: List<Contact> = MockData.contacts,
     isDefaultDialer: Boolean = true,
-    onSetDefaultDialer: () -> Unit = {}
+    onSetDefaultDialer: () -> Unit = {},
+    useHapticFeedback: Boolean = false
 ) {
     val favorites = remember(contacts) { contacts.filter { it.isFavorite }.sortedBy { it.sortOrder } }
     val allContacts = remember(contacts) { contacts.sortedBy { it.name } }
@@ -74,6 +78,7 @@ fun MainScreen(
     // Search state
     var searchQuery by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
+    val hapticFeedback = LocalHapticFeedback.current
     
     // Filtered contacts based on search
     val filteredContacts = remember(allContacts, searchQuery) {
@@ -87,7 +92,52 @@ fun MainScreen(
         }
     }
 
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize().imePadding()) {
+        // Search Bar
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .height(56.dp),
+            placeholder = { 
+                Text(
+                    "Search contacts...",
+                    style = MaterialTheme.typography.bodyLarge
+                ) 
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Search",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            trailingIcon = {
+                if (searchQuery.isNotEmpty()) {
+                    IconButton(onClick = { 
+                        if (useHapticFeedback) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        searchQuery = ""
+                        focusManager.clearFocus()
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = "Clear search",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            },
+            singleLine = true,
+            shape = RoundedCornerShape(28.dp),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(
+                onSearch = { focusManager.clearFocus() }
+            )
+        )
+
+        LazyColumn(modifier = Modifier.fillMaxSize().weight(1f)) {
 
         // --- Default Dialer Warning Banner ---
         if (!isDefaultDialer) {
@@ -96,7 +146,10 @@ fun MainScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color(0xFFFF6B00))
-                        .clickable { onSetDefaultDialer() }
+                        .clickable { 
+                            if (useHapticFeedback) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onSetDefaultDialer() 
+                        }
                         .padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -200,51 +253,7 @@ fun MainScreen(
             SectionHeader(title = "Phone Book")
         }
         
-        // Search Bar
-        item {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .height(56.dp),
-                placeholder = { 
-                    Text(
-                        "Search contacts...",
-                        style = MaterialTheme.typography.bodyLarge
-                    ) 
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                },
-                trailingIcon = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { 
-                            searchQuery = ""
-                            focusManager.clearFocus()
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.Clear,
-                                contentDescription = "Clear search",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(28.dp),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(
-                    onSearch = { focusManager.clearFocus() }
-                )
-            )
-        }
-        
+
         // Show search results count if searching
         if (searchQuery.isNotBlank()) {
             item {
@@ -266,6 +275,7 @@ fun MainScreen(
             )
             HorizontalDivider()
         }
+    }
     }
 }
 

@@ -48,6 +48,8 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.unit.dp
 import com.example.simplephone.model.Contact
 import com.example.simplephone.ui.components.ContactAvatar
@@ -76,6 +78,13 @@ fun SettingsScreen(
 ) {
     // Remember favorites order for reordering
     val mutableFavorites = remember(favorites) { mutableStateListOf(*favorites.toTypedArray()) }
+    
+    val hapticFeedback = LocalHapticFeedback.current
+    fun vibrate() {
+        if (useHapticFeedback) {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+        }
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -105,7 +114,7 @@ fun SettingsScreen(
                 ) {
                     SettingsButton(
                         text = "SET DEFAULT",
-                        onClick = onSetDefaultDialer
+                        onClick = { vibrate(); onSetDefaultDialer() }
                     )
                 }
                 HorizontalDivider(modifier = Modifier.padding(bottom = 24.dp))
@@ -134,7 +143,7 @@ fun SettingsScreen(
             ) {
                 HugeTextToggleButton(
                     isEnabled = useHugeText,
-                    onToggle = { onHugeTextChange(!useHugeText) }
+                    onToggle = { vibrate(); onHugeTextChange(!useHugeText) }
                 )
             }
 
@@ -170,7 +179,7 @@ fun SettingsScreen(
                     SettingsOptionButton(
                         text = "SYSTEM",
                         isSelected = darkModeOption == 0,
-                        onClick = { onDarkModeOptionChange(0) },
+                        onClick = { vibrate(); onDarkModeOptionChange(0) },
                         modifier = Modifier.weight(1f)
                     )
                     
@@ -178,7 +187,7 @@ fun SettingsScreen(
                     SettingsOptionButton(
                         text = "LIGHT",
                         isSelected = darkModeOption == 1,
-                        onClick = { onDarkModeOptionChange(1) },
+                        onClick = { vibrate(); onDarkModeOptionChange(1) },
                         modifier = Modifier.weight(1f)
                     )
                     
@@ -186,7 +195,7 @@ fun SettingsScreen(
                     SettingsOptionButton(
                         text = "DARK",
                         isSelected = darkModeOption == 2,
-                        onClick = { onDarkModeOptionChange(2) },
+                        onClick = { vibrate(); onDarkModeOptionChange(2) },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -218,7 +227,7 @@ fun SettingsScreen(
             ) {
                 SettingsToggleButton(
                     isEnabled = confirmBeforeCall,
-                    onToggle = { onConfirmBeforeCallChange(!confirmBeforeCall) },
+                    onToggle = { vibrate(); onConfirmBeforeCallChange(!confirmBeforeCall) },
                     label = if (confirmBeforeCall) "ON" else "OFF"
                 )
             }
@@ -249,7 +258,10 @@ fun SettingsScreen(
             ) {
                 SettingsToggleButton(
                     isEnabled = useHapticFeedback,
-                    onToggle = { onHapticFeedbackChange(!useHapticFeedback) },
+                    onToggle = { 
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onHapticFeedbackChange(!useHapticFeedback) 
+                    },
                     label = if (useHapticFeedback) "ON" else "OFF"
                 )
             }
@@ -280,7 +292,7 @@ fun SettingsScreen(
             ) {
                 SettingsToggleButton(
                     isEnabled = useVoiceAnnouncements,
-                    onToggle = { onVoiceAnnouncementsChange(!useVoiceAnnouncements) },
+                    onToggle = { vibrate(); onVoiceAnnouncementsChange(!useVoiceAnnouncements) },
                     label = if (useVoiceAnnouncements) "ON" else "OFF"
                 )
             }
@@ -311,7 +323,7 @@ fun SettingsScreen(
                 BigIconButton(
                     icon = Icons.Filled.Remove,
                     contentDescription = "Decrease hours",
-                    onClick = { if (missedCallsHours > 1) onMissedCallsHoursChange(missedCallsHours - 1) },
+                    onClick = { vibrate(); if (missedCallsHours > 1) onMissedCallsHoursChange(missedCallsHours - 1) },
                     modifier = Modifier.weight(1f)
                 )
 
@@ -325,7 +337,7 @@ fun SettingsScreen(
                 BigIconButton(
                     icon = Icons.Filled.Add,
                     contentDescription = "Increase hours",
-                    onClick = { onMissedCallsHoursChange(missedCallsHours + 1) },
+                    onClick = { vibrate(); onMissedCallsHoursChange(missedCallsHours + 1) },
                     modifier = Modifier.weight(1f)
                 )
             }

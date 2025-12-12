@@ -134,7 +134,8 @@ class MainActivity : ComponentActivity() {
                         onComplete = {
                             settingsRepository.onboardingCompleted = true
                             showOnboarding = false
-                        }
+                        },
+                        useHapticFeedback = settingsRepository.useHapticFeedback
                     )
                 } else {
                     val windowSize = calculateWindowSizeClass(this)
@@ -474,7 +475,8 @@ fun SimplePhoneApp(
                         useHugeText = useHugeText,
                         contacts = contacts.ifEmpty { MockData.contacts },
                         isDefaultDialer = isDefaultDialer,
-                        onSetDefaultDialer = onSetDefaultDialer
+                        onSetDefaultDialer = onSetDefaultDialer,
+                        useHapticFeedback = useHapticFeedback
                     )
                 }
                 composable(Screen.Settings.route) {

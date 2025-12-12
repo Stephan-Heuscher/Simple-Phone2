@@ -1,0 +1,11 @@
+{
+    "tasks": [
+        {
+            "label": "installdebug",
+            "type": "shell",
+            "command": "./gradlew installDebug",
+            "group": "build",
+            "problemMatcher": []
+        }
+    ]
+}

@@ -306,7 +306,11 @@ class CallService : InCallService() {
         
         // Show our own missed call notification since we are the default dialer.
         // The system won't show one when we handle calls.
-        if (call.details.callDirection == Call.Details.DIRECTION_INCOMING && 
+        val telecomManager = getSystemService(Context.TELECOM_SERVICE) as android.telecom.TelecomManager
+        val isDefaultDialer = telecomManager.defaultDialerPackage == packageName
+
+        if (isDefaultDialer && 
+            call.details.callDirection == Call.Details.DIRECTION_INCOMING && 
             call.details.disconnectCause.code == android.telecom.DisconnectCause.MISSED) {
             showMissedCallNotification(call)
         }
