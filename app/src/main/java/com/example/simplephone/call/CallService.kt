@@ -9,6 +9,8 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.Rect
 import android.graphics.RectF
+import android.media.Ringtone
+import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.telecom.Call
@@ -23,8 +25,11 @@ import com.example.simplephone.data.ContactRepository
  */
 class CallService : InCallService() {
 
+    private var ringtone: Ringtone? = null
+
     companion object {
         private const val TAG = "CallService"
+        private var instance: CallService? = null
         
         // Singleton to track current call state
         var currentCall: Call? = null
@@ -38,12 +43,17 @@ class CallService : InCallService() {
             
         var callerName: String? = null
             private set
+
+        var currentAudioState: CallAudioState? = null
+            private set
             
         // Listeners for call state changes
         private val callStateListeners = mutableListOf<CallStateListener>()
         
         fun addCallStateListener(listener: CallStateListener) {
             callStateListeners.add(listener)
+            // Immediately notify with current state
+            listener.onCallStateChanged(callState, callerNumber, callerName, currentAudioState)
         }
         
         fun removeCallStateListener(listener: CallStateListener) {
@@ -52,7 +62,7 @@ class CallService : InCallService() {
         
         private fun notifyCallStateChanged() {
             callStateListeners.forEach { 
-                it.onCallStateChanged(callState, callerNumber, callerName) 
+                it.onCallStateChanged(callState, callerNumber, callerName, currentAudioState) 
             }
         }
         
@@ -66,6 +76,10 @@ class CallService : InCallService() {
         
         fun endCall() {
             currentCall?.disconnect()
+        }
+        
+        fun setAudioRoute(route: Int) {
+            instance?.setAudioRoute(route)
         }
         
         fun toggleMute() {
@@ -84,16 +98,48 @@ class CallService : InCallService() {
             updateCallInfo(call)
             notifyCallStateChanged()
             
+            if (state != Call.STATE_RINGING) {
+                stopRinging()
+            }
+            
             if (state == Call.STATE_DISCONNECTED) {
                 currentCall = null
                 callerNumber = null
                 callerName = null
+                stopRinging()
             }
         }
         
         override fun onDetailsChanged(call: Call, details: Call.Details) {
             updateCallInfo(call)
             notifyCallStateChanged()
+        }
+    }
+    
+    override fun onCreate() {
+        super.onCreate()
+        instance = this
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        instance = null
+        stopRinging()
+    }
+
+    private fun startRinging() {
+        if (ringtone == null) {
+            val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+            ringtone = RingtoneManager.getRingtone(applicationContext, uri)
+        }
+        if (ringtone?.isPlaying == false) {
+            ringtone?.play()
+        }
+    }
+
+    private fun stopRinging() {
+        if (ringtone?.isPlaying == true) {
+            ringtone?.stop()
         }
     }
     
@@ -118,6 +164,10 @@ class CallService : InCallService() {
         updateCallInfo(call)
         notifyCallStateChanged()
         
+        if (call.state == Call.STATE_RINGING) {
+            startRinging()
+        }
+        
         // Launch the incoming call activity
         val intent = Intent(this, IncomingCallActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -131,6 +181,7 @@ class CallService : InCallService() {
     override fun onCallRemoved(call: Call) {
         Log.d(TAG, "Call removed")
         call.unregisterCallback(callCallback)
+        stopRinging()
         
         // Check for missed call
         if (call.details.callDirection == Call.Details.DIRECTION_INCOMING && 
@@ -217,6 +268,23 @@ class CallService : InCallService() {
             android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT
         )
         
+        // Call Back Action
+        val callBackIntent = Intent(Intent.ACTION_CALL, Uri.parse("tel:$number"))
+        val callBackPendingIntent = android.app.PendingIntent.getActivity(
+            context, 1, callBackIntent,
+            android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        
+        // Ignore Action (Dismiss)
+        val ignoreIntent = Intent(context, NotificationReceiver::class.java).apply {
+            action = "IGNORE"
+            putExtra("notification_id", number.hashCode())
+        }
+        val ignorePendingIntent = android.app.PendingIntent.getBroadcast(
+            context, 2, ignoreIntent,
+            android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        
         val notificationBuilder = androidx.core.app.NotificationCompat.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.sym_call_missed)
             .setContentTitle("Missed Call")
@@ -224,6 +292,8 @@ class CallService : InCallService() {
             .setPriority(androidx.core.app.NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
+            .addAction(android.R.drawable.sym_action_call, "Call Back", callBackPendingIntent)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Ignore", ignorePendingIntent)
         
         // Add large icon (contact photo) if available
         if (contactBitmap != null) {
@@ -265,9 +335,11 @@ class CallService : InCallService() {
     
     override fun onCallAudioStateChanged(audioState: CallAudioState?) {
         Log.d(TAG, "Audio state changed: ${audioState?.route}")
+        currentAudioState = audioState
+        notifyCallStateChanged()
     }
 }
 
 interface CallStateListener {
-    fun onCallStateChanged(state: Int, number: String?, name: String?)
+    fun onCallStateChanged(state: Int, number: String?, name: String?, audioState: CallAudioState?)
 }
