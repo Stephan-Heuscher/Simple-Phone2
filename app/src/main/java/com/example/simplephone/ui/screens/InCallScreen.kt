@@ -54,6 +54,9 @@ import com.example.simplephone.ui.theme.RedHangup
 import com.example.simplephone.ui.theme.SpeakerActive
 import com.example.simplephone.ui.theme.SpeakerInactive
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+
 /**
  * In-call screen UI - ultra accessible with large buttons and high contrast
  * Shows only available audio outputs (speaker, bluetooth devices if connected)
@@ -67,8 +70,16 @@ fun InCallScreen(
         AudioOutput.SPEAKER
     ),
     onHangup: () -> Unit,
-    onAudioOutputChange: (AudioOutput) -> Unit
+    onAudioOutputChange: (AudioOutput) -> Unit,
+    useHapticFeedback: Boolean = true
 ) {
+    val hapticFeedback = LocalHapticFeedback.current
+    fun vibrate() {
+        if (useHapticFeedback) {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -120,7 +131,7 @@ fun InCallScreen(
                     AudioOutputButton(
                         audioOutput = audioOutput,
                         isSelected = audioOutput == currentAudioOutput,
-                        onClick = { onAudioOutputChange(audioOutput) }
+                        onClick = { vibrate(); onAudioOutputChange(audioOutput) }
                     )
                 }
             }
@@ -131,7 +142,7 @@ fun InCallScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(bottom = 48.dp)
         ) {
-            HangupButton(onClick = onHangup)
+            HangupButton(onClick = { vibrate(); onHangup() })
             
             Spacer(modifier = Modifier.height(16.dp))
             

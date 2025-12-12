@@ -81,14 +81,37 @@ fun MainScreen(
     val hapticFeedback = LocalHapticFeedback.current
     
     // Filtered contacts based on search
-    val filteredContacts = remember(allContacts, searchQuery) {
+    val filteredContacts = remember(allContacts, missedCalls, searchQuery) {
         if (searchQuery.isBlank()) {
             allContacts
         } else {
-            allContacts.filter { contact ->
+            // Get contacts matching search
+            val matchingContacts = allContacts.filter { contact ->
                 contact.name.contains(searchQuery, ignoreCase = true) ||
                 contact.number.contains(searchQuery)
             }
+            
+            // Get missed calls matching search (that are not already in contacts)
+            val matchingMissedCalls = missedCalls.filter { call ->
+                // Check if number matches search
+                val numberMatches = call.contactId.contains(searchQuery)
+                
+                // Check if this number is already in our contacts list (to avoid duplicates)
+                val isKnownContact = allContacts.any { 
+                    it.number.replace(Regex("[^0-9]"), "") == call.contactId.replace(Regex("[^0-9]"), "") 
+                }
+                
+                numberMatches && !isKnownContact
+            }.map { call ->
+                Contact(
+                    id = call.id,
+                    name = call.contactId, // Show number as name for unknown contacts
+                    number = call.contactId,
+                    isFavorite = false
+                )
+            }.distinctBy { it.number } // Avoid duplicate unknown numbers
+            
+            matchingContacts + matchingMissedCalls
         }
     }
 
@@ -170,87 +193,91 @@ fun MainScreen(
             }
         }
 
-        // --- Missed Calls Section (always shown) ---
-        item {
-            SectionHeader(title = "Missed Calls (last $missedCallsHours hrs)")
+        // --- Missed Calls Section (only shown when not searching) ---
+        if (searchQuery.isBlank()) {
+            item {
+                SectionHeader(title = "Missed Calls (last $missedCallsHours hrs)")
+            }
+
+            if (missedCalls.isEmpty()) {
+                // Show green background with "No missed calls" message
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(GreenCall.copy(alpha = 0.3f))
+                            .padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No missed calls",
+                            style = if (useHugeText) MaterialTheme.typography.displaySmall else MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = GreenCall
+                        )
+                    }
+                    HorizontalDivider(thickness = 2.dp)
+                }
+            } else {
+                items(missedCalls) { callEntry ->
+                    // Try to find contact by number
+                    // Normalize numbers for comparison (remove spaces, dashes, etc.)
+                    val normalizedCallNumber = callEntry.contactId.replace(Regex("[^0-9+]"), "")
+                    
+                    val contact = allContacts.find { 
+                        val normalizedContactNumber = it.number.replace(Regex("[^0-9+]"), "")
+                        // Check if one ends with the other (to handle country codes roughly)
+                        if (normalizedCallNumber.length > 6 && normalizedContactNumber.length > 6) {
+                            normalizedCallNumber.endsWith(normalizedContactNumber) || normalizedContactNumber.endsWith(normalizedCallNumber)
+                        } else {
+                            normalizedCallNumber == normalizedContactNumber
+                        }
+                    } ?: Contact(
+                            id = callEntry.id,
+                            name = callEntry.contactId, // Show number as name
+                            number = callEntry.contactId
+                        )
+                    ContactRow(
+                        contact = contact,
+                        onCallClick = { onCallClick(contact.number) },
+                        showFavoriteStar = false,
+                        useHugeText = useHugeText
+                    )
+                    HorizontalDivider()
+                }
+            }
         }
 
-        if (missedCalls.isEmpty()) {
-            // Show green background with "No missed calls" message
+        // --- Favorites Section (only shown when not searching) ---
+        if (searchQuery.isBlank()) {
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(GreenCall.copy(alpha = 0.3f))
-                        .padding(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
+                SectionHeader(title = "Favorites")
+            }
+
+            if (favorites.isEmpty()) {
+                item {
                     Text(
-                        text = "No missed calls",
-                        style = if (useHugeText) MaterialTheme.typography.displaySmall else MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = GreenCall
+                        "No favorites",
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodyLarge
                     )
                 }
-                HorizontalDivider(thickness = 2.dp)
-            }
-        } else {
-            items(missedCalls) { callEntry ->
-                // Try to find contact by number
-                // Normalize numbers for comparison (remove spaces, dashes, etc.)
-                val normalizedCallNumber = callEntry.contactId.replace(Regex("[^0-9+]"), "")
-                
-                val contact = allContacts.find { 
-                    val normalizedContactNumber = it.number.replace(Regex("[^0-9+]"), "")
-                    // Check if one ends with the other (to handle country codes roughly)
-                    if (normalizedCallNumber.length > 6 && normalizedContactNumber.length > 6) {
-                        normalizedCallNumber.endsWith(normalizedContactNumber) || normalizedContactNumber.endsWith(normalizedCallNumber)
-                    } else {
-                        normalizedCallNumber == normalizedContactNumber
-                    }
-                } ?: Contact(
-                        id = callEntry.id,
-                        name = callEntry.contactId, // Show number as name
-                        number = callEntry.contactId
+            } else {
+                items(favorites) { contact ->
+                    ContactRow(
+                        contact = contact,
+                        onCallClick = { onCallClick(contact.number) },
+                        showFavoriteStar = true,
+                        useHugeText = useHugeText
                     )
-                ContactRow(
-                    contact = contact,
-                    onCallClick = { onCallClick(contact.number) },
-                    showFavoriteStar = false,
-                    useHugeText = useHugeText
-                )
-                HorizontalDivider()
+                    HorizontalDivider()
+                }
             }
         }
 
-        // --- Favorites Section ---
+        // --- Phone Book Section (or Search Results) ---
         item {
-            SectionHeader(title = "Favorites")
-        }
-
-        if (favorites.isEmpty()) {
-            item {
-                Text(
-                    "No favorites",
-                    modifier = Modifier.padding(16.dp),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
-        } else {
-            items(favorites) { contact ->
-                ContactRow(
-                    contact = contact,
-                    onCallClick = { onCallClick(contact.number) },
-                    showFavoriteStar = true,
-                    useHugeText = useHugeText
-                )
-                HorizontalDivider()
-            }
-        }
-
-        // --- Phone Book Section ---
-        item {
-            SectionHeader(title = "Phone Book")
+            SectionHeader(title = if (searchQuery.isBlank()) "Phone Book" else "Search Results")
         }
         
 

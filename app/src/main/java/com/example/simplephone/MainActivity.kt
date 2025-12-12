@@ -587,7 +587,8 @@ fun SimplePhoneApp(
                                         audioManager.isBluetoothScoOn = false
                                     }
                                 }
-                            }
+                            },
+                            useHapticFeedback = useHapticFeedback
                         )
                     }
                 }
