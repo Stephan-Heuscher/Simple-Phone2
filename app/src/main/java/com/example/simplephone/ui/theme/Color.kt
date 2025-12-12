@@ -19,3 +19,15 @@ val AlertRed = Color(0xFFB00020)
 
 val GreenCall = Color(0xFF00C853)
 val RedHangup = Color(0xFFD50000)
+
+// Additional accessible colors
+val FavoriteGold = Color(0xFFFFD700) // Gold star for favorites
+val AvatarBlue = Color(0xFF1565C0) // Avatar background
+val AvatarTeal = Color(0xFF00838F)
+val AvatarPurple = Color(0xFF6A1B9A)
+val AvatarGreen = Color(0xFF2E7D32)
+val AvatarOrange = Color(0xFFE65100)
+
+// Audio output button colors
+val SpeakerActive = Color(0xFF4CAF50)
+val SpeakerInactive = Color(0xFF757575)

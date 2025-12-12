@@ -7,14 +7,41 @@ import java.time.LocalDateTime
 
 object MockData {
     val contacts = listOf(
-        Contact("1", "Amelia", "0123456789", isFavorite = true),
-        Contact("2", "Bob", "0987654321", isFavorite = true),
+        Contact("1", "Amelia", "0123456789", isFavorite = true, sortOrder = 0),
+        Contact("2", "Bob", "0987654321", isFavorite = true, sortOrder = 1),
         Contact("3", "Charlie", "1122334455", isFavorite = false),
-        Contact("4", "Doctor Smith", "555-0123", isFavorite = true),
-        Contact("5", "Emergency", "911", isFavorite = true),
+        Contact("4", "Doctor Smith", "555-0123", isFavorite = true, sortOrder = 2),
+        Contact("5", "Emergency", "911", isFavorite = true, sortOrder = 3),
         Contact("6", "Frank", "4455667788", isFavorite = false),
-        Contact("7", "Grandson", "9988776655", isFavorite = true),
+        Contact("7", "Grandson", "9988776655", isFavorite = true, sortOrder = 4),
     )
+
+    // Mutable list for favorites ordering
+    private var _favoritesOrder: MutableList<String> = contacts
+        .filter { it.isFavorite }
+        .sortedBy { it.sortOrder }
+        .map { it.id }
+        .toMutableList()
+
+    fun getFavoritesOrdered(): List<Contact> {
+        return _favoritesOrder.mapNotNull { id -> contacts.find { it.id == id } }
+    }
+
+    fun moveFavoriteUp(contactId: String) {
+        val index = _favoritesOrder.indexOf(contactId)
+        if (index > 0) {
+            _favoritesOrder.removeAt(index)
+            _favoritesOrder.add(index - 1, contactId)
+        }
+    }
+
+    fun moveFavoriteDown(contactId: String) {
+        val index = _favoritesOrder.indexOf(contactId)
+        if (index >= 0 && index < _favoritesOrder.size - 1) {
+            _favoritesOrder.removeAt(index)
+            _favoritesOrder.add(index + 1, contactId)
+        }
+    }
 
     fun getRecents(): List<CallLogEntry> {
         val now = LocalDateTime.now()
@@ -25,6 +52,12 @@ object MockData {
             CallLogEntry("4", "2", now.minusHours(3), CallType.INCOMING), // 3h ago (Subject to filter)
             CallLogEntry("5", "3", now.minusHours(5), CallType.MISSED)   // 5h ago (Subject to filter)
         )
+    }
+
+    fun getLastMissedCall(): CallLogEntry? {
+        return getRecents()
+            .filter { it.type == CallType.MISSED }
+            .maxByOrNull { it.timestamp }
     }
 
     fun getContactById(id: String): Contact? {
