@@ -143,30 +143,28 @@ fun MainScreen(
                         role = Role.Button
                     )
                     .semantics { contentDescription = "Open Dialer" },
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.TopStart
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(4.dp),
+                        .padding(start = 5.dp, top = 5.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     val textStyle = MaterialTheme.typography.labelMedium.copy(
                         fontWeight = FontWeight.Bold, 
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
+                    val buttonSize = 24.dp
                     
                     // Row 1: 1, 2, 3
                     Row(
-                        modifier = Modifier.weight(1f).fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         listOf("1", "2", "3").forEach { num ->
                             Box(
                                 modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxSize()
-                                    .clip(RoundedCornerShape(4.dp))
+                                    .size(buttonSize)
+                                    .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -177,15 +175,13 @@ fun MainScreen(
                     
                     // Row 2: 4, 5, 6
                     Row(
-                        modifier = Modifier.weight(1f).fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         listOf("4", "5", "6").forEach { num ->
                             Box(
                                 modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxSize()
-                                    .clip(RoundedCornerShape(4.dp))
+                                    .size(buttonSize)
+                                    .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)),
                                 contentAlignment = Alignment.Center
                             ) {
