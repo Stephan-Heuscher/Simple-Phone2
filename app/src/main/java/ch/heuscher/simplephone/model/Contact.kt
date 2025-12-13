@@ -16,7 +16,8 @@ data class CallLogEntry(
     val id: String,
     val contactId: String,
     val timestamp: LocalDateTime,
-    val type: CallType
+    val type: CallType,
+    val duration: Long = 0
 )
 
 enum class CallType {

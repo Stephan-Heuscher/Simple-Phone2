@@ -89,12 +89,14 @@ class ContactRepository(private val context: Context) {
             val numberIndex = it.getColumnIndex(android.provider.CallLog.Calls.NUMBER)
             val typeIndex = it.getColumnIndex(android.provider.CallLog.Calls.TYPE)
             val dateIndex = it.getColumnIndex(android.provider.CallLog.Calls.DATE)
+            val durationIndex = it.getColumnIndex(android.provider.CallLog.Calls.DURATION)
             val idIndex = it.getColumnIndex(android.provider.CallLog.Calls._ID)
 
             while (it.moveToNext()) {
                 val number = it.getString(numberIndex)
                 val type = it.getInt(typeIndex)
                 val date = it.getLong(dateIndex)
+                val duration = it.getLong(durationIndex)
                 val id = it.getString(idIndex)
 
                 val callType = when (type) {
@@ -110,7 +112,8 @@ class ContactRepository(private val context: Context) {
                             id = id,
                             contactId = number, 
                             timestamp = java.time.Instant.ofEpochMilli(date).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime(),
-                            type = callType
+                            type = callType,
+                            duration = duration
                         )
                     )
                 }
@@ -122,8 +125,36 @@ class ContactRepository(private val context: Context) {
     fun getMissedCallsInLastHours(hours: Int): List<ch.heuscher.simplephone.model.CallLogEntry> {
         val allCalls = getCallLogs()
         val cutoffTime = java.time.LocalDateTime.now().minusHours(hours.toLong())
-        return allCalls.filter { 
+        
+        // 1. Filter for missed calls within the time window
+        val recentMissedCalls = allCalls.filter { 
             it.type == ch.heuscher.simplephone.model.CallType.MISSED && it.timestamp.isAfter(cutoffTime)
         }
+
+        // 2. Filter out missed calls if there was a successful conversation (> 20s) AFTER the missed call
+        val filteredMissedCalls = recentMissedCalls.filter { missedCall ->
+            val hasSubsequentConversation = allCalls.any { otherCall ->
+                // Check if it's the same number
+                val sameNumber = normalizeNumber(otherCall.contactId) == normalizeNumber(missedCall.contactId)
+                // Check if it's after the missed call
+                val isAfter = otherCall.timestamp.isAfter(missedCall.timestamp)
+                // Check if it's a conversation (Incoming or Outgoing) and > 20 seconds
+                val isConversation = (otherCall.type == ch.heuscher.simplephone.model.CallType.INCOMING || 
+                                     otherCall.type == ch.heuscher.simplephone.model.CallType.OUTGOING)
+                val isLongEnough = otherCall.duration > 20
+                
+                sameNumber && isAfter && isConversation && isLongEnough
+            }
+            !hasSubsequentConversation
+        }
+
+        // 3. Deduplicate by number (keep the most recent one)
+        return filteredMissedCalls
+            .sortedByDescending { it.timestamp }
+            .distinctBy { normalizeNumber(it.contactId) }
+    }
+
+    private fun normalizeNumber(number: String): String {
+        return number.replace(Regex("[^0-9]"), "")
     }
 }
