@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
@@ -154,8 +155,7 @@ fun MainScreen(
                         fontWeight = FontWeight.Bold, 
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                    val bigButtonSize = 36.dp
-                    val smallButtonSize = 20.dp
+                    val buttonSize = 34.dp
                     
                     // Row 1: 1, Circle, Circle
                     Row(
@@ -165,7 +165,7 @@ fun MainScreen(
                         // Number 1
                         Box(
                             modifier = Modifier
-                                .size(bigButtonSize)
+                                .requiredSize(buttonSize)
                                 .clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)),
                             contentAlignment = Alignment.Center
@@ -177,7 +177,7 @@ fun MainScreen(
                         repeat(2) {
                             Box(
                                 modifier = Modifier
-                                    .size(smallButtonSize)
+                                    .requiredSize(buttonSize)
                                     .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f))
                             )
@@ -191,7 +191,7 @@ fun MainScreen(
                         repeat(3) {
                             Box(
                                 modifier = Modifier
-                                    .size(smallButtonSize)
+                                    .requiredSize(buttonSize)
                                     .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f))
                             )
