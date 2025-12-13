@@ -291,6 +291,10 @@ class MainActivity : ComponentActivity() {
         val intent = Intent(Intent.ACTION_CALL).apply {
             data = Uri.parse("tel:$phoneNumber")
         }
+
+        // Cancel missed call notification if exists
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+        notificationManager.cancel(phoneNumber.hashCode())
         
         // Acquire wake lock when call starts
         try {
@@ -595,6 +599,9 @@ fun SimplePhoneApp(
                                 val newIndex = newOrder.indexOfFirst { it.id == contact.id }
                                 if (newIndex >= 0) contact.copy(sortOrder = newIndex) else contact
                             }.sortedWith(compareBy({ !it.isFavorite }, { it.sortOrder }))
+                            
+                            // Update widget
+                            FavoritesWidget.sendRefreshBroadcast(context)
                         },
                         isDefaultDialer = isDefaultDialer,
                         onSetDefaultDialer = onSetDefaultDialer,

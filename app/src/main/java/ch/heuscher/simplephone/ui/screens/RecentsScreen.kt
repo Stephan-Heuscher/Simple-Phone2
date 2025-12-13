@@ -45,7 +45,6 @@ fun RecentsScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text("No recent calls", style = MaterialTheme.typography.displaySmall)
-            Text("(Last $filterHours hours)", style = MaterialTheme.typography.bodyLarge)
         }
     } else {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
