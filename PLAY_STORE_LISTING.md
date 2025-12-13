@@ -91,3 +91,14 @@ Modern smartphones can be overwhelming. Simple Phone strips away the complexity 
 
 *   **Pricing:** **Free**.
 *   **Countries:** Select **All countries** (or specific ones if you prefer).
+
+## 7. Release Notes
+
+### v1.0 (Initial Release)
+*   **Launch:** First release of Simple Phone!
+*   **Features:**
+    *   Large, clear contact photos and names.
+    *   Simplified dialer with high-contrast buttons.
+    *   Completely offline - your data stays on your phone.
+    *   Emergency contact support.
+    *   No ads, 100% free.
