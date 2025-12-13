@@ -60,6 +60,8 @@ import ch.heuscher.simplephone.data.MockData
 import ch.heuscher.simplephone.model.CallLogEntry
 import ch.heuscher.simplephone.model.Contact
 import ch.heuscher.simplephone.ui.components.ContactAvatar
+import ch.heuscher.simplephone.ui.components.VerticalScrollbar
+import ch.heuscher.simplephone.ui.components.HorizontalScrollbar
 import ch.heuscher.simplephone.ui.theme.GreenCall
 import ch.heuscher.simplephone.ui.utils.vibrate
 
@@ -190,10 +192,16 @@ fun MainScreen(
             )
         }
 
-        LazyColumn(modifier = Modifier.fillMaxSize().weight(1f)) {
+        Box(modifier = Modifier.fillMaxSize().weight(1f)) {
+            val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+            
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                state = listState
+            ) {
 
-        // --- Default Dialer Warning Banner ---
-        if (!isDefaultDialer) {
+            // --- Default Dialer Warning Banner ---
+            if (!isDefaultDialer) {
             item {
                 Box(
                     modifier = Modifier
@@ -335,18 +343,24 @@ fun MainScreen(
             }
         }
 
-        items(filteredContacts) { contact ->
-            ContactRow(
-                contact = contact,
-                onCallClick = { 
-                    if (useHapticFeedback) vibrate(context)
-                    onCallClick(contact.number) 
-                },
-                showFavoriteStar = true,
-                useHugeText = useHugeText
-            )
-            HorizontalDivider()
+            items(filteredContacts) { contact ->
+                ContactRow(
+                    contact = contact,
+                    onCallClick = { 
+                        if (useHapticFeedback) vibrate(context)
+                        onCallClick(contact.number) 
+                    },
+                    showFavoriteStar = true,
+                    useHugeText = useHugeText
+                )
+                HorizontalDivider()
+            }
         }
+        
+        VerticalScrollbar(
+            modifier = Modifier.align(Alignment.CenterEnd),
+            listState = listState
+        )
     }
     }
 }
@@ -401,16 +415,22 @@ fun ContactRow(
                     .weight(1f)
             ) {
                 val scrollState = androidx.compose.foundation.rememberScrollState()
-                Text(
-                    text = contact.name,
-                    style = textStyle,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    maxLines = 1,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(scrollState)
-                )
+                Column {
+                    Text(
+                        text = contact.name,
+                        style = textStyle,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        maxLines = 1,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(scrollState)
+                    )
+                    HorizontalScrollbar(
+                        scrollState = scrollState,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
             }
         }
 

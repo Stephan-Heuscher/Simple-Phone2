@@ -1,5 +1,7 @@
 package ch.heuscher.simplephone.call
 
+import android.content.Context
+import android.os.PowerManager
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -52,9 +54,20 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
     private var contact by mutableStateOf<Contact?>(null)
     private var audioState by mutableStateOf<CallAudioState?>(null)
     
+    private var wakeLock: PowerManager.WakeLock? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        // Initialize Proximity WakeLock
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        if (powerManager.isWakeLockLevelSupported(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK)) {
+            wakeLock = powerManager.newWakeLock(
+                PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK,
+                "SimplePhone:ProximityWakeLock"
+            )
+        }
+
         // Show over lock screen
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
@@ -122,6 +135,9 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
     override fun onDestroy() {
         super.onDestroy()
         CallService.removeCallStateListener(this)
+        if (wakeLock?.isHeld == true) {
+            wakeLock?.release()
+        }
     }
     
     override fun onCallStateChanged(state: Int, number: String?, name: String?, audioState: CallAudioState?) {
@@ -130,6 +146,17 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
         if (name != null) callerName = name
         this.audioState = audioState
         
+        // Manage Proximity WakeLock based on call state
+        if (state == Call.STATE_ACTIVE || state == Call.STATE_DIALING || state == Call.STATE_CONNECTING) {
+            if (wakeLock?.isHeld == false) {
+                wakeLock?.acquire(10 * 60 * 1000L /*10 minutes*/)
+            }
+        } else {
+            if (wakeLock?.isHeld == true) {
+                wakeLock?.release()
+            }
+        }
+
         if (state == Call.STATE_DISCONNECTED) {
             finish()
         }
