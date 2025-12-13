@@ -130,21 +130,61 @@ fun MainScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Dialer Button
-            IconButton(
-                onClick = { 
-                    if (useHapticFeedback) vibrate(context)
-                    onDialerClick() 
-                },
+            Box(
                 modifier = Modifier
                     .size(56.dp)
-                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(16.dp))
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .clickable(
+                        onClick = { 
+                            if (useHapticFeedback) vibrate(context)
+                            onDialerClick() 
+                        },
+                        role = Role.Button
+                    )
+                    .semantics { contentDescription = "Open Dialer" },
+                contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Dialpad,
-                    contentDescription = "Open Dialer",
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(32.dp)
-                )
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Top row (1, 2, 3) - Bigger
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1.2f)
+                            .padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val textStyle = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold, 
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text("1", style = textStyle)
+                        Text("2", style = textStyle)
+                        Text("3", style = textStyle)
+                    }
+                    
+                    // Bottom row (4, 5, 6) - Cut off
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        val textStyle = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold, 
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text("4", style = textStyle)
+                        Text("5", style = textStyle)
+                        Text("6", style = textStyle)
+                    }
+                }
             }
             
             Spacer(modifier = Modifier.width(8.dp))
