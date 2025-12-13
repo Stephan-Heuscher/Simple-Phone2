@@ -181,6 +181,12 @@ class MainActivity : ComponentActivity() {
         
         // Refresh widget in case contacts or permissions changed
         FavoritesWidget.sendRefreshBroadcast(this)
+        
+        // Release wake lock when returning to app (call ended or minimized)
+        // Note: In a real app, we'd listen to call state changes to be more precise
+        if (wakeLock?.isHeld == true) {
+            wakeLock?.release()
+        }
     }
     
     override fun onDestroy() {
@@ -298,14 +304,6 @@ class MainActivity : ComponentActivity() {
         startActivity(intent)
     }
     
-    override fun onResume() {
-        super.onResume()
-        // Release wake lock when returning to app (call ended or minimized)
-        // Note: In a real app, we'd listen to call state changes to be more precise
-        if (wakeLock?.isHeld == true) {
-            wakeLock?.release()
-        }
-    }
     
     @Deprecated("Deprecated in Java")
     override fun onRequestPermissionsResult(
