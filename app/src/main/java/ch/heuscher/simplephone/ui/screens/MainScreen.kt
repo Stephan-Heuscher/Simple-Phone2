@@ -156,7 +156,6 @@ fun MainScreen(
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     val buttonSize = 31.dp
-                    val largeButtonSize = 37.dp
                     
                     // Row 1: 1, 2
                     Row(
@@ -166,7 +165,7 @@ fun MainScreen(
                         // Number 1
                         Box(
                             modifier = Modifier
-                                .requiredSize(largeButtonSize)
+                                .requiredSize(buttonSize)
                                 .clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)),
                             contentAlignment = Alignment.Center
@@ -186,7 +185,7 @@ fun MainScreen(
                         }
                     }
                     
-                    // Row 2: 4
+                    // Row 2: 4, 5
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
@@ -199,6 +198,17 @@ fun MainScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text("4", style = textStyle)
+                        }
+                        
+                        // Number 5
+                        Box(
+                            modifier = Modifier
+                                .requiredSize(buttonSize)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("5", style = textStyle)
                         }
                     }
                 }
