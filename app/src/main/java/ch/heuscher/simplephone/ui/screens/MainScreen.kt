@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
@@ -147,46 +148,57 @@ fun MainScreen(
             ) {
                 Column(
                     modifier = Modifier
-                        .padding(start = 5.dp, top = 5.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                        .padding(start = 6.dp, top = 6.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    val textStyle = MaterialTheme.typography.labelMedium.copy(
+                    val textStyle = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold, 
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                    val buttonSize = 24.dp
+                    val buttonSize = 34.dp
+                    val largeButtonSize = 41.dp
                     
-                    // Row 1: 1, 2, 3
+                    // Row 1: 1, 2
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        horizontalArrangement = Arrangement.spacedBy(20.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        listOf("1", "2", "3").forEach { num ->
-                            Box(
-                                modifier = Modifier
-                                    .size(buttonSize)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(num, style = textStyle)
-                            }
+                        // Number 1
+                        Box(
+                            modifier = Modifier
+                                .requiredSize(largeButtonSize)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("1", style = textStyle)
+                        }
+                        
+                        // Number 2
+                        Box(
+                            modifier = Modifier
+                                .requiredSize(buttonSize)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("2", style = textStyle)
                         }
                     }
                     
-                    // Row 2: 4, 5, 6
+                    // Row 2: 4
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        horizontalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
-                        listOf("4", "5", "6").forEach { num ->
-                            Box(
-                                modifier = Modifier
-                                    .size(buttonSize)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(num, style = textStyle)
-                            }
+                        // Number 4
+                        Box(
+                            modifier = Modifier
+                                .requiredSize(buttonSize)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("4", style = textStyle)
                         }
                     }
                 }
