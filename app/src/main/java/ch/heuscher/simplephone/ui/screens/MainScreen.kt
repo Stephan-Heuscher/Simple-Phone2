@@ -133,7 +133,7 @@ fun MainScreen(
             Box(
                 modifier = Modifier
                     .size(56.dp)
-                    .clip(CircleShape)
+                    .clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.primaryContainer)
                     .clickable(
                         onClick = { 
@@ -146,43 +146,52 @@ fun MainScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Top,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    // Top row (1, 2, 3) - Bigger
+                    val textStyle = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Bold, 
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    
+                    // Row 1: 1, 2, 3
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1.2f)
-                            .padding(top = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        val textStyle = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold, 
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Text("1", style = textStyle)
-                        Text("2", style = textStyle)
-                        Text("3", style = textStyle)
+                        listOf("1", "2", "3").forEach { num ->
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(num, style = textStyle)
+                            }
+                        }
                     }
                     
-                    // Bottom row (4, 5, 6) - Cut off
+                    // Row 2: 4, 5, 6
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.Top
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        val textStyle = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold, 
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Text("4", style = textStyle)
-                        Text("5", style = textStyle)
-                        Text("6", style = textStyle)
+                        listOf("4", "5", "6").forEach { num ->
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(num, style = textStyle)
+                            }
+                        }
                     }
                 }
             }
