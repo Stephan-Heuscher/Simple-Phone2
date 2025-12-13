@@ -1,7 +1,9 @@
 package ch.heuscher.simplephone.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +40,7 @@ import android.telephony.PhoneNumberUtils
 import java.util.Locale
 import ch.heuscher.simplephone.ui.theme.GreenCall
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DialerScreen(
     onCallClick: (String) -> Unit,
@@ -150,16 +153,27 @@ fun DialerScreen(
             }
 
             // Backspace Button
-            IconButton(
-                onClick = {
-                    if (useHapticFeedback) {
-                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    }
-                    if (phoneNumber.isNotEmpty()) {
-                        phoneNumber = phoneNumber.dropLast(1)
-                    }
-                },
-                modifier = Modifier.size(80.dp)
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .combinedClickable(
+                        onClick = {
+                            if (useHapticFeedback) {
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            }
+                            if (phoneNumber.isNotEmpty()) {
+                                phoneNumber = phoneNumber.dropLast(1)
+                            }
+                        },
+                        onLongClick = {
+                            if (useHapticFeedback) {
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            }
+                            phoneNumber = ""
+                        }
+                    ),
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Backspace,
