@@ -9,11 +9,11 @@ kotlin {
 }
 
 android {
-    namespace = "com.example.simplephone"
+    namespace = "ch.heuscher.simplephone"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.simplephone"
+        applicationId = "ch.heuscher.simplephone"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
