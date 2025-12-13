@@ -301,7 +301,7 @@ fun MainScreen(
         // --- Missed Calls Section (only shown when not searching) ---
         if (searchQuery.isBlank()) {
             item {
-                SectionHeader(title = "Missed Calls (last $missedCallsHours hrs)")
+                SectionHeader(title = "Missed Calls")
             }
 
             if (missedCalls.isEmpty()) {
