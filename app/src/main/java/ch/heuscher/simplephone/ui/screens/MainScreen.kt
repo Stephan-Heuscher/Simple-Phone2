@@ -147,14 +147,14 @@ fun MainScreen(
             ) {
                 Column(
                     modifier = Modifier
-                        .padding(start = 5.dp, top = 5.dp),
+                        .padding(start = 4.dp, top = 4.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     val textStyle = MaterialTheme.typography.labelMedium.copy(
                         fontWeight = FontWeight.Bold, 
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                    val buttonSize = 24.dp
+                    val buttonSize = 34.dp
                     
                     // Row 1: 1, 2, 3
                     Row(
