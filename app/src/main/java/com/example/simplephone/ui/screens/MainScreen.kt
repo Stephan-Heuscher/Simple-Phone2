@@ -156,13 +156,7 @@ fun MainScreen(
                         style = MaterialTheme.typography.bodyLarge
                     ) 
                 },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                },
+                leadingIcon = null,
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { 
@@ -176,6 +170,12 @@ fun MainScreen(
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 },
                 singleLine = true,
