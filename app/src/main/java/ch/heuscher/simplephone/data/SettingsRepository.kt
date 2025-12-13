@@ -26,7 +26,7 @@ class SettingsRepository(context: Context) {
         private const val KEY_IS_DEMO_MODE = "is_demo_mode"
         
         private const val DEFAULT_FILTER_HOURS = 2
-        private const val DEFAULT_MISSED_CALLS_HOURS = 24
+        private const val DEFAULT_MISSED_CALLS_HOURS = 4
         
         // Dark Mode Options
         const val DARK_MODE_SYSTEM = 0

@@ -1,5 +1,9 @@
 package ch.heuscher.simplephone.ui.screens
 
+import android.content.Context
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.view.MotionEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -48,6 +52,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.unit.dp
@@ -79,10 +84,25 @@ fun SettingsScreen(
     // Remember favorites order for reordering
     val mutableFavorites = remember(favorites) { mutableStateListOf(*favorites.toTypedArray()) }
     
-    val hapticFeedback = LocalHapticFeedback.current
-    fun vibrate() {
-        if (useHapticFeedback) {
-            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+    val context = LocalContext.current
+    fun vibrate(force: Boolean = false) {
+        if (useHapticFeedback || force) {
+            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as android.os.VibratorManager
+                vibratorManager.defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+            }
+            
+            if (vibrator.hasVibrator()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
+                } else {
+                    @Suppress("DEPRECATION")
+                    vibrator.vibrate(50)
+                }
+            }
         }
     }
 
@@ -259,7 +279,7 @@ fun SettingsScreen(
                 SettingsToggleButton(
                     isEnabled = useHapticFeedback,
                     onToggle = { 
-                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        vibrate(force = true)
                         onHapticFeedbackChange(!useHapticFeedback) 
                     },
                     label = if (useHapticFeedback) "ON" else "OFF"
