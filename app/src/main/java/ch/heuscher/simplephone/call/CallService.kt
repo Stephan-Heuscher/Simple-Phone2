@@ -395,12 +395,10 @@ class CallService : InCallService() {
             android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT
         )
         
-        val notificationId = number.replace(Regex("[^0-9]"), "").hashCode()
-
         // Ignore Action (Dismiss)
         val ignoreIntent = Intent(context, NotificationReceiver::class.java).apply {
             action = "IGNORE"
-            putExtra("notification_id", notificationId)
+            putExtra("notification_id", number.hashCode())
         }
         val ignorePendingIntent = android.app.PendingIntent.getBroadcast(
             context, 2, ignoreIntent,
@@ -424,7 +422,7 @@ class CallService : InCallService() {
         
         val notification = notificationBuilder.build()
             
-        notificationManager.notify(notificationId, notification)
+        notificationManager.notify(number.hashCode(), notification)
     }
     
     private fun createCircularBitmap(bitmap: Bitmap): Bitmap {

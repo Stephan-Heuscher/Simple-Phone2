@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
@@ -148,53 +147,46 @@ fun MainScreen(
             ) {
                 Column(
                     modifier = Modifier
-                        .padding(start = 6.dp, top = 6.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                        .padding(start = 5.dp, top = 5.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    val textStyle = MaterialTheme.typography.titleLarge.copy(
+                    val textStyle = MaterialTheme.typography.labelMedium.copy(
                         fontWeight = FontWeight.Bold, 
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                    val buttonSize = 34.dp
+                    val buttonSize = 24.dp
                     
-                    // Row 1: 1, Circle, Circle
+                    // Row 1: 1, 2, 3
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        // Number 1
-                        Box(
-                            modifier = Modifier
-                                .requiredSize(buttonSize)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("1", style = textStyle)
-                        }
-                        
-                        // Empty circles
-                        repeat(2) {
+                        listOf("1", "2", "3").forEach { num ->
                             Box(
                                 modifier = Modifier
-                                    .requiredSize(buttonSize)
+                                    .size(buttonSize)
                                     .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f))
-                            )
+                                    .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(num, style = textStyle)
+                            }
                         }
                     }
                     
-                    // Row 2: Empty circles
+                    // Row 2: 4, 5, 6
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        repeat(3) {
+                        listOf("4", "5", "6").forEach { num ->
                             Box(
                                 modifier = Modifier
-                                    .requiredSize(buttonSize)
+                                    .size(buttonSize)
                                     .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f))
-                            )
+                                    .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(num, style = textStyle)
+                            }
                         }
                     }
                 }
@@ -287,7 +279,7 @@ fun MainScreen(
         // --- Missed Calls Section (only shown when not searching) ---
         if (searchQuery.isBlank()) {
             item {
-                SectionHeader(title = "Missed Calls")
+                SectionHeader(title = "Missed Calls (last $missedCallsHours hrs)")
             }
 
             if (missedCalls.isEmpty()) {

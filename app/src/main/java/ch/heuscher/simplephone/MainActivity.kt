@@ -294,8 +294,7 @@ class MainActivity : ComponentActivity() {
 
         // Cancel missed call notification if exists
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
-        val notificationId = phoneNumber.replace(Regex("[^0-9]"), "").hashCode()
-        notificationManager.cancel(notificationId)
+        notificationManager.cancel(phoneNumber.hashCode())
         
         // Acquire wake lock when call starts
         try {
