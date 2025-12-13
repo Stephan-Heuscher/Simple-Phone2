@@ -29,6 +29,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
+import androidx.compose.ui.platform.LocalContext
+import ch.heuscher.simplephone.ui.utils.vibrate
 import ch.heuscher.simplephone.data.ContactRepository
 import ch.heuscher.simplephone.model.Contact
 import ch.heuscher.simplephone.ui.components.ContactAvatar
@@ -146,6 +148,7 @@ fun CallScreen(
     onHangup: () -> Unit,
     onAudioRouteSelected: (Int) -> Unit
 ) {
+    val context = LocalContext.current
     val statusText = when (callState) {
         Call.STATE_RINGING -> "Incoming Call"
         Call.STATE_DIALING -> "Calling..."
@@ -236,7 +239,10 @@ fun CallScreen(
                 if (supportedRouteMask and CallAudioState.ROUTE_SPEAKER != 0) {
                     val isSelected = route == CallAudioState.ROUTE_SPEAKER
                     FilledIconButton(
-                        onClick = { onAudioRouteSelected(CallAudioState.ROUTE_SPEAKER) },
+                        onClick = { 
+                            vibrate(context)
+                            onAudioRouteSelected(CallAudioState.ROUTE_SPEAKER) 
+                        },
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                             contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
@@ -253,7 +259,10 @@ fun CallScreen(
                 if (supportedRouteMask and CallAudioState.ROUTE_BLUETOOTH != 0) {
                     val isSelected = route == CallAudioState.ROUTE_BLUETOOTH
                     FilledIconButton(
-                        onClick = { onAudioRouteSelected(CallAudioState.ROUTE_BLUETOOTH) },
+                        onClick = { 
+                            vibrate(context)
+                            onAudioRouteSelected(CallAudioState.ROUTE_BLUETOOTH) 
+                        },
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                             contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
@@ -271,7 +280,10 @@ fun CallScreen(
                     val isSelected = route == CallAudioState.ROUTE_EARPIECE || route == CallAudioState.ROUTE_WIRED_HEADSET
                     val targetRoute = if (supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0) CallAudioState.ROUTE_WIRED_HEADSET else CallAudioState.ROUTE_EARPIECE
                     FilledIconButton(
-                        onClick = { onAudioRouteSelected(targetRoute) },
+                        onClick = { 
+                            vibrate(context)
+                            onAudioRouteSelected(targetRoute) 
+                        },
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                             contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
@@ -300,7 +312,10 @@ fun CallScreen(
                             .size(100.dp)
                             .clip(CircleShape)
                             .background(RedHangup)
-                            .clickable { onReject() },
+                            .clickable { 
+                                vibrate(context)
+                                onReject() 
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -326,7 +341,10 @@ fun CallScreen(
                             .size(100.dp)
                             .clip(CircleShape)
                             .background(GreenCall)
-                            .clickable { onAnswer() },
+                            .clickable { 
+                                vibrate(context)
+                                onAnswer() 
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -353,7 +371,10 @@ fun CallScreen(
                         .size(100.dp)
                         .clip(CircleShape)
                         .background(RedHangup)
-                        .clickable { onHangup() },
+                        .clickable { 
+                            vibrate(context)
+                            onHangup() 
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(

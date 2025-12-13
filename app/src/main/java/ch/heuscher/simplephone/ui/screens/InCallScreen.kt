@@ -54,8 +54,8 @@ import ch.heuscher.simplephone.ui.theme.RedHangup
 import ch.heuscher.simplephone.ui.theme.SpeakerActive
 import ch.heuscher.simplephone.ui.theme.SpeakerInactive
 
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
+import ch.heuscher.simplephone.ui.utils.vibrate
 
 /**
  * In-call screen UI - ultra accessible with large buttons and high contrast
@@ -73,10 +73,10 @@ fun InCallScreen(
     onAudioOutputChange: (AudioOutput) -> Unit,
     useHapticFeedback: Boolean = true
 ) {
-    val hapticFeedback = LocalHapticFeedback.current
+    val context = LocalContext.current
     fun vibrate() {
         if (useHapticFeedback) {
-            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+            vibrate(context)
         }
     }
 

@@ -31,14 +31,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import android.telephony.PhoneNumberUtils
 import java.util.Locale
 import ch.heuscher.simplephone.ui.theme.GreenCall
+import ch.heuscher.simplephone.ui.utils.vibrate
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -47,7 +47,7 @@ fun DialerScreen(
     useHapticFeedback: Boolean = false
 ) {
     var phoneNumber by remember { mutableStateOf("") }
-    val hapticFeedback = LocalHapticFeedback.current
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -96,7 +96,7 @@ fun DialerScreen(
                             text = key,
                             onClick = {
                                 if (useHapticFeedback) {
-                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    vibrate(context)
                                 }
                                 if (phoneNumber.length < 15) {
                                     phoneNumber += key
@@ -123,7 +123,7 @@ fun DialerScreen(
                 text = "+",
                 onClick = {
                     if (useHapticFeedback) {
-                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        vibrate(context)
                     }
                     if (phoneNumber.length < 15) {
                         phoneNumber += "+"
@@ -138,6 +138,9 @@ fun DialerScreen(
                     .clip(CircleShape)
                     .background(GreenCall)
                     .clickable {
+                        if (useHapticFeedback) {
+                            vibrate(context)
+                        }
                         if (phoneNumber.isNotEmpty()) {
                             onCallClick(phoneNumber)
                         }
@@ -160,7 +163,7 @@ fun DialerScreen(
                     .combinedClickable(
                         onClick = {
                             if (useHapticFeedback) {
-                                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                vibrate(context)
                             }
                             if (phoneNumber.isNotEmpty()) {
                                 phoneNumber = phoneNumber.dropLast(1)
@@ -168,7 +171,7 @@ fun DialerScreen(
                         },
                         onLongClick = {
                             if (useHapticFeedback) {
-                                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                vibrate(context)
                             }
                             phoneNumber = ""
                         }

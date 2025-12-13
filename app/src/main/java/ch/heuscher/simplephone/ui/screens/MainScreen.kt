@@ -43,8 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -61,6 +60,7 @@ import ch.heuscher.simplephone.model.CallLogEntry
 import ch.heuscher.simplephone.model.Contact
 import ch.heuscher.simplephone.ui.components.ContactAvatar
 import ch.heuscher.simplephone.ui.theme.GreenCall
+import ch.heuscher.simplephone.ui.utils.vibrate
 
 @Composable
 fun MainScreen(
@@ -81,7 +81,7 @@ fun MainScreen(
     // Search state
     var searchQuery by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
-    val hapticFeedback = LocalHapticFeedback.current
+    val context = LocalContext.current
     
     // Filtered contacts based on search
     val filteredContacts = remember(allContacts, missedCalls, searchQuery) {
@@ -129,7 +129,7 @@ fun MainScreen(
             // Dialer Button
             IconButton(
                 onClick = { 
-                    if (useHapticFeedback) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (useHapticFeedback) vibrate(context)
                     onDialerClick() 
                 },
                 modifier = Modifier
@@ -162,7 +162,7 @@ fun MainScreen(
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { 
-                            if (useHapticFeedback) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            if (useHapticFeedback) vibrate(context)
                             searchQuery = ""
                             focusManager.clearFocus()
                         }) {
@@ -199,7 +199,7 @@ fun MainScreen(
                         .fillMaxWidth()
                         .background(Color(0xFFFF6B00))
                         .clickable { 
-                            if (useHapticFeedback) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            if (useHapticFeedback) vibrate(context)
                             onSetDefaultDialer() 
                         }
                         .padding(16.dp),
@@ -268,7 +268,10 @@ fun MainScreen(
                         )
                     ContactRow(
                         contact = contact,
-                        onCallClick = { onCallClick(contact.number) },
+                        onCallClick = { 
+                            if (useHapticFeedback) vibrate(context)
+                            onCallClick(contact.number) 
+                        },
                         showFavoriteStar = false,
                         useHugeText = useHugeText
                     )
@@ -295,7 +298,10 @@ fun MainScreen(
                 items(favorites) { contact ->
                     ContactRow(
                         contact = contact,
-                        onCallClick = { onCallClick(contact.number) },
+                        onCallClick = { 
+                            if (useHapticFeedback) vibrate(context)
+                            onCallClick(contact.number) 
+                        },
                         showFavoriteStar = true,
                         useHugeText = useHugeText
                     )
@@ -325,7 +331,10 @@ fun MainScreen(
         items(filteredContacts) { contact ->
             ContactRow(
                 contact = contact,
-                onCallClick = { onCallClick(contact.number) },
+                onCallClick = { 
+                    if (useHapticFeedback) vibrate(context)
+                    onCallClick(contact.number) 
+                },
                 showFavoriteStar = true,
                 useHugeText = useHugeText
             )
