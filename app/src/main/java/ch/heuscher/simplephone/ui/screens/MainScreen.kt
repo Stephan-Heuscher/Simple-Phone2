@@ -147,46 +147,54 @@ fun MainScreen(
             ) {
                 Column(
                     modifier = Modifier
-                        .padding(start = 8.dp, top = 8.dp),
+                        .padding(start = 6.dp, top = 6.dp),
                     verticalArrangement = Arrangement.spacedBy(1.dp)
                 ) {
-                    val textStyle = MaterialTheme.typography.labelMedium.copy(
+                    val textStyle = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold, 
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                    val buttonSize = 34.dp
+                    val bigButtonSize = 38.dp
+                    val smallButtonSize = 34.dp
                     
-                    // Row 1: 1, 2, 3
+                    // Row 1: 1, Circle, Circle
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(1.dp)
+                        horizontalArrangement = Arrangement.spacedBy(1.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        listOf("1", "2", "3").forEach { num ->
+                        // Number 1
+                        Box(
+                            modifier = Modifier
+                                .size(bigButtonSize)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("1", style = textStyle)
+                        }
+                        
+                        // Empty circles
+                        repeat(2) {
                             Box(
                                 modifier = Modifier
-                                    .size(buttonSize)
+                                    .size(smallButtonSize)
                                     .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(num, style = textStyle)
-                            }
+                                    .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f))
+                            )
                         }
                     }
                     
-                    // Row 2: 4, 5, 6
+                    // Row 2: Empty circles
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(1.dp)
                     ) {
-                        listOf("4", "5", "6").forEach { num ->
+                        repeat(3) {
                             Box(
                                 modifier = Modifier
-                                    .size(buttonSize)
+                                    .size(smallButtonSize)
                                     .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(num, style = textStyle)
-                            }
+                                    .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f))
+                            )
                         }
                     }
                 }
