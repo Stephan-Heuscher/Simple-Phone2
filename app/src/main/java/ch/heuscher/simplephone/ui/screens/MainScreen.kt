@@ -154,7 +154,7 @@ fun MainScreen(
                         fontWeight = FontWeight.Bold, 
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                    val buttonSize = 30.dp
+                    val buttonSize = 34.dp
                     
                     // Row 1: 1, 2, 3
                     Row(
@@ -279,7 +279,7 @@ fun MainScreen(
         // --- Missed Calls Section (only shown when not searching) ---
         if (searchQuery.isBlank()) {
             item {
-                SectionHeader(title = "Missed Calls (last $missedCallsHours hrs)")
+                SectionHeader(title = "Missed Calls")
             }
 
             if (missedCalls.isEmpty()) {
