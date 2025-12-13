@@ -147,19 +147,19 @@ fun MainScreen(
             ) {
                 Column(
                     modifier = Modifier
-                        .padding(start = 6.dp, top = 6.dp),
-                    verticalArrangement = Arrangement.spacedBy(1.dp)
+                        .padding(start = 4.dp, top = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    val textStyle = MaterialTheme.typography.titleMedium.copy(
+                    val textStyle = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold, 
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                    val bigButtonSize = 38.dp
-                    val smallButtonSize = 34.dp
+                    val bigButtonSize = 36.dp
+                    val smallButtonSize = 20.dp
                     
                     // Row 1: 1, Circle, Circle
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(1.dp),
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Number 1
@@ -186,7 +186,7 @@ fun MainScreen(
                     
                     // Row 2: Empty circles
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(1.dp)
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         repeat(3) {
                             Box(
