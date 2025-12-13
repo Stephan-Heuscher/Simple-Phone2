@@ -147,18 +147,18 @@ fun MainScreen(
             ) {
                 Column(
                     modifier = Modifier
-                        .padding(start = 4.dp, top = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                        .padding(start = 8.dp, top = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(1.dp)
                 ) {
                     val textStyle = MaterialTheme.typography.labelMedium.copy(
                         fontWeight = FontWeight.Bold, 
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                    val buttonSize = 34.dp
+                    val buttonSize = 30.dp
                     
                     // Row 1: 1, 2, 3
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        horizontalArrangement = Arrangement.spacedBy(1.dp)
                     ) {
                         listOf("1", "2", "3").forEach { num ->
                             Box(
@@ -175,7 +175,7 @@ fun MainScreen(
                     
                     // Row 2: 4, 5, 6
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        horizontalArrangement = Arrangement.spacedBy(1.dp)
                     ) {
                         listOf("4", "5", "6").forEach { num ->
                             Box(
