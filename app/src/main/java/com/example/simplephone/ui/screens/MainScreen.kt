@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Dialpad
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -136,7 +137,7 @@ fun MainScreen(
                     .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(16.dp))
             ) {
                 Icon(
-                    imageVector = Icons.Default.Phone,
+                    imageVector = Icons.Default.Dialpad,
                     contentDescription = "Open Dialer",
                     tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.size(32.dp)

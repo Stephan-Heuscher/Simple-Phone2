@@ -114,7 +114,8 @@ fun DialerScreen(
         ) {
             
             // Plus Button
-            IconButton(
+            DialerButton(
+                text = "+",
                 onClick = {
                     if (useHapticFeedback) {
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -122,16 +123,8 @@ fun DialerScreen(
                     if (phoneNumber.length < 15) {
                         phoneNumber += "+"
                     }
-                },
-                modifier = Modifier.size(80.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add Plus",
-                    modifier = Modifier.size(32.dp),
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
-            }
+                }
+            )
 
             // Call Button
             Box(
