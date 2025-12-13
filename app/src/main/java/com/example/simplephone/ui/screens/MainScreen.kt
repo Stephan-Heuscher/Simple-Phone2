@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -53,7 +54,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.res.vectorResource
 import android.view.MotionEvent
+import com.example.simplephone.R
 import com.example.simplephone.data.MockData
 import com.example.simplephone.model.CallLogEntry
 import com.example.simplephone.model.Contact
@@ -135,7 +138,7 @@ fun MainScreen(
                     .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(16.dp))
             ) {
                 Icon(
-                    imageVector = Icons.Default.Call,
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_rotary_phone),
                     contentDescription = "Open Dialer",
                     tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.size(32.dp)
