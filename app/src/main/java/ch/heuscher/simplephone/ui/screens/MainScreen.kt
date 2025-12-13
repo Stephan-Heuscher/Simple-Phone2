@@ -155,7 +155,7 @@ fun MainScreen(
                         fontWeight = FontWeight.Bold, 
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                    val buttonSize = 31.dp
+                    val buttonSize = 37.dp
                     
                     // Row 1: 1, 2
                     Row(
@@ -187,7 +187,7 @@ fun MainScreen(
                     
                     // Row 2: 4, 5
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
                         // Number 4
                         Box(
