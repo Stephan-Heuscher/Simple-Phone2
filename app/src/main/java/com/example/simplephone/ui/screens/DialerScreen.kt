@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -112,7 +113,25 @@ fun DialerScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             
-            Spacer(modifier = Modifier.size(80.dp)) // Placeholder to balance backspace
+            // Plus Button
+            IconButton(
+                onClick = {
+                    if (useHapticFeedback) {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
+                    if (phoneNumber.length < 15) {
+                        phoneNumber += "+"
+                    }
+                },
+                modifier = Modifier.size(80.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add Plus",
+                    modifier = Modifier.size(32.dp),
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
 
             // Call Button
             Box(

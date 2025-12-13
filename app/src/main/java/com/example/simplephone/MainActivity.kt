@@ -94,9 +94,23 @@ class MainActivity : ComponentActivity() {
     private lateinit var contactRepository: ContactRepository
     private var textToSpeech: TextToSpeech? = null
     
+    private var wakeLock: android.os.PowerManager.WakeLock? = null
+    private lateinit var powerManager: android.os.PowerManager
+    
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        powerManager = getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+        
+        // Initialize WakeLock for proximity sensor
+        if (powerManager.isWakeLockLevelSupported(android.os.PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK)) {
+            wakeLock = powerManager.newWakeLock(
+                android.os.PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK,
+                "SimplePhone:ProximityWakeLock"
+            )
+        }
+
         
         settingsRepository = SettingsRepository(this)
         contactRepository = ContactRepository(this)
@@ -271,7 +285,26 @@ class MainActivity : ComponentActivity() {
         val intent = Intent(Intent.ACTION_CALL).apply {
             data = Uri.parse("tel:$phoneNumber")
         }
+        
+        // Acquire wake lock when call starts
+        try {
+            if (wakeLock?.isHeld == false) {
+                wakeLock?.acquire(10 * 60 * 1000L /*10 minutes*/)
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "Error acquiring wake lock", e)
+        }
+        
         startActivity(intent)
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        // Release wake lock when returning to app (call ended or minimized)
+        // Note: In a real app, we'd listen to call state changes to be more precise
+        if (wakeLock?.isHeld == true) {
+            wakeLock?.release()
+        }
     }
     
     @Deprecated("Deprecated in Java")
