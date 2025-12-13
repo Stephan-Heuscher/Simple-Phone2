@@ -2,6 +2,7 @@ package com.example.simplephone.ui.components
 
 import android.view.MotionEvent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
@@ -14,6 +15,7 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material3.BottomAppBar 
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -50,6 +52,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object PhoneBook : Screen("contacts", "Book", Icons.Filled.ContactPhone)
     object Settings : Screen("settings", "Options", Icons.Filled.Settings)
     object InCall : Screen("incall", "Call", Icons.Filled.Home)
+    object Dialer : Screen("dialer", "Dialer", Icons.Filled.Call)
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
@@ -57,11 +60,12 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
 fun AppScaffold(
     navController: NavController,
     currentScreenTitle: String,
+    onTitleClick: () -> Unit = {},
     content: @Composable (Modifier) -> Unit
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    val showBackArrow = currentRoute == Screen.Settings.route
+    val showBackArrow = currentRoute == Screen.Settings.route || currentRoute == Screen.Dialer.route
 
     Scaffold(
         topBar = {
@@ -69,7 +73,8 @@ fun AppScaffold(
                 title = { 
                     Text(
                         text = currentScreenTitle,
-                        style = MaterialTheme.typography.headlineLarge // Huge title
+                        style = MaterialTheme.typography.headlineLarge, // Huge title
+                        modifier = Modifier.clickable { onTitleClick() }
                     ) 
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

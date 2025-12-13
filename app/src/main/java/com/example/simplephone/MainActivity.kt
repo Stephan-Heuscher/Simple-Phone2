@@ -69,6 +69,7 @@ import com.example.simplephone.ui.components.Screen
 import com.example.simplephone.ui.screens.FavoritesScreen
 import com.example.simplephone.ui.screens.InCallScreen
 import com.example.simplephone.ui.screens.MainScreen
+import com.example.simplephone.ui.screens.DialerScreen
 import com.example.simplephone.ui.screens.OnboardingScreen
 import com.example.simplephone.ui.screens.PhoneBookScreen
 import com.example.simplephone.ui.screens.RecentsScreen
@@ -180,6 +181,7 @@ class MainActivity : ComponentActivity() {
             if (roleManager.isRoleAvailable(android.app.role.RoleManager.ROLE_DIALER) &&
                 !roleManager.isRoleHeld(android.app.role.RoleManager.ROLE_DIALER)) {
                 val intent = roleManager.createRequestRoleIntent(android.app.role.RoleManager.ROLE_DIALER)
+                @Suppress("DEPRECATION")
                 startActivityForResult(intent, REQUEST_CODE_SET_DEFAULT_DIALER)
             } else {
                 // Already default or role not available
@@ -229,6 +231,7 @@ class MainActivity : ComponentActivity() {
                     val intent = Intent(android.telecom.TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
                         putExtra(android.telecom.TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, packageName)
                     }
+                    @Suppress("DEPRECATION")
                     startActivityForResult(intent, REQUEST_CODE_SET_DEFAULT_DIALER)
                 } catch (e: Exception) {
                     android.util.Log.e("MainActivity", "Failed to show default dialer prompt", e)
@@ -322,6 +325,30 @@ fun SimplePhoneApp(
     var confirmBeforeCall by remember { mutableStateOf(settingsRepository.confirmBeforeCall) }
     var useHapticFeedback by remember { mutableStateOf(settingsRepository.useHapticFeedback) }
     var useVoiceAnnouncements by remember { mutableStateOf(settingsRepository.useVoiceAnnouncements) }
+    var isDemoMode by remember { mutableStateOf(settingsRepository.isDemoMode) }
+
+    // Triple tap logic
+    var titleTapCount by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    var lastTitleTapTime by remember { androidx.compose.runtime.mutableLongStateOf(0L) }
+
+    fun onTitleClick() {
+        val now = System.currentTimeMillis()
+        if (now - lastTitleTapTime < 500) {
+            titleTapCount++
+        } else {
+            titleTapCount = 1
+        }
+        lastTitleTapTime = now
+
+        if (titleTapCount >= 3) {
+            isDemoMode = !isDemoMode
+            settingsRepository.isDemoMode = isDemoMode
+            titleTapCount = 0
+            android.widget.Toast.makeText(context, if (isDemoMode) "Demo Mode Enabled" else "Demo Mode Disabled", android.widget.Toast.LENGTH_SHORT).show()
+            // Refresh widget
+            FavoritesWidget.sendRefreshBroadcast(context)
+        }
+    }
     
     // Permission denied messages
     var showPermissionMessage by remember { mutableStateOf(false) }
@@ -336,29 +363,29 @@ fun SimplePhoneApp(
     var missedCalls by remember { mutableStateOf<List<CallLogEntry>>(emptyList()) }
     
     // Load contacts and call logs
-    LaunchedEffect(Unit) {
-        fun loadData() {
-            val loadedContacts = contactRepository.getContacts()
-            
-            // Apply saved favorites order
-            val savedOrder = settingsRepository.getFavoritesOrder()
-            val orderedContacts = if (savedOrder.isNotEmpty()) {
-                loadedContacts.map { contact ->
-                    val savedIndex = savedOrder.indexOf(contact.id)
-                    if (savedIndex >= 0) contact.copy(sortOrder = savedIndex) else contact.copy(sortOrder = Int.MAX_VALUE)
-                }.sortedWith(compareBy({ !it.isFavorite }, { it.sortOrder }, { it.name }))
-            } else {
-                loadedContacts
-            }
-            
-            contacts = orderedContacts
-            if (loadedContacts.isEmpty()) {
-                showPermissionMessage = true
-                permissionMessageText = "Please grant contacts permission to see your contacts"
-            }
-            missedCalls = contactRepository.getMissedCallsInLastHours(missedCallsHours)
+    fun loadData() {
+        val loadedContacts = if (isDemoMode) MockData.demoContacts else contactRepository.getContacts()
+        
+        // Apply saved favorites order
+        val savedOrder = settingsRepository.getFavoritesOrder()
+        val orderedContacts = if (savedOrder.isNotEmpty()) {
+            loadedContacts.map { contact ->
+                val savedIndex = savedOrder.indexOf(contact.id)
+                if (savedIndex >= 0) contact.copy(sortOrder = savedIndex) else contact.copy(sortOrder = Int.MAX_VALUE)
+            }.sortedWith(compareBy({ !it.isFavorite }, { it.sortOrder }, { it.name }))
+        } else {
+            loadedContacts
         }
         
+        contacts = orderedContacts
+        if (loadedContacts.isEmpty() && !isDemoMode) {
+            showPermissionMessage = true
+            permissionMessageText = "Please grant contacts permission to see your contacts"
+        }
+        missedCalls = contactRepository.getMissedCallsInLastHours(missedCallsHours)
+    }
+
+    LaunchedEffect(Unit) {
         loadData()
         
         // Register content observer for contact changes
@@ -380,6 +407,10 @@ fun SimplePhoneApp(
             observer
         )
     }
+
+    LaunchedEffect(isDemoMode) {
+        loadData()
+    }
     
     // Refresh missed calls when hours change
     LaunchedEffect(missedCallsHours) {
@@ -396,6 +427,7 @@ fun SimplePhoneApp(
     val currentRoute = navBackStackEntry?.destination?.route
     val currentTitle = when(currentRoute) {
         Screen.Settings.route -> Screen.Settings.title
+        Screen.Dialer.route -> Screen.Dialer.title
         Screen.InCall.route -> "Calling..."
         else -> "Simple Phone"
     }
@@ -461,7 +493,11 @@ fun SimplePhoneApp(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        AppScaffold(navController = navController, currentScreenTitle = currentTitle) {
+        AppScaffold(
+            navController = navController, 
+            currentScreenTitle = currentTitle,
+            onTitleClick = { if (currentTitle == "Simple Phone") onTitleClick() }
+        ) {
             NavHost(navController = navController, startDestination = Screen.Home.route) {
                 composable(Screen.Home.route) {
                     MainScreen(
@@ -470,12 +506,19 @@ fun SimplePhoneApp(
                             val contact = contacts.find { it.id == contactId }
                             contact?.let { handleCall(it.number) }
                         },
+                        onDialerClick = { navController.navigate(Screen.Dialer.route) },
                         missedCalls = missedCalls,
                         missedCallsHours = missedCallsHours,
                         useHugeText = useHugeText,
                         contacts = contacts.ifEmpty { MockData.contacts },
                         isDefaultDialer = isDefaultDialer,
                         onSetDefaultDialer = onSetDefaultDialer,
+                        useHapticFeedback = useHapticFeedback
+                    )
+                }
+                composable(Screen.Dialer.route) {
+                    DialerScreen(
+                        onCallClick = handleCall,
                         useHapticFeedback = useHapticFeedback
                     )
                 }
@@ -570,19 +613,25 @@ fun SimplePhoneApp(
                                 when (output) {
                                     AudioOutput.SPEAKER -> {
                                         audioManager.mode = AudioManager.MODE_IN_CALL
+                                        @Suppress("DEPRECATION")
                                         audioManager.isSpeakerphoneOn = true
+                                        @Suppress("DEPRECATION")
                                         audioManager.stopBluetoothSco()
                                         audioManager.isBluetoothScoOn = false
                                     }
                                     AudioOutput.BLUETOOTH -> {
                                         audioManager.mode = AudioManager.MODE_IN_CALL
+                                        @Suppress("DEPRECATION")
                                         audioManager.isSpeakerphoneOn = false
+                                        @Suppress("DEPRECATION")
                                         audioManager.startBluetoothSco()
                                         audioManager.isBluetoothScoOn = true
                                     }
                                     else -> { // Earpiece, Wired Headset, Hearing Aid
                                         audioManager.mode = AudioManager.MODE_IN_CALL
+                                        @Suppress("DEPRECATION")
                                         audioManager.isSpeakerphoneOn = false
+                                        @Suppress("DEPRECATION")
                                         audioManager.stopBluetoothSco()
                                         audioManager.isBluetoothScoOn = false
                                     }

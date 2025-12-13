@@ -16,6 +16,17 @@ object MockData {
         Contact("7", "Grandson", "9988776655", isFavorite = true, sortOrder = 4),
     )
 
+    val demoContacts = listOf(
+        Contact("d1", "Grandson Tom", "0123456789", isFavorite = true, sortOrder = 0, imageUri = "android.resource://com.example.simplephone/drawable/demo_tom"),
+        Contact("d2", "Martha (Bingo)", "0987654321", isFavorite = true, sortOrder = 1, imageUri = "android.resource://com.example.simplephone/drawable/demo_martha"),
+        Contact("d3", "Dr. Smith", "555-0123", isFavorite = true, sortOrder = 2, imageUri = "android.resource://com.example.simplephone/drawable/demo_doctor"),
+        Contact("d4", "Emergency", "112", isFavorite = true, sortOrder = 3),
+        Contact("d5", "Daughter Sarah", "4455667788", isFavorite = true, sortOrder = 4, imageUri = "android.resource://com.example.simplephone/drawable/demo_sarah"),
+        Contact("d6", "Taxi Service", "9988776655", isFavorite = false),
+        Contact("d7", "Pharmacy", "1122334455", isFavorite = false),
+        Contact("d8", "Neighbor John", "6677889900", isFavorite = false)
+    )
+
     // Mutable list for favorites ordering
     private var _favoritesOrder: MutableList<String> = contacts
         .filter { it.isFavorite }
@@ -50,7 +61,8 @@ object MockData {
             CallLogEntry("2", "4", now.minusMinutes(45), CallType.OUTGOING), // 45 mins ago
             CallLogEntry("3", "7", now.minusHours(1).minusMinutes(30), CallType.MISSED), // 1h 30m ago
             CallLogEntry("4", "2", now.minusHours(3), CallType.INCOMING), // 3h ago (Subject to filter)
-            CallLogEntry("5", "3", now.minusHours(5), CallType.MISSED)   // 5h ago (Subject to filter)
+            CallLogEntry("5", "3", now.minusHours(5), CallType.MISSED),   // 5h ago (Subject to filter)
+            CallLogEntry("d_missed", "d2", now.minusMinutes(5), CallType.MISSED) // Missed call from Martha (d2)
         )
     }
 

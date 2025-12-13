@@ -90,6 +90,7 @@ class CallService : InCallService() {
         }
         
         fun setAudioRoute(route: Int) {
+            @Suppress("DEPRECATION")
             instance?.setAudioRoute(route)
         }
         

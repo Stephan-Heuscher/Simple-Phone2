@@ -64,6 +64,7 @@ import com.example.simplephone.ui.theme.GreenCall
 fun MainScreen(
     onCallClick: (String) -> Unit,
     onContactClick: (String) -> Unit,
+    onDialerClick: () -> Unit = {},
     missedCalls: List<CallLogEntry> = emptyList(),
     missedCallsHours: Int = 24,
     useHugeText: Boolean = false,
@@ -116,49 +117,75 @@ fun MainScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize().imePadding()) {
-        // Search Bar
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
+        // Search Bar Row
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .height(56.dp),
-            placeholder = { 
-                Text(
-                    "Search contacts...",
-                    style = MaterialTheme.typography.bodyLarge
-                ) 
-            },
-            leadingIcon = {
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Dialer Button
+            IconButton(
+                onClick = { 
+                    if (useHapticFeedback) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onDialerClick() 
+                },
+                modifier = Modifier
+                    .size(56.dp)
+                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(16.dp))
+            ) {
                 Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    imageVector = Icons.Default.Call,
+                    contentDescription = "Open Dialer",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(32.dp)
                 )
-            },
-            trailingIcon = {
-                if (searchQuery.isNotEmpty()) {
-                    IconButton(onClick = { 
-                        if (useHapticFeedback) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                        searchQuery = ""
-                        focusManager.clearFocus()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Clear,
-                            contentDescription = "Clear search",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+            }
+            
+            Spacer(modifier = Modifier.width(8.dp))
+
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp),
+                placeholder = { 
+                    Text(
+                        "Search...",
+                        style = MaterialTheme.typography.bodyLarge
+                    ) 
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { 
+                            if (useHapticFeedback) hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            searchQuery = ""
+                            focusManager.clearFocus()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = "Clear search",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
-                }
-            },
-            singleLine = true,
-            shape = RoundedCornerShape(28.dp),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(
-                onSearch = { focusManager.clearFocus() }
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(28.dp),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(
+                    onSearch = { focusManager.clearFocus() }
+                )
             )
-        )
+        }
 
         LazyColumn(modifier = Modifier.fillMaxSize().weight(1f)) {
 
