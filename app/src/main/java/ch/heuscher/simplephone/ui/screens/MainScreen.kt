@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -130,7 +131,7 @@ fun MainScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Dialer Button
+
             Box(
                 modifier = Modifier
                     .size(56.dp)
@@ -143,74 +144,69 @@ fun MainScreen(
                         },
                         role = Role.Button
                     )
-                    .semantics { contentDescription = "Open Dialer" },
-                contentAlignment = Alignment.TopStart
+                    .semantics { contentDescription = "Open Dialer" }
             ) {
-                Column(
+                // High contrast buttons for better visibility
+                val buttonSize = 28.dp
+                val spacing = 5.dp
+                val startOffset = 5.dp
+                val buttonColor = MaterialTheme.colorScheme.primary
+                val textColor = MaterialTheme.colorScheme.onPrimary
+                val textStyle = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = textColor
+                )
+                
+                // Button 1 (Top-Left)
+                Box(
                     modifier = Modifier
-                        .padding(start = 5.dp, top = 5.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                        .align(Alignment.TopStart)
+                        .offset(x = startOffset, y = startOffset)
+                        .size(buttonSize)
+                        .clip(CircleShape)
+                        .background(buttonColor),
+                    contentAlignment = Alignment.Center
                 ) {
-                    val textStyle = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold, 
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    val buttonSize = 37.dp
-                    
-                    // Row 1: 1, 2
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Number 1
-                        Box(
-                            modifier = Modifier
-                                .requiredSize(buttonSize)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("1", style = textStyle)
-                        }
-                        
-                        // Number 2
-                        Box(
-                            modifier = Modifier
-                                .requiredSize(buttonSize)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("2", style = textStyle)
-                        }
-                    }
-                    
-                    // Row 2: 4, 5
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(20.dp)
-                    ) {
-                        // Number 4
-                        Box(
-                            modifier = Modifier
-                                .requiredSize(buttonSize)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("4", style = textStyle)
-                        }
-                        
-                        // Number 5
-                        Box(
-                            modifier = Modifier
-                                .requiredSize(buttonSize)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("5", style = textStyle)
-                        }
-                    }
+                    Text("1", style = textStyle)
+                }
+                
+                // Button 2 (Top-Right)
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .offset(x = startOffset + buttonSize + spacing, y = startOffset)
+                        .size(buttonSize)
+                        .clip(CircleShape)
+                        .background(buttonColor),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("2", style = textStyle)
+                }
+                
+                // Button 4 (Bottom-Left)
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .offset(x = startOffset, y = startOffset + buttonSize + spacing)
+                        .size(buttonSize)
+                        .clip(CircleShape)
+                        .background(buttonColor),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("4", style = textStyle)
+                }
+                
+                // Button 5 (Bottom-Right)
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .offset(x = startOffset + buttonSize + spacing, y = startOffset + buttonSize + spacing)
+                        .size(buttonSize)
+                        .clip(CircleShape)
+                        .background(buttonColor),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("5", style = textStyle)
                 }
             }
             

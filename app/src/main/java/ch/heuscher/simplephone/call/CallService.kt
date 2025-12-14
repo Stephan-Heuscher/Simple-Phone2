@@ -34,6 +34,7 @@ class CallService : InCallService() {
     private var ringtone: Ringtone? = null
     private var vibrator: Vibrator? = null
     private var isVibrating = false
+    private var wakeLock: android.os.PowerManager.WakeLock? = null
 
     companion object {
         // Track recent callers for repeat caller exception (number -> timestamp)
@@ -71,9 +72,9 @@ class CallService : InCallService() {
             callStateListeners.remove(listener)
         }
         
-        private fun notifyCallStateChanged() {
+        private fun notifyCallStateChanged(disconnectCause: android.telecom.DisconnectCause? = null) {
             callStateListeners.forEach { 
-                it.onCallStateChanged(callState, callerNumber, callerName, currentAudioState) 
+                it.onCallStateChanged(callState, callerNumber, callerName, currentAudioState, disconnectCause) 
             }
         }
         
@@ -108,7 +109,15 @@ class CallService : InCallService() {
             Log.d(TAG, "Call state changed: $state")
             callState = state
             updateCallInfo(call)
-            notifyCallStateChanged()
+            
+            // Acquire/Release wake lock based on state
+            instance?.updateWakeLock(state)
+            
+            if (state == Call.STATE_DISCONNECTED) {
+                notifyCallStateChanged(call.details.disconnectCause)
+            } else {
+                notifyCallStateChanged()
+            }
             
             if (state != Call.STATE_RINGING) {
                 stopRinging()
@@ -138,6 +147,15 @@ class CallService : InCallService() {
         } else {
             @Suppress("DEPRECATION")
             getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        }
+        
+        // Initialize WakeLock for proximity sensor
+        val powerManager = getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+        if (powerManager.isWakeLockLevelSupported(android.os.PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK)) {
+            wakeLock = powerManager.newWakeLock(
+                android.os.PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK,
+                "SimplePhone:ServiceProximityWakeLock"
+            )
         }
     }
 
@@ -284,6 +302,10 @@ class CallService : InCallService() {
         call.registerCallback(callCallback)
         callState = call.state
         updateCallInfo(call)
+        
+        // Acquire wake lock for any new call
+        updateWakeLock(call.state)
+        
         notifyCallStateChanged()
         
         if (call.state == Call.STATE_RINGING) {
@@ -305,6 +327,11 @@ class CallService : InCallService() {
         call.unregisterCallback(callCallback)
         stopRinging()
         
+        // Release wake lock
+        if (wakeLock?.isHeld == true) {
+            wakeLock?.release()
+        }
+        
         // Show our own missed call notification since we are the default dialer.
         // The system won't show one when we handle calls.
         val telecomManager = getSystemService(Context.TELECOM_SERVICE) as android.telecom.TelecomManager
@@ -317,13 +344,38 @@ class CallService : InCallService() {
         }
         
         if (currentCall == call) {
+            // Capture disconnect cause before clearing currentCall
+            val disconnectCause = call.details.disconnectCause
+            
             currentCall = null
             callState = Call.STATE_DISCONNECTED
             callerNumber = null
             callerName = null
-            notifyCallStateChanged()
+            notifyCallStateChanged(disconnectCause)
         }
     }
+    
+    private fun updateWakeLock(state: Int) {
+        if (state == Call.STATE_ACTIVE || 
+            state == Call.STATE_DIALING || 
+            state == Call.STATE_RINGING) {
+            if (wakeLock?.isHeld == false) {
+                try {
+                    wakeLock?.acquire(60 * 60 * 1000L /* 1 hour max */)
+                    Log.d(TAG, "WakeLock acquired")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error acquiring wake lock", e)
+                }
+            }
+        } else if (state == Call.STATE_DISCONNECTED) {
+            if (wakeLock?.isHeld == true) {
+                wakeLock?.release()
+                Log.d(TAG, "WakeLock released")
+            }
+        }
+    }
+    
+
     
     private fun showMissedCallNotification(call: Call) {
         val context = this
@@ -463,5 +515,5 @@ class CallService : InCallService() {
 }
 
 interface CallStateListener {
-    fun onCallStateChanged(state: Int, number: String?, name: String?, audioState: CallAudioState?)
+    fun onCallStateChanged(state: Int, number: String?, name: String?, audioState: CallAudioState?, disconnectCause: android.telecom.DisconnectCause? = null)
 }

@@ -54,18 +54,21 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
     private var contact by mutableStateOf<Contact?>(null)
     private var audioState by mutableStateOf<CallAudioState?>(null)
     
-    private var wakeLock: PowerManager.WakeLock? = null
+    private var wakeLock: PowerManager.WakeLock? = null // Removed, but kept variable to avoid compilation error if used elsewhere, actually I should remove it.
+    // Wait, I am replacing the whole class body parts.
+    
+    private var textToSpeech: android.speech.tts.TextToSpeech? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Initialize Proximity WakeLock
-        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-        if (powerManager.isWakeLockLevelSupported(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK)) {
-            wakeLock = powerManager.newWakeLock(
-                PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK,
-                "SimplePhone:ProximityWakeLock"
-            )
+        // Removed local WakeLock logic as it is now handled in CallService
+        
+        // Initialize TextToSpeech
+        textToSpeech = android.speech.tts.TextToSpeech(this) { status ->
+            if (status == android.speech.tts.TextToSpeech.SUCCESS) {
+                textToSpeech?.language = java.util.Locale.getDefault()
+            }
         }
 
         // Show over lock screen
@@ -135,30 +138,41 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
     override fun onDestroy() {
         super.onDestroy()
         CallService.removeCallStateListener(this)
-        if (wakeLock?.isHeld == true) {
-            wakeLock?.release()
-        }
+        textToSpeech?.stop()
+        textToSpeech?.shutdown()
     }
     
-    override fun onCallStateChanged(state: Int, number: String?, name: String?, audioState: CallAudioState?) {
+    override fun onCallStateChanged(state: Int, number: String?, name: String?, audioState: CallAudioState?, disconnectCause: android.telecom.DisconnectCause?) {
         callState = state
         if (number != null) callerNumber = number
         if (name != null) callerName = name
         this.audioState = audioState
         
-        // Manage Proximity WakeLock based on call state
-        if (state == Call.STATE_ACTIVE || state == Call.STATE_DIALING || state == Call.STATE_CONNECTING) {
-            if (wakeLock?.isHeld == false) {
-                wakeLock?.acquire(10 * 60 * 1000L /*10 minutes*/)
-            }
-        } else {
-            if (wakeLock?.isHeld == true) {
-                wakeLock?.release()
-            }
-        }
+        // WakeLock is now managed by CallService
 
         if (state == Call.STATE_DISCONNECTED) {
-            finish()
+            if (disconnectCause != null && disconnectCause.code != android.telecom.DisconnectCause.LOCAL && disconnectCause.code != android.telecom.DisconnectCause.REMOTE) {
+                // Something went wrong or busy
+                val reason = disconnectCause.label?.toString() ?: when(disconnectCause.code) {
+                    android.telecom.DisconnectCause.BUSY -> "User is Busy"
+                    android.telecom.DisconnectCause.REJECTED -> "Call Rejected"
+                    android.telecom.DisconnectCause.ERROR -> "Call Error"
+                    else -> "Call Ended"
+                }
+                
+                // Show transparent message (Toast is effectively a transparent overlay message)
+                android.widget.Toast.makeText(this, reason, android.widget.Toast.LENGTH_LONG).show()
+                
+                // Speak it
+                textToSpeech?.speak(reason, android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, null)
+                
+                // Delay finish slightly to allow TTS to start
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    finish()
+                }, 3000)
+            } else {
+                finish()
+            }
         }
     }
 }

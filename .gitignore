@@ -12,6 +12,7 @@
 /captures
 .externalNativeBuild
 .cxx
+build-log.txt
 
 # Checksums and binary artifacts
 *.bin
