@@ -85,8 +85,11 @@ class CallService : InCallService() {
             // Robust Audio Routing: Default to Handset (Earpiece), unless Bluetooth is connected.
             // This satisfies the requirement to "decide when to start... with a default to handset".
             // Robust Audio Routing
-            val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(this)
+            val context = instance ?: return
+            val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(context)
             val useSpeakerIfFlat = settingsRepository.answerOnSpeakerIfFlat
+            
+            val isPhoneFlat = instance?.isPhoneFlat == true
             
             val supportedRouteMask = currentAudioState?.supportedRouteMask ?: 0
             val route = if (supportedRouteMask and CallAudioState.ROUTE_BLUETOOTH != 0) {

@@ -45,21 +45,7 @@ fun CallLogScreen(
     var callLogs by remember { mutableStateOf<List<CallLogEntry>>(emptyList()) }
     
     LaunchedEffect(Unit) {
-        // We need to fetch and map the raw logs to our model
-        // Ideally this mapping happens in Repository, but our Repository currently returns the model directly
-        // However, the model definition in Contact.kt uses LocalDateTime, while my Repository used Long. 
-        // I need to fix the repository first or handle it here. 
-        // Let's assume I will fix the repository to match the model.
-        // Or better, I will update the repository call in a second.
-        
-        // Actually, for this step, I will rely on the user passing in a working repository or fixing it.
-        // But since I just wrote the repository, I know it is slightly mismatched. 
-        // I will fix the repository in the next step. 
-        // For now, let's assume the repository returns a DTO or I construct the UI assuming valid data.
-        
-        // Refetching using the repository
-        // Note: The previous tool write for repository was "CallLogEntry(id, number, timestamp)" but the model requires "type" and "duration".
-        // I will fix the repository first.
+        callLogs = callLogRepository.getAllCallLogs()
     }
     
     // Placeholder UI until data is loaded

@@ -10,6 +10,8 @@
 .DS_Store
 /build
 /captures
+/play_store
+/.kotlin
 .externalNativeBuild
 .cxx
 build-log.txt
