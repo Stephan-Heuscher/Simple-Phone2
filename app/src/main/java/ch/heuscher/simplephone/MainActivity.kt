@@ -346,6 +346,8 @@ fun SimplePhoneApp(
     var useVoiceAnnouncements by remember { mutableStateOf(settingsRepository.useVoiceAnnouncements) }
     var isDemoMode by remember { mutableStateOf(settingsRepository.isDemoMode) }
 
+    var answerOnSpeakerIfFlat by remember { mutableStateOf(settingsRepository.answerOnSpeakerIfFlat) }
+
     // Triple tap logic
     var titleTapCount by remember { androidx.compose.runtime.mutableIntStateOf(0) }
     var lastTitleTapTime by remember { androidx.compose.runtime.mutableLongStateOf(0L) }
@@ -574,8 +576,9 @@ fun SimplePhoneApp(
                         onBlockUnknownCallersChange = {
                             settingsRepository.blockUnknownCallers = it
                         },
-                        answerOnSpeakerIfFlat = settingsRepository.answerOnSpeakerIfFlat,
+                        answerOnSpeakerIfFlat = answerOnSpeakerIfFlat,
                         onAnswerOnSpeakerIfFlatChange = {
+                             answerOnSpeakerIfFlat = it
                              settingsRepository.answerOnSpeakerIfFlat = it
                         },
                         confirmBeforeCall = confirmBeforeCall,

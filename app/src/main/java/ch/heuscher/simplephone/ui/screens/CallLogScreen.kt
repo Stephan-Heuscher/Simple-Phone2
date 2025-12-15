@@ -143,7 +143,7 @@ fun CallLogItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = contact.name,
-                style = if (useHugeText) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.bodyLarge,
+                style = if (useHugeText) MaterialTheme.typography.displayMedium else MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis

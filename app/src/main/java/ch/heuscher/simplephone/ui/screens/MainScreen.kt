@@ -300,28 +300,27 @@ fun MainScreen(
         // --- Missed Calls Section (only shown when not searching) ---
         if (searchQuery.isBlank()) {
             item {
-                // Calls Button
-                Button(
-                    onClick = onCallLogClick,
+                // Missed Calls Header with "History" link
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                        .clickable { onCallLogClick() },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Call,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.calls),
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.missed_calls),
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    
+                    Text(
+                        text = "History >", // Hidden button/Link
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
