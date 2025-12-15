@@ -14,6 +14,8 @@
     <string name="search_placeholder">Suchen...</string>
     <string name="default_app_warning">⚠️ Nicht als Standard-Telefon-App gesetzt</string>
     <string name="default_app_enable">Hier tippen um Anrufe &amp; Benachrichtigungen zu aktivieren</string>
+    <string name="all_calls">Alle Anrufe</string>
+    <string name="back">Zurück</string>
 
     <!-- Call Log -->
     <string name="call_history">Anrufverlauf</string>
@@ -56,6 +58,9 @@
     <string name="reject">Ablehnen</string>
     <string name="answer">Annehmen</string>
     <string name="end_call">Auflegen</string>
+    <string name="speaker">Lautsprecher</string>
+    <string name="bluetooth">Bluetooth</string>
+    <string name="earpiece">Hörer</string>
     <string name="advanced_settings">Erweiterte Optionen</string>
     <string name="answer_speaker_table">Lautsprecher wenn flach</string>
     <string name="answer_speaker_table_desc">Lautsprecher nutzen, wenn das Telefon flach auf dem Tisch liegt:</string>

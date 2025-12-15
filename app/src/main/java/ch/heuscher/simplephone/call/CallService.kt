@@ -125,6 +125,13 @@ class CallService : InCallService() {
         fun toggleSpeaker() {
             // Speaker is handled through audio routing
         }
+        
+        /**
+         * Silence the ringer - called when volume down is pressed during an incoming call
+         */
+        fun silenceRinger() {
+            instance?.stopRingingExternal()
+        }
     }
     
     private val callCallback = object : Call.Callback() {
@@ -386,6 +393,13 @@ class CallService : InCallService() {
         stopVibrating()
     }
     
+    /**
+     * Internal method called by companion object to silence the ringer
+     */
+    internal fun stopRingingExternal() {
+        stopRinging()
+    }
+    
     private fun updateCallInfo(call: Call) {
         val details = call.details
         val handle = details?.handle
@@ -481,7 +495,9 @@ class CallService : InCallService() {
         val telecomManager = getSystemService(Context.TELECOM_SERVICE) as android.telecom.TelecomManager
         val isDefaultDialer = telecomManager.defaultDialerPackage == packageName
 
+        // callDirection requires API 29+
         if (isDefaultDialer && 
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
             call.details.callDirection == Call.Details.DIRECTION_INCOMING && 
             call.details.disconnectCause.code == android.telecom.DisconnectCause.MISSED) {
             showMissedCallNotification(call)

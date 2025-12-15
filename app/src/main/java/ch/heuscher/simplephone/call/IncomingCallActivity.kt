@@ -8,10 +8,13 @@ import android.os.Bundle
 import android.telecom.Call
 import android.telecom.CallAudioState
 import android.view.WindowManager
+import android.view.KeyEvent
+import android.telecom.TelecomManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -27,12 +30,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.compose.ui.platform.LocalContext
+import ch.heuscher.simplephone.R
 import ch.heuscher.simplephone.ui.utils.vibrate
 import ch.heuscher.simplephone.data.ContactRepository
 import ch.heuscher.simplephone.model.Contact
@@ -135,6 +140,17 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
         return number.replace(Regex("[^0-9+]"), "")
     }
     
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+            if (isIncoming && callState == Call.STATE_RINGING) {
+                // Silence the ringer using CallService
+                CallService.silenceRinger()
+                return true
+            }
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         CallService.removeCallStateListener(this)
@@ -191,54 +207,64 @@ fun CallScreen(
     onAudioRouteSelected: (Int) -> Unit
 ) {
     val context = LocalContext.current
+    
+    // i18n status text
     val statusText = when (callState) {
-        Call.STATE_RINGING -> "Incoming Call"
-        Call.STATE_DIALING -> "Calling..."
-        Call.STATE_ACTIVE -> "On Call"
-        Call.STATE_HOLDING -> "On Hold"
-        Call.STATE_CONNECTING -> "Connecting..."
+        Call.STATE_RINGING -> stringResource(R.string.incoming_call)
+        Call.STATE_DIALING -> stringResource(R.string.calling)
+        Call.STATE_ACTIVE -> stringResource(R.string.on_call)
+        Call.STATE_HOLDING -> stringResource(R.string.on_hold)
+        Call.STATE_CONNECTING -> stringResource(R.string.connecting)
         else -> ""
     }
+    
+    // Check if this is a known contact (has a real name, not just a number)
+    val isKnownContact = contact != null
+    val displayName = if (isKnownContact) callerName else (callerNumber ?: stringResource(R.string.unknown_contact))
     
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(32.dp),
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // Top: Status
+        // Top: Status - large and clear
         Text(
             text = statusText,
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
+            textAlign = TextAlign.Center
         )
         
-        // Middle: Contact info
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Middle: Contact info - main focus area
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.Center
         ) {
-            // Contact avatar
+            // Contact avatar - show favorite star for favorites
             if (contact != null) {
                 ContactAvatar(
                     contact = contact,
-                    size = 160.dp,
-                    showFavoriteStar = false
+                    size = 180.dp,
+                    showFavoriteStar = contact.isFavorite
                 )
             } else {
-                // Default avatar
+                // Default avatar for unknown contacts
                 Box(
                     modifier = Modifier
-                        .size(160.dp)
+                        .size(180.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primary),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = callerName.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
+                        text = displayName.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
                         style = MaterialTheme.typography.displayLarge,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -246,21 +272,39 @@ fun CallScreen(
                 }
             }
             
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             
-            // Caller name - very large
-            Text(
-                text = callerName,
-                style = MaterialTheme.typography.displayMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            // Caller name - very large, 2 lines max with horizontal scroll
+            val nameScrollState = androidx.compose.foundation.rememberScrollState()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = displayName,
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.horizontalScroll(nameScrollState)
+                    )
+                    // Show subtle scrollbar if content overflows
+                    if (nameScrollState.maxValue > 0) {
+                        ch.heuscher.simplephone.ui.components.HorizontalScrollbar(
+                            scrollState = nameScrollState,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
+            }
             
-            // Caller number (if different from name)
-            if (callerNumber != null && callerNumber != callerName) {
+            // Only show phone number for UNKNOWN contacts
+            if (!isKnownContact && callerNumber != null) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = callerNumber,
@@ -272,10 +316,12 @@ fun CallScreen(
             }
         }
         
-        // Audio Controls
-        if (audioState != null) {
+        // Audio Controls - simplified, only show when active
+        if (audioState != null && callState == Call.STATE_ACTIVE) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 val route = audioState.route
@@ -284,67 +330,49 @@ fun CallScreen(
                 // Speaker
                 if (supportedRouteMask and CallAudioState.ROUTE_SPEAKER != 0) {
                     val isSelected = route == CallAudioState.ROUTE_SPEAKER
-                    FilledIconButton(
+                    AudioRouteButton(
+                        icon = Icons.AutoMirrored.Filled.VolumeUp,
+                        label = stringResource(R.string.speaker),
+                        isSelected = isSelected,
                         onClick = { 
                             vibrate(context)
                             onAudioRouteSelected(CallAudioState.ROUTE_SPEAKER) 
-                        },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                            contentDescription = "Speaker"
-                        )
-                    }
+                        }
+                    )
                 }
                 
                 // Bluetooth
                 if (supportedRouteMask and CallAudioState.ROUTE_BLUETOOTH != 0) {
                     val isSelected = route == CallAudioState.ROUTE_BLUETOOTH
-                    FilledIconButton(
+                    AudioRouteButton(
+                        icon = Icons.Filled.Bluetooth,
+                        label = stringResource(R.string.bluetooth),
+                        isSelected = isSelected,
                         onClick = { 
                             vibrate(context)
                             onAudioRouteSelected(CallAudioState.ROUTE_BLUETOOTH) 
-                        },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Bluetooth,
-                            contentDescription = "Bluetooth"
-                        )
-                    }
+                        }
+                    )
                 }
                 
                 // Earpiece / Wired Headset
                 if (supportedRouteMask and CallAudioState.ROUTE_EARPIECE != 0 || supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0) {
                     val isSelected = route == CallAudioState.ROUTE_EARPIECE || route == CallAudioState.ROUTE_WIRED_HEADSET
                     val targetRoute = if (supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0) CallAudioState.ROUTE_WIRED_HEADSET else CallAudioState.ROUTE_EARPIECE
-                    FilledIconButton(
+                    AudioRouteButton(
+                        icon = Icons.Filled.PhoneInTalk,
+                        label = stringResource(R.string.earpiece),
+                        isSelected = isSelected,
                         onClick = { 
                             vibrate(context)
                             onAudioRouteSelected(targetRoute) 
-                        },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.PhoneInTalk,
-                            contentDescription = "Earpiece"
-                        )
-                    }
+                        }
+                    )
                 }
             }
         }
 
-        // Bottom: Action buttons
+        // Bottom: Action buttons - larger and clearer
         if (isIncoming) {
             // Incoming call: Reject and Answer buttons
             Row(
@@ -352,94 +380,118 @@ fun CallScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 // Reject button
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Box(
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clip(CircleShape)
-                            .background(RedHangup)
-                            .clickable { 
-                                vibrate(context)
-                                onReject() 
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.CallEnd,
-                            contentDescription = "Reject call",
-                            tint = Color.White,
-                            modifier = Modifier.size(48.dp)
-                        )
+                CallActionButton(
+                    icon = Icons.Filled.CallEnd,
+                    label = stringResource(R.string.reject),
+                    backgroundColor = RedHangup,
+                    onClick = {
+                        vibrate(context)
+                        onReject()
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "Reject",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = RedHangup
-                    )
-                }
+                )
                 
                 // Answer button
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Box(
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clip(CircleShape)
-                            .background(GreenCall)
-                            .clickable { 
-                                vibrate(context)
-                                onAnswer() 
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Call,
-                            contentDescription = "Answer call",
-                            tint = Color.White,
-                            modifier = Modifier.size(48.dp)
-                        )
+                CallActionButton(
+                    icon = Icons.Filled.Call,
+                    label = stringResource(R.string.answer),
+                    backgroundColor = GreenCall,
+                    onClick = {
+                        vibrate(context)
+                        onAnswer()
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "Answer",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = GreenCall
-                    )
-                }
-            }
-        } else {
-            // Active call: Only hangup button
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(CircleShape)
-                        .background(RedHangup)
-                        .clickable { 
-                            vibrate(context)
-                            onHangup() 
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.CallEnd,
-                        contentDescription = "End call",
-                        tint = Color.White,
-                        modifier = Modifier.size(48.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = "End Call",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = RedHangup
                 )
             }
+        } else {
+            // Active call: Only hangup button - centered
+            CallActionButton(
+                icon = Icons.Filled.CallEnd,
+                label = stringResource(R.string.end_call),
+                backgroundColor = RedHangup,
+                onClick = {
+                    vibrate(context)
+                    onHangup()
+                }
+            )
         }
         
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
+    }
+}
+
+/**
+ * Large, accessible call action button (Answer/Reject/End Call)
+ */
+@Composable
+fun CallActionButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    backgroundColor: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+    ) {
+        Box(
+            modifier = Modifier
+                .size(110.dp)
+                .clip(CircleShape)
+                .background(backgroundColor)
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = Color.White,
+                modifier = Modifier.size(56.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = backgroundColor
+        )
+    }
+}
+
+/**
+ * Audio route selection button with label
+ */
+@Composable
+fun AudioRouteButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier.clickable(onClick = onClick)
+    ) {
+        FilledIconButton(
+            onClick = onClick,
+            modifier = Modifier.size(56.dp),
+            colors = IconButtonDefaults.filledIconButtonColors(
+                containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                modifier = Modifier.size(28.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }

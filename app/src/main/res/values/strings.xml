@@ -14,6 +14,8 @@
     <string name="search_placeholder">Search...</string>
     <string name="default_app_warning">⚠️ Not set as default phone app</string>
     <string name="default_app_enable">Tap here to enable call handling &amp; notifications</string>
+    <string name="all_calls">All Calls</string>
+    <string name="back">Back</string>
 
     <!-- Call Log -->
     <string name="call_history">Call History</string>
@@ -56,6 +58,9 @@
     <string name="reject">Reject</string>
     <string name="answer">Answer</string>
     <string name="end_call">End Call</string>
+    <string name="speaker">Speaker</string>
+    <string name="bluetooth">Bluetooth</string>
+    <string name="earpiece">Earpiece</string>
     <string name="advanced_settings">Advanced Options</string>
     <string name="answer_speaker_table">Answer on Speaker if flat</string>
     <string name="answer_speaker_table_desc">Use loudspeaker when answering while phone is lying flat on a table:</string>

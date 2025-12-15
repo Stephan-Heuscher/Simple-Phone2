@@ -316,12 +316,23 @@ fun MainScreen(
                         color = MaterialTheme.colorScheme.primary
                     )
                     
-                    Text(
-                        text = "History >", // Hidden button/Link
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Button(
+                        onClick = { 
+                            if (useHapticFeedback) vibrate(context)
+                            onCallLogClick() 
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                        modifier = Modifier.height(36.dp)
+                    ) {
+                        Text(
+                            text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.all_calls),
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
                 }
             }
 
@@ -336,7 +347,7 @@ fun MainScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No missed calls",
+                            text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.no_missed_calls),
                             style = if (useHugeText) MaterialTheme.typography.displaySmall else MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Medium,
                             color = GreenCall,
