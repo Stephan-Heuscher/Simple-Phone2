@@ -79,7 +79,27 @@ class CallService : InCallService() {
         }
         
         fun answerCall() {
-            currentCall?.answer(android.telecom.VideoProfile.STATE_AUDIO_ONLY)
+            val call = currentCall ?: return
+            call.answer(android.telecom.VideoProfile.STATE_AUDIO_ONLY)
+            
+            // Robust Audio Routing: Default to Handset (Earpiece), unless Bluetooth is connected.
+            // This satisfies the requirement to "decide when to start... with a default to handset".
+            // Robust Audio Routing
+            val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(this)
+            val useSpeakerIfFlat = settingsRepository.answerOnSpeakerIfFlat
+            
+            val supportedRouteMask = currentAudioState?.supportedRouteMask ?: 0
+            val route = if (supportedRouteMask and CallAudioState.ROUTE_BLUETOOTH != 0) {
+                 CallAudioState.ROUTE_BLUETOOTH
+            } else if (supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0) {
+                 CallAudioState.ROUTE_WIRED_HEADSET
+            } else if (useSpeakerIfFlat && isPhoneFlat && (supportedRouteMask and CallAudioState.ROUTE_SPEAKER != 0)) {
+                 Log.d(TAG, "Answering on Speaker (Phone is flat)")
+                 CallAudioState.ROUTE_SPEAKER
+            } else {
+                 CallAudioState.ROUTE_EARPIECE
+            }
+            setAudioRoute(route)
         }
         
         fun rejectCall() {
@@ -137,6 +157,43 @@ class CallService : InCallService() {
         }
     }
     
+    private var sensorManager: android.hardware.SensorManager? = null
+    private var accelerometer: android.hardware.Sensor? = null
+    private var isPhoneFlat = false
+    
+    private val sensorEventListener = object : android.hardware.SensorEventListener {
+        override fun onSensorChanged(event: android.hardware.SensorEvent?) {
+            event?.let {
+                if (it.sensor.type == android.hardware.Sensor.TYPE_ACCELEROMETER) {
+                    val x = it.values[0]
+                    val y = it.values[1]
+                    val z = it.values[2]
+                    
+                    // Simple logic: if Z is close to 9.8 (gravity) and X, Y are close to 0
+                    // Gravity is ~9.81 m/s^2.
+                    val gravity = 9.81f
+                    val threshold = 2.0f // Allow some tilt
+                    
+                    val zDiff = kotlin.math.abs(z) - gravity
+                    val isZAligned = kotlin.math.abs(zDiff) < threshold
+                    val isXFlat = kotlin.math.abs(x) < threshold
+                    val isYFlat = kotlin.math.abs(y) < threshold
+                    
+                    // If Z is negative (-9.8), it is face down. We probably only want face up? 
+                    // "Flat on table" usually implies face up for use.
+                    // But if they want speaker, maybe they don't care. Usually face up.
+                    // Let's assume face up (Z > 0) for now.
+                    
+                    isPhoneFlat = isZAligned && isXFlat && isYFlat && z > 0
+                }
+            }
+        }
+        
+        override fun onAccuracyChanged(sensor: android.hardware.Sensor?, accuracy: Int) {
+            // No-op
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
         instance = this
@@ -157,12 +214,27 @@ class CallService : InCallService() {
                 "SimplePhone:ServiceProximityWakeLock"
             )
         }
+        
+        // Initialize Sensors
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as android.hardware.SensorManager
+        accelerometer = sensorManager?.getDefaultSensor(android.hardware.Sensor.TYPE_ACCELEROMETER)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         instance = null
         stopRinging()
+        stopSensor()
+    }
+    
+    private fun startSensor() {
+        if (accelerometer != null) {
+            sensorManager?.registerListener(sensorEventListener, accelerometer, android.hardware.SensorManager.SENSOR_DELAY_UI)
+        }
+    }
+    
+    private fun stopSensor() {
+        sensorManager?.unregisterListener(sensorEventListener)
     }
 
     /**
@@ -170,6 +242,34 @@ class CallService : InCallService() {
      * Returns true if we should ring, false if DND blocks it
      */
     private fun shouldRingForCall(callerNumber: String?): Boolean {
+        // First check internal blocking setting
+        val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(this)
+        if (settingsRepository.blockUnknownCallers) {
+             // Check if number is in contacts
+             val number = callerNumber?.replace(Regex("[^0-9+]"), "")
+             if (number.isNullOrEmpty()) {
+                 // Block private/hidden numbers
+                 Log.d(TAG, "Blocking call from empty number")
+                 return false // Will be rejected in onCallAdded
+             }
+             
+             val contactRepository = ContactRepository(this)
+             val contacts = contactRepository.getContacts()
+             val isKnown = contacts.any { 
+                 val normalizedContact = it.number.replace(Regex("[^0-9+]"), "")
+                 if (number.length > 6 && normalizedContact.length > 6) {
+                    number.endsWith(normalizedContact) || normalizedContact.endsWith(number)
+                 } else {
+                    number == normalizedContact
+                 }
+             }
+             
+             if (!isKnown) {
+                 Log.d(TAG, "Blocking call from unknown number: $callerNumber")
+                 return false // Will be rejected
+             }
+        }
+
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         
         // Check DND status
@@ -298,6 +398,42 @@ class CallService : InCallService() {
 
     override fun onCallAdded(call: Call) {
         Log.d(TAG, "Call added")
+        
+        // Check blocking immediately
+        updateCallInfo(call)
+        if (!shouldRingForCall(callerNumber)) {
+             // If shouldRing returns false, it might be DND or our Blocking.
+             // We should check if it's our blocking specifically to reject.
+             // Re-checking blocking logic to be precise
+             val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(this)
+             var isBlocked = false
+             if (settingsRepository.blockUnknownCallers) {
+                 val number = callerNumber?.replace(Regex("[^0-9+]"), "")
+                 if (number.isNullOrEmpty()) {
+                     isBlocked = true
+                 } else {
+                     val contactRepository = ContactRepository(this)
+                     val contacts = contactRepository.getContacts()
+                     val isKnown = contacts.any { 
+                        val normalizedContact = it.number.replace(Regex("[^0-9+]"), "")
+                         if (number.length > 6 && normalizedContact.length > 6) {
+                            number.endsWith(normalizedContact) || normalizedContact.endsWith(number)
+                         } else {
+                            number == normalizedContact
+                         }
+                     }
+                     if (!isKnown) isBlocked = true
+                 }
+             }
+             
+             if (isBlocked) {
+                 Log.i(TAG, "Rejecting blocked call from $callerNumber")
+                 call.reject(false, null)
+                 // It will be logged by system or we can let it be logged as rejected
+                 return
+             }
+        }
+
         currentCall = call
         call.registerCallback(callCallback)
         callState = call.state
@@ -305,6 +441,9 @@ class CallService : InCallService() {
         
         // Acquire wake lock for any new call
         updateWakeLock(call.state)
+        
+        // Start monitoring sensor for phone orientation
+        startSensor()
         
         notifyCallStateChanged()
         
@@ -331,6 +470,8 @@ class CallService : InCallService() {
         if (wakeLock?.isHeld == true) {
             wakeLock?.release()
         }
+        
+        stopSensor()
         
         // Show our own missed call notification since we are the default dialer.
         // The system won't show one when we handle calls.

@@ -1,4 +1,63 @@
 <resources>
     <string name="app_name">Simple Phone</string>
     <string name="widget_description">Quick access to your favorite contacts. Tap photo or green button to call directly.</string>
+    
+    <!-- Main Screen -->
+    <string name="missed_calls">Missed Calls</string>
+    <string name="show_all">Show All ></string>
+    <string name="no_missed_calls">No missed calls</string>
+    <string name="favorites">Favorites</string>
+    <string name="no_favorites">No favorites</string>
+    <string name="phone_book">Phone Book</string>
+    <string name="search_results">Search Results</string>
+    <string name="contacts_found">%d contacts found</string>
+    <string name="search_placeholder">Search...</string>
+    <string name="default_app_warning">⚠️ Not set as default phone app</string>
+    <string name="default_app_enable">Tap here to enable call handling &amp; notifications</string>
+
+    <!-- Call Log -->
+    <string name="call_history">Call History</string>
+    <string name="unknown_contact">Unknown</string>
+    
+    <!-- Settings -->
+    <string name="settings_title">Options</string>
+    <string name="default_phone_app">Default Phone App</string>
+    <string name="set_default_desc">Set this app as your default phone app:</string>
+    <string name="set_default_btn">SET DEFAULT</string>
+    <string name="text_size">Text Size</string>
+    <string name="text_size_desc">Make contact names very large (same size as picture):</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="dark_mode_desc">Choose app appearance:</string>
+    <string name="mode_system">SYSTEM</string>
+    <string name="mode_light">LIGHT</string>
+    <string name="mode_dark">DARK</string>
+    <string name="call_confirm">Call Confirmation</string>
+    <string name="call_confirm_desc">Ask before making a call (prevents accidental calls):</string>
+    <string name="vibration_feedback">Vibration Feedback</string>
+    <string name="vibration_desc">Vibrate when buttons are pressed:</string>
+    <string name="voice_announcements">Voice Announcements</string>
+    <string name="voice_desc">Speak contact names when calling:</string>
+    <string name="missed_calls_display">Missed Calls Display</string>
+    <string name="missed_calls_desc">Show missed calls from the last:</string>
+    <string name="hours_format">%d hours</string>
+    <string name="favorites_order">Favorites Order</string>
+    <string name="favorites_order_desc">Use the arrows to reorder your favorites:</string>
+    <string name="block_unknown">Block Unknown Numbers</string>
+    <string name="block_unknown_desc">Automatically block calls from numbers not in your contacts:</string>
+    <string name="on">ON</string>
+    <string name="off">OFF</string>
+    
+    <!-- Call Screen -->
+    <string name="incoming_call">Incoming Call</string>
+    <string name="calling">Calling...</string>
+    <string name="on_call">On Call</string>
+    <string name="on_hold">On Hold</string>
+    <string name="connecting">Connecting...</string>
+    <string name="reject">Reject</string>
+    <string name="answer">Answer</string>
+    <string name="end_call">End Call</string>
+    <string name="advanced_settings">Advanced Options</string>
+    <string name="answer_speaker_table">Answer on Speaker if flat</string>
+    <string name="answer_speaker_table_desc">Use loudspeaker when answering while phone is lying flat on a table:</string>
+    <string name="calls">Calls</string>
 </resources>

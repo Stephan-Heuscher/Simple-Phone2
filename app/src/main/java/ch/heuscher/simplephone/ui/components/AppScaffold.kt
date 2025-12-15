@@ -54,6 +54,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object Settings : Screen("settings", "Options", Icons.Filled.Settings)
     object InCall : Screen("incall", "Call", Icons.Filled.Home)
     object Dialer : Screen("dialer", "Dialer", Icons.Filled.Call)
+    object CallLog : Screen("calllog", "Call Log", Icons.Filled.History)
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)

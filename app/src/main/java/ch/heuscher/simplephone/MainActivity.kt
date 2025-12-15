@@ -525,6 +525,7 @@ fun SimplePhoneApp(
                             val contact = contacts.find { it.id == contactId }
                             contact?.let { handleCall(it.number) }
                         },
+                        onCallLogClick = { navController.navigate(Screen.CallLog.route) },
                         onDialerClick = { navController.navigate(Screen.Dialer.route) },
                         missedCalls = missedCalls,
                         missedCallsHours = missedCallsHours,
@@ -538,6 +539,16 @@ fun SimplePhoneApp(
                 composable(Screen.Dialer.route) {
                     DialerScreen(
                         onCallClick = handleCall,
+                        useHapticFeedback = useHapticFeedback
+                    )
+                }
+                composable(Screen.CallLog.route) {
+                    ch.heuscher.simplephone.ui.screens.CallLogScreen(
+                        onCallClick = handleCall,
+                        onBackClick = { navController.popBackStack() },
+                        callLogRepository = ch.heuscher.simplephone.data.CallLogRepository(context),
+                        contacts = contacts,
+                        useHugeText = useHugeText,
                         useHapticFeedback = useHapticFeedback
                     )
                 }
@@ -558,6 +569,14 @@ fun SimplePhoneApp(
                             darkModeOption = it
                             settingsRepository.darkModeOption = it
                             onDarkModeOptionChange(it)
+                        },
+                        blockUnknownCallers = settingsRepository.blockUnknownCallers,
+                        onBlockUnknownCallersChange = {
+                            settingsRepository.blockUnknownCallers = it
+                        },
+                        answerOnSpeakerIfFlat = settingsRepository.answerOnSpeakerIfFlat,
+                        onAnswerOnSpeakerIfFlatChange = {
+                             settingsRepository.answerOnSpeakerIfFlat = it
                         },
                         confirmBeforeCall = confirmBeforeCall,
                         onConfirmBeforeCallChange = {

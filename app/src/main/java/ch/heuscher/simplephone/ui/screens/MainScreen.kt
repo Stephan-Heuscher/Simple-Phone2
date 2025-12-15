@@ -71,6 +71,7 @@ import ch.heuscher.simplephone.ui.utils.vibrate
 fun MainScreen(
     onCallClick: (String) -> Unit,
     onContactClick: (String) -> Unit,
+    onCallLogClick: () -> Unit = {},
     onDialerClick: () -> Unit = {},
     missedCalls: List<CallLogEntry> = emptyList(),
     missedCallsHours: Int = 24,
@@ -297,7 +298,30 @@ fun MainScreen(
         // --- Missed Calls Section (only shown when not searching) ---
         if (searchQuery.isBlank()) {
             item {
-                SectionHeader(title = "Missed Calls")
+                // Calls Button
+                Button(
+                    onClick = onCallLogClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Call,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.calls),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
 
             if (missedCalls.isEmpty()) {

@@ -70,6 +70,10 @@ fun SettingsScreen(
     onMissedCallsHoursChange: (Int) -> Unit = {},
     darkModeOption: Int = 0, // 0=System, 1=Light, 2=Dark
     onDarkModeOptionChange: (Int) -> Unit = {},
+    blockUnknownCallers: Boolean = false,
+    onBlockUnknownCallersChange: (Boolean) -> Unit = {},
+    answerOnSpeakerIfFlat: Boolean = false,
+    onAnswerOnSpeakerIfFlatChange: (Boolean) -> Unit = {},
     confirmBeforeCall: Boolean = false,
     onConfirmBeforeCallChange: (Boolean) -> Unit = {},
     useHapticFeedback: Boolean = true,
@@ -226,111 +230,15 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(24.dp))
         }
 
-        // --- Call Confirmation Section ---
-        item {
-            Text(
-                "Call Confirmation",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                "Ask before making a call (prevents accidental calls):",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(top = 16.dp, bottom = 32.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                SettingsToggleButton(
-                    isEnabled = confirmBeforeCall,
-                    onToggle = { vibrate(); onConfirmBeforeCallChange(!confirmBeforeCall) },
-                    label = if (confirmBeforeCall) "ON" else "OFF"
-                )
-            }
-
-            HorizontalDivider(thickness = 2.dp)
-            Spacer(modifier = Modifier.height(24.dp))
-        }
-
-        // --- Haptic Feedback Section ---
-        item {
-            Text(
-                "Vibration Feedback",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                "Vibrate when buttons are pressed:",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(top = 16.dp, bottom = 32.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                SettingsToggleButton(
-                    isEnabled = useHapticFeedback,
-                    onToggle = { 
-                        vibrate(force = true)
-                        onHapticFeedbackChange(!useHapticFeedback) 
-                    },
-                    label = if (useHapticFeedback) "ON" else "OFF"
-                )
-            }
-
-            HorizontalDivider(thickness = 2.dp)
-            Spacer(modifier = Modifier.height(24.dp))
-        }
-
-        // --- Voice Announcements Section ---
-        item {
-            Text(
-                "Voice Announcements",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                "Speak contact names when calling:",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(top = 16.dp, bottom = 32.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                SettingsToggleButton(
-                    isEnabled = useVoiceAnnouncements,
-                    onToggle = { vibrate(); onVoiceAnnouncementsChange(!useVoiceAnnouncements) },
-                    label = if (useVoiceAnnouncements) "ON" else "OFF"
-                )
-            }
-
-            HorizontalDivider(thickness = 2.dp)
-            Spacer(modifier = Modifier.height(24.dp))
-        }
-
         // --- Missed Calls Section ---
         item {
             Text(
-                "Missed Calls Display",
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.missed_calls_display),
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                "Show missed calls from the last:",
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.missed_calls_desc),
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(top = 8.dp)
             )
@@ -349,7 +257,7 @@ fun SettingsScreen(
                 )
 
                 Text(
-                    "$missedCallsHours hours",
+                    androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.hours_format, missedCallsHours),
                     style = MaterialTheme.typography.displayMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(horizontal = 16.dp)
@@ -370,12 +278,12 @@ fun SettingsScreen(
         // --- Favorites Order Section ---
         item {
             Text(
-                "Favorites Order",
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.favorites_order),
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                "Use the arrows to reorder your favorites:",
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.favorites_order_desc),
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
             )
@@ -406,9 +314,170 @@ fun SettingsScreen(
                 HorizontalDivider()
             }
         }
-
+        
+        // --- Advanced Options Header ---
         item {
-            HorizontalDivider(thickness = 2.dp, modifier = Modifier.padding(vertical = 24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.advanced_settings),
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // --- Block Unknown Numbers Section ---
+        item {
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.block_unknown),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.block_unknown_desc),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                SettingsToggleButton(
+                    isEnabled = blockUnknownCallers,
+                    onToggle = { vibrate(); onBlockUnknownCallersChange(!blockUnknownCallers) },
+                    label = if (blockUnknownCallers) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
+                )
+            }
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // --- Answer on Speaker if Flat ---
+        item {
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.answer_speaker_table),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.answer_speaker_table_desc),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                SettingsToggleButton(
+                    isEnabled = answerOnSpeakerIfFlat,
+                    onToggle = { vibrate(); onAnswerOnSpeakerIfFlatChange(!answerOnSpeakerIfFlat) },
+                    label = if (answerOnSpeakerIfFlat) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
+                )
+            }
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+        
+        // --- Call Confirmation Section ---
+        item {
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.call_confirm),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.call_confirm_desc),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                SettingsToggleButton(
+                    isEnabled = confirmBeforeCall,
+                    onToggle = { vibrate(); onConfirmBeforeCallChange(!confirmBeforeCall) },
+                    label = if (confirmBeforeCall) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
+                )
+            }
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // --- Voice Announcements Section ---
+        item {
+             Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.voice_announcements),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.voice_desc),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                SettingsToggleButton(
+                    isEnabled = useVoiceAnnouncements,
+                    onToggle = { vibrate(); onVoiceAnnouncementsChange(!useVoiceAnnouncements) },
+                    label = if (useVoiceAnnouncements) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
+                )
+            }
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // --- Haptic Feedback Section ---
+        item {
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.vibration_feedback),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.vibration_desc),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                SettingsToggleButton(
+                    isEnabled = useHapticFeedback,
+                    onToggle = { 
+                        vibrate(force = true)
+                        onHapticFeedbackChange(!useHapticFeedback) 
+                    },
+                    label = if (useHapticFeedback) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
+                )
+            }
         }
 
     }

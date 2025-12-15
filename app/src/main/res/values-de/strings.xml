@@ -1,0 +1,63 @@
+<resources>
+    <string name="app_name">Einfaches Telefon</string>
+    <string name="widget_description">Schneller Zugriff auf Favoriten. Foto oder grüne Taste tippen zum Anrufen.</string>
+    
+    <!-- Main Screen -->
+    <string name="missed_calls">Verpasste Anrufe</string>
+    <string name="show_all">Alle anzeigen ></string>
+    <string name="no_missed_calls">Keine verpassten Anrufe</string>
+    <string name="favorites">Favoriten</string>
+    <string name="no_favorites">Keine Favoriten</string>
+    <string name="phone_book">Telefonbuch</string>
+    <string name="search_results">Suchergebnisse</string>
+    <string name="contacts_found">%d Kontakte gefunden</string>
+    <string name="search_placeholder">Suchen...</string>
+    <string name="default_app_warning">⚠️ Nicht als Standard-Telefon-App gesetzt</string>
+    <string name="default_app_enable">Hier tippen um Anrufe &amp; Benachrichtigungen zu aktivieren</string>
+
+    <!-- Call Log -->
+    <string name="call_history">Anrufverlauf</string>
+    <string name="unknown_contact">Unbekannt</string>
+    
+    <!-- Settings -->
+    <string name="settings_title">Optionen</string>
+    <string name="default_phone_app">Standard-Telefon-App</string>
+    <string name="set_default_desc">Diese App als Standard setzen:</string>
+    <string name="set_default_btn">ALS STANDARD SETZEN</string>
+    <string name="text_size">Textgröße</string>
+    <string name="text_size_desc">Kontaktnamen sehr groß anzeigen (wie Bilder):</string>
+    <string name="dark_mode">Dunkelmodus</string>
+    <string name="dark_mode_desc">Erscheinungsbild wählen:</string>
+    <string name="mode_system">SYSTEM</string>
+    <string name="mode_light">HELL</string>
+    <string name="mode_dark">DUNKEL</string>
+    <string name="call_confirm">Anruferbestätigung</string>
+    <string name="call_confirm_desc">Vor Anruf fragen (verhindert versehentliche Anrufe):</string>
+    <string name="vibration_feedback">Vibrationsfeedback</string>
+    <string name="vibration_desc">Vibrieren bei Tastendruck:</string>
+    <string name="voice_announcements">Sprachansagen</string>
+    <string name="voice_desc">Namen beim Anrufen vorlesen:</string>
+    <string name="missed_calls_display">Anzeige verpasste Anrufe</string>
+    <string name="missed_calls_desc">Verpasste Anrufe der letzten:</string>
+    <string name="hours_format">%d Stunden</string>
+    <string name="favorites_order">Favoriten-Reihenfolge</string>
+    <string name="favorites_order_desc">Pfeile nutzen zum Sortieren:</string>
+    <string name="block_unknown">Unbekannte blockieren</string>
+    <string name="block_unknown_desc">Anrufe von Nummern nicht in Kontakten blockieren:</string>
+    <string name="on">AN</string>
+    <string name="off">AUS</string>
+    
+    <!-- Call Screen -->
+    <string name="incoming_call">Eingehender Anruf</string>
+    <string name="calling">Ruft an...</string>
+    <string name="on_call">Im Gespräch</string>
+    <string name="on_hold">Gehalten</string>
+    <string name="connecting">Verbinden...</string>
+    <string name="reject">Ablehnen</string>
+    <string name="answer">Annehmen</string>
+    <string name="end_call">Auflegen</string>
+    <string name="advanced_settings">Erweiterte Optionen</string>
+    <string name="answer_speaker_table">Lautsprecher wenn flach</string>
+    <string name="answer_speaker_table_desc">Lautsprecher nutzen, wenn das Telefon flach auf dem Tisch liegt:</string>
+    <string name="calls">Anrufe</string>
+</resources>

@@ -24,6 +24,8 @@ class SettingsRepository(context: Context) {
         private const val KEY_FAVORITES_ORDER = "favorites_order"
         private const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
         private const val KEY_IS_DEMO_MODE = "is_demo_mode"
+        private const val KEY_BLOCK_UNKNOWN_CALLERS = "block_unknown_callers"
+        private const val KEY_ANSWER_SPEAKER_TABLE = "answer_speaker_table"
         
         private const val DEFAULT_FILTER_HOURS = 2
         private const val DEFAULT_MISSED_CALLS_HOURS = 4
@@ -91,4 +93,12 @@ class SettingsRepository(context: Context) {
     var isDemoMode: Boolean
         get() = prefs.getBoolean(KEY_IS_DEMO_MODE, false)
         set(value) = prefs.edit().putBoolean(KEY_IS_DEMO_MODE, value).apply()
+
+    var blockUnknownCallers: Boolean
+        get() = prefs.getBoolean(KEY_BLOCK_UNKNOWN_CALLERS, false)
+        set(value) = prefs.edit().putBoolean(KEY_BLOCK_UNKNOWN_CALLERS, value).apply()
+
+    var answerOnSpeakerIfFlat: Boolean
+        get() = prefs.getBoolean(KEY_ANSWER_SPEAKER_TABLE, false)
+        set(value) = prefs.edit().putBoolean(KEY_ANSWER_SPEAKER_TABLE, value).apply()
 }
