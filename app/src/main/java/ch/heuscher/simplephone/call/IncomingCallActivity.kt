@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CallEnd
+import androidx.compose.material.icons.filled.Dialpad
 import androidx.compose.material.icons.filled.PhoneInTalk
 import androidx.compose.material.icons.filled.SpeakerPhone
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
@@ -130,6 +131,9 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
                     },
                     onAudioRouteSelected = { route ->
                         CallService.setAudioRoute(route)
+                    },
+                    onDtmfClick = { digit ->
+                        CallService.sendDtmf(digit)
                     }
                 )
             }
@@ -204,9 +208,23 @@ fun CallScreen(
     onAnswer: () -> Unit,
     onReject: () -> Unit,
     onHangup: () -> Unit,
-    onAudioRouteSelected: (Int) -> Unit
+    onAudioRouteSelected: (Int) -> Unit,
+    onDtmfClick: (Char) -> Unit = {}
 ) {
     val context = LocalContext.current
+    var showKeypad by remember { mutableStateOf(false) }
+    
+    // Show keypad overlay if active
+    if (showKeypad && callState == Call.STATE_ACTIVE) {
+        DtmfKeypadOverlay(
+            onDismiss = { showKeypad = false },
+            onKeyClick = { key ->
+                vibrate(context)
+                onDtmfClick(key)
+            }
+        )
+        return
+    }
     
     // i18n status text
     val statusText = when (callState) {
@@ -402,16 +420,37 @@ fun CallScreen(
                 )
             }
         } else {
-            // Active call: Only hangup button - centered
-            CallActionButton(
-                icon = Icons.Filled.CallEnd,
-                label = stringResource(R.string.end_call),
-                backgroundColor = RedHangup,
-                onClick = {
-                    vibrate(context)
-                    onHangup()
+            // Active call: Keypad button and hangup button
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Keypad button
+                Button(
+                    onClick = { 
+                        vibrate(context)
+                        showKeypad = true 
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    ),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
+                    Icon(Icons.Filled.Dialpad, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Keypad", style = MaterialTheme.typography.titleMedium)
                 }
-            )
+                
+                CallActionButton(
+                    icon = Icons.Filled.CallEnd,
+                    label = stringResource(R.string.end_call),
+                    backgroundColor = RedHangup,
+                    onClick = {
+                        vibrate(context)
+                        onHangup()
+                    }
+                )
+            }
         }
         
         Spacer(modifier = Modifier.height(24.dp))
@@ -492,6 +531,78 @@ fun AudioRouteButton(
             text = label,
             style = MaterialTheme.typography.labelMedium,
             color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+/**
+ * DTMF Keypad overlay for in-call tone sending
+ */
+@Composable
+fun DtmfKeypadOverlay(
+    onDismiss: () -> Unit,
+    onKeyClick: (Char) -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            val keys = listOf(
+                listOf('1', '2', '3'),
+                listOf('4', '5', '6'),
+                listOf('7', '8', '9'),
+                listOf('*', '0', '#')
+            )
+            
+            keys.forEach { row ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    row.forEach { key ->
+                        DtmfKeyButton(key = key, onClick = { onKeyClick(key) })
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            ) {
+                Text("Hide Keypad", style = MaterialTheme.typography.titleMedium)
+            }
+        }
+    }
+}
+
+@Composable
+fun DtmfKeyButton(key: Char, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(80.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = key.toString(),
+            style = MaterialTheme.typography.displaySmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

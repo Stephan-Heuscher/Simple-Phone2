@@ -159,14 +159,16 @@ fun ContactEditScreen(
                 singleLine = true
             )
             
-            // Phone number field
+            // Phone number field - read only
             OutlinedTextField(
                 value = number,
-                onValueChange = { number = it },
+                onValueChange = { },
                 label = { Text("Phone Number", style = labelStyle) },
                 textStyle = textStyle,
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                readOnly = true,
+                enabled = false
             )
             
             Spacer(modifier = Modifier.weight(1f))
