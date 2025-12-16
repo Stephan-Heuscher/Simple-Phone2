@@ -1,5 +1,7 @@
 package ch.heuscher.simplephone.ui.screens
 
+import android.app.Activity
+import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,6 +27,9 @@ import ch.heuscher.simplephone.data.ContactRepository
 import ch.heuscher.simplephone.model.Contact
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.yalantis.ucrop.UCrop
+import java.io.File
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,10 +47,44 @@ fun ContactEditScreen(
     var number by remember { mutableStateOf(contact?.number ?: initialNumber ?: "") }
     var imageUri by remember { mutableStateOf<Uri?>(contact?.imageUri?.let { Uri.parse(it) }) }
     
+    // Temporary URI to hold the source image for cropping
+    var pendingCropUri by remember { mutableStateOf<Uri?>(null) }
+    
+    // Launcher for UCrop result
+    val cropLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.let { data ->
+                UCrop.getOutput(data)?.let { croppedUri ->
+                    imageUri = croppedUri
+                }
+            }
+        }
+    }
+    
+    // Function to start UCrop
+    fun startCrop(sourceUri: Uri) {
+        val destinationUri = Uri.fromFile(
+            File(context.cacheDir, "contact_photo_${UUID.randomUUID()}.jpg")
+        )
+        val options = UCrop.Options().apply {
+            setCircleDimmedLayer(true)
+            setShowCropFrame(false)
+            setShowCropGrid(false)
+        }
+        val intent = UCrop.of(sourceUri, destinationUri)
+            .withAspectRatio(1f, 1f)
+            .withMaxResultSize(512, 512)
+            .withOptions(options)
+            .getIntent(context)
+        cropLauncher.launch(intent)
+    }
+    
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let { imageUri = it }
+        uri?.let { startCrop(it) }
     }
     
     val avatarSize = if (useHugeText) 160.dp else 120.dp

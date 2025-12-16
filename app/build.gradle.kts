@@ -65,6 +65,9 @@ dependencies {
     
     // Coil for image loading (contact photos)
     implementation("io.coil-kt:coil-compose:2.5.0")
+    
+    // UCrop for image cropping
+    implementation("com.github.yalantis:ucrop:2.2.8")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

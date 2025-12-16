@@ -292,34 +292,19 @@ fun CallScreen(
             
             Spacer(modifier = Modifier.height(24.dp))
             
-            // Caller name - very large, 2 lines max with horizontal scroll
-            val nameScrollState = androidx.compose.foundation.rememberScrollState()
-            Box(
+            // Caller name - very large, 2 lines max
+            Text(
+                text = displayName,
+                style = MaterialTheme.typography.displayMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = displayName,
-                        style = MaterialTheme.typography.displayMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        textAlign = TextAlign.Center,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.horizontalScroll(nameScrollState)
-                    )
-                    // Show subtle scrollbar if content overflows
-                    if (nameScrollState.maxValue > 0) {
-                        ch.heuscher.simplephone.ui.components.HorizontalScrollbar(
-                            scrollState = nameScrollState,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
-                }
-            }
+                    .padding(horizontal = 16.dp)
+            )
             
             // Only show phone number for UNKNOWN contacts
             if (!isKnownContact && callerNumber != null) {
