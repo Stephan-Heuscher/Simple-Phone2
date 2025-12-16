@@ -536,7 +536,7 @@ fun SimplePhoneApp(
                         missedCalls = missedCalls,
                         missedCallsHours = missedCallsHours,
                         useHugeText = useHugeText,
-                        contacts = contacts.ifEmpty { MockData.contacts },
+                        contacts = contacts,
                         isDefaultDialer = isDefaultDialer,
                         onSetDefaultDialer = onSetDefaultDialer,
                         useHapticFeedback = useHapticFeedback
