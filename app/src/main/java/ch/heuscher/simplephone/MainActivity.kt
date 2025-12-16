@@ -552,8 +552,9 @@ fun SimplePhoneApp(
                     ch.heuscher.simplephone.ui.screens.CallLogScreen(
                         onCallClick = handleCall,
                         onBackClick = { navController.popBackStack() },
-                        onAddContactClick = { number ->
-                            navController.navigate("contact_edit?number=$number")
+                        onEditContactClick = { contactId, number ->
+                            val route = "contact_edit?contactId=${contactId ?: ""}&number=$number"
+                            navController.navigate(route)
                         },
                         callLogRepository = ch.heuscher.simplephone.data.CallLogRepository(context),
                         contacts = contacts,
@@ -581,6 +582,7 @@ fun SimplePhoneApp(
                     ch.heuscher.simplephone.ui.screens.ContactEditScreen(
                         contact = contact,
                         initialNumber = number,
+                        useHugeText = useHugeText,
                         onSave = {
                             loadData() // Refresh data
                             navController.popBackStack()

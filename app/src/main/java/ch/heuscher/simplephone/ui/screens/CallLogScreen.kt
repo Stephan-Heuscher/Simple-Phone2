@@ -38,14 +38,16 @@ import ch.heuscher.simplephone.ui.utils.vibrate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CallLogScreen(
     onCallClick: (String) -> Unit,
     onBackClick: () -> Unit,
-    onAddContactClick: (String) -> Unit = {},
+    onEditContactClick: (String?, String) -> Unit = { _, _ -> },
     callLogRepository: CallLogRepository,
     contacts: List<Contact>,
     useHugeText: Boolean = false,
@@ -113,11 +115,13 @@ fun CallLogScreen(
                         log = log,
                         contact = contact,
                         isKnownContact = isKnownContact,
-                        onClick = { 
+                        onCallClick = { 
                             if (useHapticFeedback) vibrate(context)
                             onCallClick(contact.number)
                         },
-                        onAddContactClick = { onAddContactClick(contact.number) },
+                        onEditContactClick = { 
+                            onEditContactClick(if (isKnownContact) contact.id else null, contact.number)
+                        },
                         useHugeText = useHugeText
                     )
                     HorizontalDivider()
@@ -138,8 +142,8 @@ fun CallLogItem(
     log: CallLogEntry,
     contact: Contact,
     isKnownContact: Boolean,
-    onClick: () -> Unit,
-    onAddContactClick: () -> Unit = {},
+    onCallClick: () -> Unit,
+    onEditContactClick: () -> Unit = {},
     useHugeText: Boolean
 ) {
     val context = LocalContext.current
@@ -147,7 +151,11 @@ fun CallLogItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onDoubleTap = { onEditContactClick() }
+                )
+            }
             .padding(if (useHugeText) 20.dp else 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -264,14 +272,13 @@ fun CallLogItem(
             }
         }
 
-        if (!isKnownContact) {
-            IconButton(onClick = onAddContactClick) {
-                Icon(
-                    Icons.Default.Add, 
-                    contentDescription = "Add Contact",
-                    modifier = Modifier.size(if (useHugeText) 48.dp else 24.dp)
-                )
-            }
+        IconButton(onClick = onCallClick) {
+            Icon(
+                Icons.Default.Call, 
+                contentDescription = "Call",
+                tint = GreenCall,
+                modifier = Modifier.size(if (useHugeText) 48.dp else 32.dp)
+            )
         }
     }
 }
