@@ -23,6 +23,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.toArgb
 import ch.heuscher.simplephone.data.ContactRepository
 import ch.heuscher.simplephone.model.Contact
 import coil.compose.AsyncImage
@@ -50,6 +51,11 @@ fun ContactEditScreen(
     // Temporary URI to hold the source image for cropping
     var pendingCropUri by remember { mutableStateOf<Uri?>(null) }
     
+    // Colors for UCrop
+    val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
+    val onPrimaryColor = MaterialTheme.colorScheme.onPrimary.toArgb()
+    val surfaceColor = MaterialTheme.colorScheme.surface.toArgb()
+    
     // Launcher for UCrop result
     val cropLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -70,8 +76,20 @@ fun ContactEditScreen(
         )
         val options = UCrop.Options().apply {
             setCircleDimmedLayer(true)
-            setShowCropFrame(false)
+            setShowCropFrame(true)
             setShowCropGrid(false)
+            setCompressionQuality(100)
+            setHideBottomControls(false)
+            setFreeStyleCropEnabled(false)
+            
+            // Colors for accessibility
+            setToolbarColor(primaryColor)
+            setStatusBarColor(primaryColor)
+            setToolbarWidgetColor(onPrimaryColor)
+            setActiveControlsWidgetColor(primaryColor)
+            setRootViewBackgroundColor(surfaceColor)
+            
+            setToolbarTitle("Crop Photo")
         }
         val intent = UCrop.of(sourceUri, destinationUri)
             .withAspectRatio(1f, 1f)

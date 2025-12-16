@@ -192,7 +192,23 @@ class ContactRepository(private val context: Context) {
             .withValue(ContactsContract.CommonDataKinds.Phone.TYPE, ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE)
             .build())
 
-        // Note: Image handling is omitted for simplicity as requested, but can be added here.
+        if (imageUri != null) {
+            try {
+                val inputStream = context.contentResolver.openInputStream(android.net.Uri.parse(imageUri))
+                val photoBytes = inputStream?.readBytes()
+                inputStream?.close()
+
+                if (photoBytes != null) {
+                    ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                        .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                        .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE)
+                        .withValue(ContactsContract.CommonDataKinds.Photo.PHOTO, photoBytes)
+                        .build())
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
         
         try {
             context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
@@ -200,6 +216,23 @@ class ContactRepository(private val context: Context) {
         } catch (e: Exception) {
             e.printStackTrace()
             return false
+        }
+    }
+
+    private fun getRawContactId(contactId: String): Long? {
+        val cursor = context.contentResolver.query(
+            ContactsContract.RawContacts.CONTENT_URI,
+            arrayOf(ContactsContract.RawContacts._ID),
+            "${ContactsContract.RawContacts.CONTACT_ID}=?",
+            arrayOf(contactId),
+            null
+        )
+        return cursor?.use {
+            if (it.moveToFirst()) {
+                it.getLong(0)
+            } else {
+                null
+            }
         }
     }
 
@@ -223,6 +256,48 @@ class ContactRepository(private val context: Context) {
             )
             .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, number)
             .build())
+
+        // Update Photo
+        if (imageUri != null) {
+            try {
+                val inputStream = context.contentResolver.openInputStream(android.net.Uri.parse(imageUri))
+                val photoBytes = inputStream?.readBytes()
+                inputStream?.close()
+
+                if (photoBytes != null) {
+                    val photoCursor = context.contentResolver.query(
+                        ContactsContract.Data.CONTENT_URI,
+                        arrayOf(ContactsContract.Data._ID),
+                        "${ContactsContract.Data.CONTACT_ID}=? AND ${ContactsContract.Data.MIMETYPE}=?",
+                        arrayOf(id, ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE),
+                        null
+                    )
+                    
+                    val hasPhoto = photoCursor?.use { it.moveToFirst() } ?: false
+                    
+                    if (hasPhoto) {
+                        ops.add(ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
+                            .withSelection(
+                                "${ContactsContract.Data.CONTACT_ID}=? AND ${ContactsContract.Data.MIMETYPE}=?",
+                                arrayOf(id, ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE)
+                            )
+                            .withValue(ContactsContract.CommonDataKinds.Photo.PHOTO, photoBytes)
+                            .build())
+                    } else {
+                        val rawContactId = getRawContactId(id)
+                        if (rawContactId != null) {
+                            ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                                .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawContactId)
+                                .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Photo.CONTENT_ITEM_TYPE)
+                                .withValue(ContactsContract.CommonDataKinds.Photo.PHOTO, photoBytes)
+                                .build())
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
 
         try {
             context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
