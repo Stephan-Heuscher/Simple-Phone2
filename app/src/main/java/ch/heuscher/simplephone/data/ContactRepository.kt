@@ -1,5 +1,6 @@
 package ch.heuscher.simplephone.data
 
+import android.content.ContentProviderOperation
 import android.content.ContentResolver
 import android.content.Context
 import android.database.Cursor
@@ -156,5 +157,67 @@ class ContactRepository(private val context: Context) {
 
     private fun normalizeNumber(number: String): String {
         return number.replace(Regex("[^0-9]"), "")
+    }
+
+    fun addContact(name: String, number: String, imageUri: String? = null): Boolean {
+        val ops = ArrayList<ContentProviderOperation>()
+
+        ops.add(ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
+            .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null)
+            .withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null)
+            .build())
+
+        ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+            .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+            .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
+            .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name)
+            .build())
+
+        ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+            .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+            .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+            .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, number)
+            .withValue(ContactsContract.CommonDataKinds.Phone.TYPE, ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE)
+            .build())
+
+        // Note: Image handling is omitted for simplicity as requested, but can be added here.
+        
+        try {
+            context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
+            return true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return false
+        }
+    }
+
+    fun updateContact(id: String, name: String, number: String, imageUri: String? = null): Boolean {
+        val ops = ArrayList<ContentProviderOperation>()
+
+        // Update Name
+        ops.add(ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
+            .withSelection(
+                "${ContactsContract.Data.CONTACT_ID}=? AND ${ContactsContract.Data.MIMETYPE}=?",
+                arrayOf(id, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
+            )
+            .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name)
+            .build())
+
+        // Update Number
+        ops.add(ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
+            .withSelection(
+                "${ContactsContract.Data.CONTACT_ID}=? AND ${ContactsContract.Data.MIMETYPE}=?",
+                arrayOf(id, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+            )
+            .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, number)
+            .build())
+
+        try {
+            context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
+            return true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return false
+        }
     }
 }

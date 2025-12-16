@@ -34,8 +34,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -55,6 +53,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -75,6 +75,7 @@ fun MainScreen(
     onContactClick: (String) -> Unit,
     onCallLogClick: () -> Unit = {},
     onDialerClick: () -> Unit = {},
+    onEditClick: (String?, String?) -> Unit = { _, _ -> },
     missedCalls: List<CallLogEntry> = emptyList(),
     missedCallsHours: Int = 24,
     useHugeText: Boolean = false,
@@ -300,39 +301,27 @@ fun MainScreen(
         // --- Missed Calls Section (only shown when not searching) ---
         if (searchQuery.isBlank()) {
             item {
-                // Missed Calls Header with "History" link
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .clickable { onCallLogClick() },
+                        .padding(top = 24.dp, bottom = 8.dp)
+                        .clickable { onCallLogClick() }
+                        .padding(horizontal = 16.dp), // Add padding here for touch target, but text has padding? No, SectionHeader has padding.
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.missed_calls),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                         text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.missed_calls),
+                         style = MaterialTheme.typography.titleLarge,
+                         fontWeight = FontWeight.Bold,
+                         color = MaterialTheme.colorScheme.primary
                     )
-                    
-                    Button(
-                        onClick = { 
-                            if (useHapticFeedback) vibrate(context)
-                            onCallLogClick() 
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        ),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                        modifier = Modifier.height(36.dp)
-                    ) {
-                        Text(
-                            text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.all_calls),
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    }
+                    Text(
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.show_all),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
 
@@ -347,7 +336,7 @@ fun MainScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.no_missed_calls),
+                            text = "No missed calls",
                             style = if (useHugeText) MaterialTheme.typography.displaySmall else MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Medium,
                             color = GreenCall,
@@ -382,6 +371,11 @@ fun MainScreen(
                             if (useHapticFeedback) vibrate(context)
                             onCallClick(contact.number) 
                         },
+                        onEditClick = { 
+                            // If contact was found in address book, use its ID. Otherwise pass null ID to create new.
+                            val isKnown = allContacts.any { it.id == contact.id }
+                            onEditClick(if (isKnown) contact.id else null, contact.number) 
+                        },
                         showFavoriteStar = false,
                         useHugeText = useHugeText
                     )
@@ -414,6 +408,7 @@ fun MainScreen(
                             if (useHapticFeedback) vibrate(context)
                             onCallClick(contact.number) 
                         },
+                        onEditClick = { onEditClick(contact.id, contact.number) },
                         showFavoriteStar = true,
                         useHugeText = useHugeText
                     )
@@ -449,6 +444,7 @@ fun MainScreen(
                         if (useHapticFeedback) vibrate(context)
                         onCallClick(contact.number) 
                     },
+                    onEditClick = { onEditClick(contact.id, contact.number) },
                     showFavoriteStar = true,
                     useHugeText = useHugeText
                 )
@@ -472,6 +468,7 @@ fun MainScreen(
 fun ContactRow(
     contact: Contact,
     onCallClick: () -> Unit,
+    onEditClick: () -> Unit = {},
     showFavoriteStar: Boolean = true,
     modifier: Modifier = Modifier,
     useHugeText: Boolean = false
@@ -479,6 +476,11 @@ fun ContactRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onDoubleTap = { onEditClick() }
+                )
+            }
             .semantics {
                 contentDescription = "Contact ${contact.name}, tap picture or green button to call"
             }

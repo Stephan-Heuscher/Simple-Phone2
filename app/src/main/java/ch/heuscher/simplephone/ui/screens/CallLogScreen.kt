@@ -38,11 +38,14 @@ import ch.heuscher.simplephone.ui.utils.vibrate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+import androidx.compose.material.icons.filled.Add
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CallLogScreen(
     onCallClick: (String) -> Unit,
     onBackClick: () -> Unit,
+    onAddContactClick: (String) -> Unit = {},
     callLogRepository: CallLogRepository,
     contacts: List<Contact>,
     useHugeText: Boolean = false,
@@ -114,6 +117,7 @@ fun CallLogScreen(
                             if (useHapticFeedback) vibrate(context)
                             onCallClick(contact.number)
                         },
+                        onAddContactClick = { onAddContactClick(contact.number) },
                         useHugeText = useHugeText
                     )
                     HorizontalDivider()
@@ -135,6 +139,7 @@ fun CallLogItem(
     contact: Contact,
     isKnownContact: Boolean,
     onClick: () -> Unit,
+    onAddContactClick: () -> Unit = {},
     useHugeText: Boolean
 ) {
     val context = LocalContext.current
@@ -256,6 +261,16 @@ fun CallLogItem(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+            }
+        }
+
+        if (!isKnownContact) {
+            IconButton(onClick = onAddContactClick) {
+                Icon(
+                    Icons.Default.Add, 
+                    contentDescription = "Add Contact",
+                    modifier = Modifier.size(if (useHugeText) 48.dp else 24.dp)
+                )
             }
         }
     }

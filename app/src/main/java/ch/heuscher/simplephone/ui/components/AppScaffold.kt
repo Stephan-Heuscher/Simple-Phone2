@@ -55,6 +55,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object InCall : Screen("incall", "Call", Icons.Filled.Home)
     object Dialer : Screen("dialer", "Dialer", Icons.Filled.Call)
     object CallLog : Screen("calllog", "Call Log", Icons.Filled.History)
+    object ContactEdit : Screen("contact_edit?contactId={contactId}&number={number}", "Edit Contact", Icons.Filled.ContactPhone)
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)

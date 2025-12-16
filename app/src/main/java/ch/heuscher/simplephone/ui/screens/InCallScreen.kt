@@ -2,6 +2,7 @@ package ch.heuscher.simplephone.ui.screens
 
 import android.view.MotionEvent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -20,6 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.BluetoothAudio
 import androidx.compose.material.icons.filled.CallEnd
 import androidx.compose.material.icons.filled.Hearing
+import androidx.compose.material.icons.filled.Dialpad
 import androidx.compose.material.icons.filled.Headset
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Speaker
@@ -72,6 +76,7 @@ fun InCallScreen(
     ),
     onHangup: () -> Unit,
     onAudioOutputChange: (AudioOutput) -> Unit,
+    onDtmfClick: (Char) -> Unit = {},
     useHapticFeedback: Boolean = true
 ) {
     val context = LocalContext.current
@@ -81,6 +86,17 @@ fun InCallScreen(
         }
     }
 
+    var showKeypad by remember { mutableStateOf(false) }
+
+    if (showKeypad) {
+        KeypadOverlay(
+            onDismiss = { showKeypad = false },
+            onKeyClick = { key ->
+                vibrate()
+                onDtmfClick(key)
+            }
+        )
+    } else {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -106,7 +122,7 @@ fun InCallScreen(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
         }
@@ -140,6 +156,21 @@ fun InCallScreen(
                     )
                 }
             }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Keypad Button
+            androidx.compose.material3.Button(
+                onClick = { vibrate(); showKeypad = true },
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            ) {
+                Icon(Icons.Default.Dialpad, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Keypad")
+            }
         }
 
         // Bottom section: Hangup button
@@ -160,6 +191,70 @@ fun InCallScreen(
                 overflow = TextOverflow.Ellipsis
             )
         }
+    }
+    }
+}
+
+@Composable
+fun KeypadOverlay(
+    onDismiss: () -> Unit,
+    onKeyClick: (Char) -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(16.dp)
+            .clickable(enabled = false) {} // Prevent clicks passing through
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            val keys = listOf(
+                listOf('1', '2', '3'),
+                listOf('4', '5', '6'),
+                listOf('7', '8', '9'),
+                listOf('*', '0', '#')
+            )
+            
+            keys.forEach { row ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    row.forEach { key ->
+                        KeypadButton(key = key, onClick = { onKeyClick(key) })
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            androidx.compose.material3.Button(onClick = onDismiss) {
+                Text("Hide Keypad")
+            }
+        }
+    }
+}
+
+@Composable
+fun KeypadButton(key: Char, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(80.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = key.toString(),
+            style = MaterialTheme.typography.displaySmall,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 

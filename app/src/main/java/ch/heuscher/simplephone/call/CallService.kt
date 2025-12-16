@@ -132,6 +132,13 @@ class CallService : InCallService() {
         fun silenceRinger() {
             instance?.stopRingingExternal()
         }
+
+        fun sendDtmf(digit: Char) {
+            currentCall?.playDtmfTone(digit)
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                currentCall?.stopDtmfTone()
+            }, 200)
+        }
     }
     
     private val callCallback = object : Call.Callback() {
@@ -144,8 +151,12 @@ class CallService : InCallService() {
             instance?.updateWakeLock(state)
             
             if (state == Call.STATE_DISCONNECTED) {
+                instance?.cancelOngoingCallNotification()
                 notifyCallStateChanged(call.details.disconnectCause)
             } else {
+                if (state == Call.STATE_ACTIVE || state == Call.STATE_DIALING) {
+                    instance?.showOngoingCallNotification(call)
+                }
                 notifyCallStateChanged()
             }
             
@@ -637,6 +648,49 @@ class CallService : InCallService() {
         val notification = notificationBuilder.build()
             
         notificationManager.notify(notificationId, notification)
+    }
+
+    private val ONGOING_NOTIFICATION_ID = 12345
+
+    private fun showOngoingCallNotification(call: Call) {
+        val context = this
+        val notificationManager = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+        val channelId = "ongoing_calls"
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = android.app.NotificationChannel(
+                channelId,
+                "Ongoing Calls",
+                android.app.NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Notification for ongoing calls"
+            }
+            notificationManager.createNotificationChannel(channel)
+        }
+        
+        val intent = Intent(context, IncomingCallActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+        }
+        val pendingIntent = android.app.PendingIntent.getActivity(
+            context, 100, intent, 
+            android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        
+        val notification = androidx.core.app.NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(android.R.drawable.sym_call_outgoing)
+            .setContentTitle("Ongoing Call")
+            .setContentText(callerName ?: callerNumber ?: "Unknown")
+            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_LOW)
+            .setContentIntent(pendingIntent)
+            .setOngoing(true)
+            .build()
+            
+        notificationManager.notify(ONGOING_NOTIFICATION_ID, notification)
+    }
+
+    private fun cancelOngoingCallNotification() {
+        val notificationManager = getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+        notificationManager.cancel(ONGOING_NOTIFICATION_ID)
     }
     
     private fun createCircularBitmap(bitmap: Bitmap): Bitmap {
