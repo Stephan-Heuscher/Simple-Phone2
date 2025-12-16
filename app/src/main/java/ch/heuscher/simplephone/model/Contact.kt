@@ -9,7 +9,9 @@ data class Contact(
     val isFavorite: Boolean = false,
     val initial: Char = name.firstOrNull()?.uppercaseChar() ?: '?',
     val imageUri: String? = null, // Contact photo URI if available
-    val sortOrder: Int = 0 // For custom favorites ordering
+    val sortOrder: Int = 0, // For custom favorites ordering
+    val isPrimary: Boolean = false, // IS_PRIMARY flag from contacts
+    val isSuperPrimary: Boolean = false // IS_SUPER_PRIMARY flag from contacts (default number)
 )
 
 data class CallLogEntry(

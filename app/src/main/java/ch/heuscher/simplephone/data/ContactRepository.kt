@@ -21,7 +21,9 @@ class ContactRepository(private val context: Context) {
                     ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
                     ContactsContract.CommonDataKinds.Phone.NUMBER,
                     ContactsContract.CommonDataKinds.Phone.PHOTO_URI,
-                    ContactsContract.CommonDataKinds.Phone.STARRED
+                    ContactsContract.CommonDataKinds.Phone.STARRED,
+                    ContactsContract.CommonDataKinds.Phone.IS_PRIMARY,
+                    ContactsContract.CommonDataKinds.Phone.IS_SUPER_PRIMARY
                 ),
                 null,
                 null,
@@ -34,6 +36,8 @@ class ContactRepository(private val context: Context) {
                 val numberIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
                 val photoUriIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.PHOTO_URI)
                 val starredIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.STARRED)
+                val isPrimaryIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.IS_PRIMARY)
+                val isSuperPrimaryIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.IS_SUPER_PRIMARY)
 
                 while (it.moveToNext()) {
                     val id = it.getString(idIndex)
@@ -41,6 +45,8 @@ class ContactRepository(private val context: Context) {
                     val number = it.getString(numberIndex)
                     val photoUri = it.getString(photoUriIndex)
                     val isStarred = it.getInt(starredIndex) == 1
+                    val isPrimary = it.getInt(isPrimaryIndex) == 1
+                    val isSuperPrimary = it.getInt(isSuperPrimaryIndex) == 1
 
                     // Filter out contacts without numbers (already handled by querying CommonDataKinds.Phone, but good to be safe)
                     if (!number.isNullOrBlank()) {
@@ -50,7 +56,9 @@ class ContactRepository(private val context: Context) {
                                 name = name ?: "Unknown",
                                 number = number,
                                 isFavorite = isStarred,
-                                imageUri = photoUri
+                                imageUri = photoUri,
+                                isPrimary = isPrimary,
+                                isSuperPrimary = isSuperPrimary
                             )
                         )
                     }
@@ -62,11 +70,15 @@ class ContactRepository(private val context: Context) {
             android.util.Log.e("ContactRepository", "Error reading contacts", e)
         }
         
-        // Remove duplicates if any (same contact multiple numbers) - for simplicity, we might keep them or distinct by ID
-        // The user requirement: "only display contacts, if a phone number is present"
-        // CommonDataKinds.Phone query only returns contacts with phone numbers.
+        // Remove duplicates: for contacts with multiple numbers, prefer super_primary > primary > first
+        val groupedById = contacts.groupBy { it.id }
+        val deduplicatedContacts = groupedById.map { (_, contactList) ->
+            contactList.find { it.isSuperPrimary }
+                ?: contactList.find { it.isPrimary }
+                ?: contactList.first()
+        }
         
-        return contacts.distinctBy { it.id }
+        return deduplicatedContacts
     }
 
     fun getCallLogs(): List<ch.heuscher.simplephone.model.CallLogEntry> {

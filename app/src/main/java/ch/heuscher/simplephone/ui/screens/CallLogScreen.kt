@@ -38,7 +38,6 @@ import ch.heuscher.simplephone.ui.utils.vibrate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-import androidx.compose.material.icons.filled.Call
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 
@@ -176,8 +175,8 @@ fun CallLogItem(
         
         Spacer(modifier = Modifier.width(if (useHugeText) 20.dp else 16.dp))
         
-        // Avatar with favorite star for known contacts
-        val avatarSize = if (useHugeText) 72.dp else 48.dp
+        // Avatar with favorite star for known contacts - same size as MainScreen
+        val avatarSize = if (useHugeText) 80.dp else 64.dp
         ContactAvatar(
             contact = contact,
             size = avatarSize,
@@ -272,13 +271,11 @@ fun CallLogItem(
             }
         }
 
-        IconButton(onClick = onCallClick) {
-            Icon(
-                Icons.Default.Call, 
-                contentDescription = "Call",
-                tint = GreenCall,
-                modifier = Modifier.size(if (useHugeText) 48.dp else 32.dp)
-            )
-        }
+        // Green call button - same as MainScreen
+        GreenCallIcon(
+            onClick = onCallClick,
+            contentDescription = "Call ${contact.name}",
+            size = if (useHugeText) 72 else 56
+        )
     }
 }
