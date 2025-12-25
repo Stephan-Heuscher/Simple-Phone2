@@ -1,6 +1,6 @@
 package ch.heuscher.simplephone.ui.components
 
-import android.view.MotionEvent
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -20,12 +20,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
+
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.pointerInteropFilter
+import ch.heuscher.simplephone.ui.components.pressClickEffect
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -41,7 +41,7 @@ import ch.heuscher.simplephone.ui.theme.RedHangup
  * This is crucial for users with motor disabilities who may have difficulty
  * holding and releasing a button.
  */
-@OptIn(ExperimentalComposeUiApi::class)
+
 @Composable
 fun AccessiblePressButton(
     onClick: () -> Unit,
@@ -61,20 +61,10 @@ fun AccessiblePressButton(
                 this.contentDescription = contentDescription
                 role = Role.Button
             }
-            .pointerInteropFilter { event ->
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        isPressed = true
-                        onClick() // Trigger on press, not release!
-                        true
-                    }
-                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                        isPressed = false
-                        true
-                    }
-                    else -> false
-                }
-            }
+            .pressClickEffect(
+                onClick = onClick,
+                onPressedChange = { isPressed = it }
+            )
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -85,7 +75,7 @@ fun AccessiblePressButton(
 /**
  * Large circular button for call actions (call/hangup)
  */
-@OptIn(ExperimentalComposeUiApi::class)
+
 @Composable
 fun CallActionButton(
     icon: ImageVector,
@@ -107,20 +97,10 @@ fun CallActionButton(
                 this.contentDescription = contentDescription
                 role = Role.Button
             }
-            .pointerInteropFilter { event ->
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        isPressed = true
-                        onClick() // Trigger on press!
-                        true
-                    }
-                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                        isPressed = false
-                        true
-                    }
-                    else -> false
-                }
-            },
+            .pressClickEffect(
+                onClick = onClick,
+                onPressedChange = { isPressed = it }
+            ),
         contentAlignment = Alignment.Center
     ) {
         Icon(

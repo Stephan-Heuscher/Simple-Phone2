@@ -23,6 +23,13 @@
     
     <!-- Settings -->
     <string name="settings_title">Options</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_appearance_desc">Customize how contacts are displayed:</string>
+    <string name="settings_huge_text">Huge Text</string>
+    <string name="settings_huge_picture">Huge Picture</string>
+    <string name="settings_huge_picture_desc">Half screen with big multi-line name</string>
+    <string name="settings_grid_view">Grid View</string>
+    <string name="settings_grid_view_desc">Just contact images (2 per line)</string>
     <string name="default_phone_app">Default Phone App</string>
     <string name="set_default_desc">Set this app as your default phone app:</string>
     <string name="set_default_btn">SET DEFAULT</string>

@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
-import android.view.MotionEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
@@ -40,13 +39,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import ch.heuscher.simplephone.ui.theme.GreenCall
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -56,11 +53,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ch.heuscher.simplephone.model.Contact
 import ch.heuscher.simplephone.ui.components.ContactAvatar
 import ch.heuscher.simplephone.ui.theme.HighContrastBlue
-import androidx.compose.ui.text.style.TextOverflow
+import ch.heuscher.simplephone.ui.components.pressClickEffect
 
 @Composable
 fun SettingsScreen(
@@ -124,12 +122,12 @@ fun SettingsScreen(
         if (!isDefaultDialer) {
             item {
                 Text(
-                    "Default Phone App",
+                    androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.default_phone_app),
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    "Set this app as your default phone app:",
+                    androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.set_default_desc),
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(top = 8.dp)
                 )
@@ -142,7 +140,7 @@ fun SettingsScreen(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     SettingsButton(
-                        text = "SET DEFAULT",
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.set_default_btn),
                         onClick = { vibrate(); onSetDefaultDialer() }
                     )
                 }
@@ -153,12 +151,12 @@ fun SettingsScreen(
         // --- Contact List Appearance Section ---
         item {
             Text(
-                "Appearance",
+                androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_appearance),
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                "Customize how contacts are displayed:",
+                androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_appearance_desc),
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(top = 8.dp)
             )
@@ -172,14 +170,14 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Huge Text",
+                    text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_huge_text),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.weight(1f)
                 )
                 SettingsToggleButton(
                     isEnabled = useHugeText,
                     onToggle = { vibrate(); onHugeTextChange(!useHugeText) },
-                    label = if (useHugeText) "ON" else "OFF",
+                    label = if (useHugeText) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off),
                     modifier = Modifier.size(width = 100.dp, height = 50.dp)
                 )
             }
@@ -194,11 +192,11 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                      Text(
-                        text = "Huge Picture",
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_huge_picture),
                         style = MaterialTheme.typography.titleLarge,
                     )
                     Text(
-                        text = "Half screen with big multi-line name",
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_huge_picture_desc),
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.Gray
                     )
@@ -207,7 +205,7 @@ fun SettingsScreen(
                 SettingsToggleButton(
                     isEnabled = useHugeContactPicture,
                     onToggle = { vibrate(); onHugeContactPictureChange(!useHugeContactPicture) },
-                    label = if (useHugeContactPicture) "ON" else "OFF",
+                    label = if (useHugeContactPicture) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off),
                     modifier = Modifier.size(width = 100.dp, height = 50.dp)
                 )
             }
@@ -222,11 +220,11 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                      Text(
-                        text = "Grid View",
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_grid_view),
                         style = MaterialTheme.typography.titleLarge,
                     )
                     Text(
-                        text = "Just contact images (2 per line)",
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_grid_view_desc),
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.Gray
                     )
@@ -234,7 +232,7 @@ fun SettingsScreen(
                 SettingsToggleButton(
                     isEnabled = useGridContactImages,
                     onToggle = { vibrate(); onGridContactImagesChange(!useGridContactImages) },
-                    label = if (useGridContactImages) "ON" else "OFF",
+                    label = if (useGridContactImages) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off),
                     modifier = Modifier.size(width = 100.dp, height = 50.dp)
                 )
             }
@@ -246,12 +244,12 @@ fun SettingsScreen(
         // --- Dark Mode Section ---
         item {
             Text(
-                "Dark Mode",
+                androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.dark_mode),
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                "Choose app appearance:",
+                androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.dark_mode_desc),
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(top = 8.dp)
             )
@@ -269,7 +267,7 @@ fun SettingsScreen(
                 ) {
                     // System Default
                     SettingsOptionButton(
-                        text = "SYSTEM",
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.mode_system),
                         isSelected = darkModeOption == 0,
                         onClick = { vibrate(); onDarkModeOptionChange(0) },
                         modifier = Modifier.weight(1f)
@@ -277,7 +275,7 @@ fun SettingsScreen(
                     
                     // Light
                     SettingsOptionButton(
-                        text = "LIGHT",
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.mode_light),
                         isSelected = darkModeOption == 1,
                         onClick = { vibrate(); onDarkModeOptionChange(1) },
                         modifier = Modifier.weight(1f)
@@ -285,7 +283,7 @@ fun SettingsScreen(
                     
                     // Dark
                     SettingsOptionButton(
-                        text = "DARK",
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.mode_dark),
                         isSelected = darkModeOption == 2,
                         onClick = { vibrate(); onDarkModeOptionChange(2) },
                         modifier = Modifier.weight(1f)
@@ -628,7 +626,6 @@ fun FavoriteReorderRow(
 /**
  * Large arrow button for reordering - triggers on press
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun BigArrowButton(
     icon: ImageVector,
@@ -654,25 +651,10 @@ fun BigArrowButton(
                 this.contentDescription = contentDescription
                 role = Role.Button
             }
-            .then(
-                if (enabled) {
-                    Modifier.pointerInteropFilter { event ->
-                        when (event.action) {
-                            MotionEvent.ACTION_DOWN -> {
-                                isPressed = true
-                                onClick()
-                                true
-                            }
-                            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                                isPressed = false
-                                true
-                            }
-                            else -> false
-                        }
-                    }
-                } else {
-                    Modifier
-                }
+            .pressClickEffect(
+                enabled = enabled,
+                onClick = onClick,
+                onPressedChange = { isPressed = it }
             ),
         contentAlignment = Alignment.Center
     ) {
@@ -688,7 +670,6 @@ fun BigArrowButton(
 /**
  * Large icon button for filter controls - triggers on press
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun BigIconButton(
     icon: ImageVector,
@@ -707,20 +688,10 @@ fun BigIconButton(
                 this.contentDescription = contentDescription
                 role = Role.Button
             }
-            .pointerInteropFilter { event ->
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        isPressed = true
-                        onClick()
-                        true
-                    }
-                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                        isPressed = false
-                        true
-                    }
-                    else -> false
-                }
-            },
+            .pressClickEffect(
+                onClick = onClick,
+                onPressedChange = { isPressed = it }
+            ),
         contentAlignment = Alignment.Center
     ) {
         Icon(
@@ -735,7 +706,6 @@ fun BigIconButton(
 /**
  * Option button for settings (like Dark Mode)
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SettingsOptionButton(
     text: String,
@@ -762,20 +732,10 @@ fun SettingsOptionButton(
                 role = Role.RadioButton
                 this.selected = isSelected
             }
-            .pointerInteropFilter { event ->
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        isPressed = true
-                        onClick()
-                        true
-                    }
-                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                        isPressed = false
-                        true
-                    }
-                    else -> false
-                }
-            },
+            .pressClickEffect(
+                onClick = onClick,
+                onPressedChange = { isPressed = it }
+            ),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -793,7 +753,6 @@ fun SettingsOptionButton(
 /**
  * Generic toggle button for settings - triggers on press
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SettingsToggleButton(
     isEnabled: Boolean,
@@ -818,20 +777,10 @@ fun SettingsToggleButton(
                 contentDescription = "$label is ${if (isEnabled) "ON" else "OFF"}, tap to toggle"
                 role = Role.Switch
             }
-            .pointerInteropFilter { event ->
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        isPressed = true
-                        onToggle()
-                        true
-                    }
-                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                        isPressed = false
-                        true
-                    }
-                    else -> false
-                }
-            },
+            .pressClickEffect(
+                onClick = onToggle,
+                onPressedChange = { isPressed = it }
+            ),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -843,10 +792,6 @@ fun SettingsToggleButton(
     }
 }
 
-/**
- * Generic button for settings actions - triggers on press
- */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SettingsButton(
     text: String,
@@ -866,20 +811,10 @@ fun SettingsButton(
                 contentDescription = "$text button"
                 role = Role.Button
             }
-            .pointerInteropFilter { event ->
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        isPressed = true
-                        onClick()
-                        true
-                    }
-                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                        isPressed = false
-                        true
-                    }
-                    else -> false
-                }
-            },
+            .pressClickEffect(
+                onClick = onClick,
+                onPressedChange = { isPressed = it }
+            ),
         contentAlignment = Alignment.Center
     ) {
         Text(

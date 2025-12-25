@@ -40,12 +40,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.pointer.pointerInteropFilter
+import ch.heuscher.simplephone.ui.components.pressClickEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -746,7 +745,6 @@ fun SimplePhoneApp(
 /**
  * Large, accessible call confirmation dialog
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun CallConfirmationDialog(
     contactName: String,
@@ -785,12 +783,10 @@ fun CallConfirmationDialog(
                             .height(80.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(HighContrastBlue)
-                            .pointerInteropFilter { event ->
-                                if (event.action == android.view.MotionEvent.ACTION_DOWN) {
-                                    onDismiss()
-                                    true
-                                } else false
-                            },
+                            .pressClickEffect(
+                                onClick = onDismiss,
+                                onPressedChange = {} // We don't track press for color change here? But wait, background is static HighContrastBlue
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -808,12 +804,10 @@ fun CallConfirmationDialog(
                             .height(80.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(GreenCall)
-                            .pointerInteropFilter { event ->
-                                if (event.action == android.view.MotionEvent.ACTION_DOWN) {
-                                    onConfirm()
-                                    true
-                                } else false
-                            },
+                            .pressClickEffect(
+                                onClick = onConfirm,
+                                onPressedChange = {}
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
