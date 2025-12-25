@@ -66,6 +66,10 @@ import androidx.compose.ui.text.style.TextOverflow
 fun SettingsScreen(
     useHugeText: Boolean = false,
     onHugeTextChange: (Boolean) -> Unit = {},
+    useHugeContactPicture: Boolean = false,
+    onHugeContactPictureChange: (Boolean) -> Unit = {},
+    useGridContactImages: Boolean = false,
+    onGridContactImagesChange: (Boolean) -> Unit = {},
     missedCallsHours: Int = 24,
     onMissedCallsHoursChange: (Int) -> Unit = {},
     darkModeOption: Int = 0, // 0=System, 1=Light, 2=Dark
@@ -146,29 +150,92 @@ fun SettingsScreen(
             }
         }
 
-        // --- Text Size Section ---
+        // --- Contact List Appearance Section ---
         item {
             Text(
-                "Text Size",
+                "Appearance",
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                "Make contact names very large (same size as picture):",
+                "Customize how contacts are displayed:",
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(top = 8.dp)
             )
 
+            // Text Size
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .padding(top = 16.dp, bottom = 32.dp)
+                    .padding(top = 16.dp, bottom = 16.dp)
                     .fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                HugeTextToggleButton(
+                Text(
+                    text = "Huge Text",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.weight(1f)
+                )
+                SettingsToggleButton(
                     isEnabled = useHugeText,
-                    onToggle = { vibrate(); onHugeTextChange(!useHugeText) }
+                    onToggle = { vibrate(); onHugeTextChange(!useHugeText) },
+                    label = if (useHugeText) "ON" else "OFF",
+                    modifier = Modifier.size(width = 100.dp, height = 50.dp)
+                )
+            }
+
+            // Huge Picture
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(vertical = 16.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                     Text(
+                        text = "Huge Picture",
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                    Text(
+                        text = "Half screen with big multi-line name",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray
+                    )
+                }
+
+                SettingsToggleButton(
+                    isEnabled = useHugeContactPicture,
+                    onToggle = { vibrate(); onHugeContactPictureChange(!useHugeContactPicture) },
+                    label = if (useHugeContactPicture) "ON" else "OFF",
+                    modifier = Modifier.size(width = 100.dp, height = 50.dp)
+                )
+            }
+
+            // Grid View
+             Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(vertical = 16.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                     Text(
+                        text = "Grid View",
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                    Text(
+                        text = "Just contact images (2 per line)",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray
+                    )
+                }
+                SettingsToggleButton(
+                    isEnabled = useGridContactImages,
+                    onToggle = { vibrate(); onGridContactImagesChange(!useGridContactImages) },
+                    label = if (useGridContactImages) "ON" else "OFF",
+                    modifier = Modifier.size(width = 100.dp, height = 50.dp)
                 )
             }
 
@@ -722,57 +789,6 @@ fun SettingsOptionButton(
     }
 }
 
-/**
- * Large toggle button for huge text setting - triggers on press
- */
-@OptIn(ExperimentalComposeUiApi::class)
-@Composable
-fun HugeTextToggleButton(
-    isEnabled: Boolean,
-    onToggle: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var isPressed by remember { mutableStateOf(false) }
-
-    val backgroundColor = when {
-        isPressed -> if (isEnabled) GreenCall.copy(alpha = 0.7f) else HighContrastBlue.copy(alpha = 0.7f)
-        isEnabled -> GreenCall
-        else -> HighContrastBlue
-    }
-
-    Box(
-        modifier = modifier
-            .size(width = 160.dp, height = 80.dp)
-            .clip(CircleShape)
-            .background(backgroundColor)
-            .semantics {
-                contentDescription = if (isEnabled) "Huge text is ON, tap to turn off" else "Huge text is OFF, tap to turn on"
-                role = Role.Switch
-            }
-            .pointerInteropFilter { event ->
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        isPressed = true
-                        onToggle()
-                        true
-                    }
-                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                        isPressed = false
-                        true
-                    }
-                    else -> false
-                }
-            },
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = if (isEnabled) "ON" else "OFF",
-            color = Color.White,
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
 
 /**
  * Generic toggle button for settings - triggers on press

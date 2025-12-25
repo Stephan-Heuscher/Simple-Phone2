@@ -26,6 +26,8 @@ class SettingsRepository(context: Context) {
         private const val KEY_IS_DEMO_MODE = "is_demo_mode"
         private const val KEY_BLOCK_UNKNOWN_CALLERS = "block_unknown_callers"
         private const val KEY_ANSWER_SPEAKER_TABLE = "answer_speaker_table"
+        private const val KEY_USE_HUGE_CONTACT_PICTURE = "use_huge_contact_picture"
+        private const val KEY_USE_GRID_CONTACT_IMAGES = "use_grid_contact_images"
         
         private const val DEFAULT_FILTER_HOURS = 2
         private const val DEFAULT_MISSED_CALLS_HOURS = 4
@@ -101,4 +103,12 @@ class SettingsRepository(context: Context) {
     var answerOnSpeakerIfFlat: Boolean
         get() = prefs.getBoolean(KEY_ANSWER_SPEAKER_TABLE, false)
         set(value) = prefs.edit().putBoolean(KEY_ANSWER_SPEAKER_TABLE, value).apply()
+
+    var useHugeContactPicture: Boolean
+        get() = prefs.getBoolean(KEY_USE_HUGE_CONTACT_PICTURE, false)
+        set(value) = prefs.edit().putBoolean(KEY_USE_HUGE_CONTACT_PICTURE, value).apply()
+
+    var useGridContactImages: Boolean
+        get() = prefs.getBoolean(KEY_USE_GRID_CONTACT_IMAGES, false)
+        set(value) = prefs.edit().putBoolean(KEY_USE_GRID_CONTACT_IMAGES, value).apply()
 }

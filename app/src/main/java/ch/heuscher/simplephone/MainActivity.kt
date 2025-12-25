@@ -339,6 +339,8 @@ fun SimplePhoneApp(
     
     // Settings state
     var useHugeText by remember { mutableStateOf(settingsRepository.useHugeText) }
+    var useHugeContactPicture by remember { mutableStateOf(settingsRepository.useHugeContactPicture) }
+    var useGridContactImages by remember { mutableStateOf(settingsRepository.useGridContactImages) }
     var missedCallsHours by remember { mutableStateOf(settingsRepository.missedCallsHours) }
     var darkModeOption by remember { mutableStateOf(settingsRepository.darkModeOption) }
     var confirmBeforeCall by remember { mutableStateOf(settingsRepository.confirmBeforeCall) }
@@ -536,6 +538,8 @@ fun SimplePhoneApp(
                         missedCalls = missedCalls,
                         missedCallsHours = missedCallsHours,
                         useHugeText = useHugeText,
+                        useHugeContactPicture = useHugeContactPicture,
+                        useGridContactImages = useGridContactImages,
                         contacts = contacts,
                         isDefaultDialer = isDefaultDialer,
                         onSetDefaultDialer = onSetDefaultDialer,
@@ -596,6 +600,16 @@ fun SimplePhoneApp(
                         onHugeTextChange = {
                             useHugeText = it
                             settingsRepository.useHugeText = it
+                        },
+                        useHugeContactPicture = useHugeContactPicture,
+                        onHugeContactPictureChange = {
+                            useHugeContactPicture = it
+                            settingsRepository.useHugeContactPicture = it
+                        },
+                        useGridContactImages = useGridContactImages,
+                        onGridContactImagesChange = {
+                            useGridContactImages = it
+                            settingsRepository.useGridContactImages = it
                         },
                         missedCallsHours = missedCallsHours,
                         onMissedCallsHoursChange = {

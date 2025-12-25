@@ -79,6 +79,8 @@ fun MainScreen(
     missedCalls: List<CallLogEntry> = emptyList(),
     missedCallsHours: Int = 24,
     useHugeText: Boolean = false,
+    useHugeContactPicture: Boolean = false,
+    useGridContactImages: Boolean = false,
     contacts: List<Contact> = MockData.contacts,
     isDefaultDialer: Boolean = true,
     onSetDefaultDialer: () -> Unit = {},
@@ -327,7 +329,7 @@ fun MainScreen(
 
             if (missedCalls.isEmpty()) {
                 // Show green background with "No missed calls" message
-                item {
+                item(key = "no_missed_calls") {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -347,7 +349,7 @@ fun MainScreen(
                     HorizontalDivider(thickness = 2.dp)
                 }
             } else {
-                items(missedCalls) { callEntry ->
+                items(missedCalls, key = { "missed_${it.id}" }) { callEntry ->
                     // Try to find contact by number
                     // Normalize numbers for comparison (remove spaces, dashes, etc.)
                     val normalizedCallNumber = callEntry.contactId.replace(Regex("[^0-9+]"), "")
@@ -391,7 +393,7 @@ fun MainScreen(
             }
 
             if (favorites.isEmpty()) {
-                item {
+                item(key = "no_favorites") {
                     Text(
                         "No favorites",
                         modifier = Modifier.padding(16.dp),
@@ -401,31 +403,65 @@ fun MainScreen(
                     )
                 }
             } else {
-                items(favorites) { contact ->
-                    ContactRow(
-                        contact = contact,
-                        onCallClick = { 
-                            if (useHapticFeedback) vibrate(context)
-                            onCallClick(contact.number) 
-                        },
-                        onEditClick = { onEditClick(contact.id, contact.number) },
-                        showFavoriteStar = true,
-                        useHugeText = useHugeText
-                    )
-                    HorizontalDivider()
+                if (useGridContactImages) {
+                    items(favorites.chunked(2), key = { "fav_chunk_${it[0].id}" }) { chunk ->
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            chunk.forEach { contact ->
+                                Box(modifier = Modifier.weight(1f)) {
+                                     GridContactItem(
+                                        contact = contact,
+                                        onCallClick = {
+                                            if (useHapticFeedback) vibrate(context)
+                                            onCallClick(contact.number)
+                                        },
+                                        onEditClick = { onEditClick(contact.id, contact.number) }
+                                     )
+                                }
+                            }
+                            if (chunk.size == 1) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                } else {
+                    items(favorites, key = { "fav_${it.id}" }) { contact ->
+                        if (useHugeContactPicture) {
+                            HugeContactRow(
+                                contact = contact,
+                                onCallClick = {
+                                    if (useHapticFeedback) vibrate(context)
+                                    onCallClick(contact.number)
+                                },
+                                onEditClick = { onEditClick(contact.id, contact.number) },
+                                showFavoriteStar = true
+                            )
+                        } else {
+                            ContactRow(
+                                contact = contact,
+                                onCallClick = {
+                                    if (useHapticFeedback) vibrate(context)
+                                    onCallClick(contact.number)
+                                },
+                                onEditClick = { onEditClick(contact.id, contact.number) },
+                                showFavoriteStar = true,
+                                useHugeText = useHugeText
+                            )
+                        }
+                        HorizontalDivider()
+                    }
                 }
             }
         }
 
         // --- Phone Book Section (or Search Results) ---
-        item {
+        item(key = "phone_book_header") {
             SectionHeader(title = if (searchQuery.isBlank()) "Phone Book" else "Search Results")
         }
         
 
         // Show search results count if searching
         if (searchQuery.isNotBlank()) {
-            item {
+            item(key = "search_count") {
                 Text(
                     text = "${filteredContacts.size} contact${if (filteredContacts.size != 1) "s" else ""} found",
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
@@ -437,18 +473,53 @@ fun MainScreen(
             }
         }
 
-            items(filteredContacts) { contact ->
-                ContactRow(
-                    contact = contact,
-                    onCallClick = { 
-                        if (useHapticFeedback) vibrate(context)
-                        onCallClick(contact.number) 
-                    },
-                    onEditClick = { onEditClick(contact.id, contact.number) },
-                    showFavoriteStar = true,
-                    useHugeText = useHugeText
-                )
-                HorizontalDivider()
+            if (useGridContactImages) {
+                 items(filteredContacts.chunked(2), key = { "chunk_${it[0].id}" }) { chunk ->
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        chunk.forEach { contact ->
+                            Box(modifier = Modifier.weight(1f)) {
+                                    GridContactItem(
+                                    contact = contact,
+                                    onCallClick = {
+                                        if (useHapticFeedback) vibrate(context)
+                                        onCallClick(contact.number)
+                                    },
+                                    onEditClick = { onEditClick(contact.id, contact.number) }
+                                    )
+                            }
+                        }
+                        if (chunk.size == 1) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
+                    HorizontalDivider()
+                 }
+            } else {
+                items(filteredContacts, key = { it.id }) { contact ->
+                    if (useHugeContactPicture) {
+                        HugeContactRow(
+                            contact = contact,
+                            onCallClick = {
+                                if (useHapticFeedback) vibrate(context)
+                                onCallClick(contact.number)
+                            },
+                            onEditClick = { onEditClick(contact.id, contact.number) },
+                            showFavoriteStar = true
+                        )
+                    } else {
+                        ContactRow(
+                            contact = contact,
+                            onCallClick = {
+                                if (useHapticFeedback) vibrate(context)
+                                onCallClick(contact.number)
+                            },
+                            onEditClick = { onEditClick(contact.id, contact.number) },
+                            showFavoriteStar = true,
+                            useHugeText = useHugeText
+                        )
+                    }
+                    HorizontalDivider()
+                }
             }
         }
         
@@ -478,7 +549,8 @@ fun ContactRow(
             .fillMaxWidth()
             .pointerInput(Unit) {
                 detectTapGestures(
-                    onDoubleTap = { onEditClick() }
+                    onDoubleTap = { onEditClick() },
+                    onTap = { /* Let children handle tap or add listener here if needed, but row isn't clickable as whole? */ }
                 )
             }
             .semantics {
@@ -611,4 +683,104 @@ fun SectionHeader(title: String) {
             .fillMaxWidth()
             .padding(start = 16.dp, top = 24.dp, bottom = 8.dp)
     )
+}
+
+@Composable
+fun HugeContactRow(
+    contact: Contact,
+    onCallClick: () -> Unit,
+    onEditClick: () -> Unit,
+    showFavoriteStar: Boolean
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(180.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onDoubleTap = { onEditClick() }
+                )
+            }
+            .semantics {
+                contentDescription = "Contact ${contact.name}, huge picture mode"
+            },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Image (Half screen)
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxSize()
+                .padding(8.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .clickable { onCallClick() }
+        ) {
+           // We reuse ContactAvatar but scaled up, or just use it as is if it supports fill?
+           // ContactAvatar uses .size(size), so we might need a custom one or just pass a large size
+           // But ContactAvatar is Circle. We want "Huge Contact Picture" likely Rectangular or very large Circle.
+           // Let's use ContactAvatar with a large size for now.
+           // Actually, "half screen with" probably implies the image is large.
+           // Let's make it a large square or rectangle.
+           // Since ContactAvatar logic (letters/colors/image loading) is complex, let's reuse it but in a Box.
+           // We can just put a very large ContactAvatar.
+           Box(modifier = Modifier.align(Alignment.Center)) {
+               ContactAvatar(contact = contact, size = 140.dp, showFavoriteStar = showFavoriteStar)
+           }
+        }
+
+        // Name (Half screen)
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .padding(8.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
+             Text(
+                text = contact.name,
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Bold,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
+fun GridContactItem(
+    contact: Contact,
+    onCallClick: () -> Unit,
+    onEditClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onDoubleTap = { onEditClick() },
+                    onTap = { onCallClick() }
+                )
+            },
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Just contact image (large)
+        ContactAvatar(
+            contact = contact,
+            size = 150.dp,
+            showFavoriteStar = false
+        )
+        // User asked for "just contact images", but a name is usually helpful.
+        // Let's put name very small or omit if strict?
+        // "Create an option with just contact images (2 per line)"
+        // I will add the name below just in case, but make it optional or unobtrusive?
+        // Let's add it.
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = contact.name,
+            style = MaterialTheme.typography.titleMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
 }
