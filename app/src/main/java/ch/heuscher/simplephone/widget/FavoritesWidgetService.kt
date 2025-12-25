@@ -72,8 +72,12 @@ class FavoritesRemoteViewsFactory(private val context: Context) : RemoteViewsSer
     override fun getViewAt(position: Int): RemoteViews {
         if (position == -1 || position >= favorites.size) return RemoteViews(context.packageName, R.layout.widget_item)
 
+        // Check if huge picture is enabled
+        val useHugePicture = settingsRepository.useHugeContactPicture
+        val layoutId = if (useHugePicture) R.layout.widget_item_huge else R.layout.widget_item
+        
         val contact = favorites[position]
-        val views = RemoteViews(context.packageName, R.layout.widget_item)
+        val views = RemoteViews(context.packageName, layoutId)
         
         // Check if huge text is enabled
         val useHugeText = settingsRepository.useHugeText
@@ -102,8 +106,10 @@ class FavoritesRemoteViewsFactory(private val context: Context) : RemoteViewsSer
         if (bitmap != null) {
             views.setImageViewBitmap(R.id.widget_item_icon, bitmap)
         } else {
-            // Create initials bitmap with colored background (64dp = ~168px at xxxhdpi)
-            val sizePx = (64 * context.resources.displayMetrics.density).toInt()
+            // Create initials bitmap with colored background
+            // 64dp for normal, 112dp for huge
+            val dpSize = if (useHugePicture) 112 else 64
+            val sizePx = (dpSize * context.resources.displayMetrics.density).toInt()
             val initialsBitmap = createInitialsBitmap(contact.name, sizePx)
             views.setImageViewBitmap(R.id.widget_item_icon, initialsBitmap)
         }
