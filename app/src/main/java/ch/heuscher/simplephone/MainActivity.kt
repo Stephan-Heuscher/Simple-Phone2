@@ -1,8 +1,6 @@
 package ch.heuscher.simplephone
 
 import android.Manifest
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothProfile
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -14,43 +12,25 @@ import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import ch.heuscher.simplephone.ui.components.pressClickEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
@@ -58,27 +38,23 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import ch.heuscher.simplephone.data.ContactRepository
-import ch.heuscher.simplephone.data.MockData
 import ch.heuscher.simplephone.data.SettingsRepository
 import ch.heuscher.simplephone.model.AudioOutput
 import ch.heuscher.simplephone.model.CallLogEntry
 import ch.heuscher.simplephone.model.Contact
+import ch.heuscher.simplephone.ui.SimplePhoneViewModel
 import ch.heuscher.simplephone.ui.components.AppScaffold
 import ch.heuscher.simplephone.ui.components.Screen
-import ch.heuscher.simplephone.ui.screens.FavoritesScreen
+import ch.heuscher.simplephone.ui.dialogs.CallConfirmationDialog
+import ch.heuscher.simplephone.ui.dialogs.PermissionMessageDialog
+import ch.heuscher.simplephone.ui.screens.DialerScreen
 import ch.heuscher.simplephone.ui.screens.InCallScreen
 import ch.heuscher.simplephone.ui.screens.MainScreen
-import ch.heuscher.simplephone.ui.screens.DialerScreen
 import ch.heuscher.simplephone.ui.screens.OnboardingScreen
-import ch.heuscher.simplephone.ui.screens.PhoneBookScreen
-import ch.heuscher.simplephone.ui.screens.RecentsScreen
 import ch.heuscher.simplephone.ui.screens.SettingsScreen
-import ch.heuscher.simplephone.ui.theme.GreenCall
-import ch.heuscher.simplephone.ui.theme.HighContrastBlue
 import ch.heuscher.simplephone.ui.theme.SimplePhoneTheme
-import java.util.Locale
-
 import ch.heuscher.simplephone.widget.FavoritesWidget
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     
@@ -95,14 +71,14 @@ class MainActivity : ComponentActivity() {
     
     private lateinit var powerManager: android.os.PowerManager
     
+    // ViewModel
+    private val viewModel: SimplePhoneViewModel by viewModels()
+
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
         powerManager = getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
-        
-
-
         
         settingsRepository = SettingsRepository(this)
         contactRepository = ContactRepository(this)
@@ -118,15 +94,16 @@ class MainActivity : ComponentActivity() {
         requestPermissionsIfNeeded()
         
         setContent {
-            val darkModeOption = remember { mutableStateOf(settingsRepository.darkModeOption) }
+            val darkModeOption by viewModel.darkModeOption.collectAsState()
             var isDefaultDialer by remember { mutableStateOf(checkIsDefaultDialer()) }
-            var showOnboarding by remember { mutableStateOf(!settingsRepository.onboardingCompleted) }
+            val showOnboarding by viewModel.onboardingCompleted.collectAsState()
             val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
             
             DisposableEffect(lifecycleOwner) {
                 val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
                     if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
                         isDefaultDialer = checkIsDefaultDialer()
+                        viewModel.loadData() // Reload data on resume
                     }
                 }
                 lifecycleOwner.lifecycle.addObserver(observer)
@@ -135,28 +112,25 @@ class MainActivity : ComponentActivity() {
                 }
             }
             
-            SimplePhoneTheme(darkThemeOption = darkModeOption.value) {
-                if (showOnboarding) {
+            SimplePhoneTheme(darkThemeOption = darkModeOption) {
+                if (!showOnboarding) {
                     OnboardingScreen(
                         onComplete = {
-                            settingsRepository.onboardingCompleted = true
-                            showOnboarding = false
+                            viewModel.setOnboardingCompleted(true)
                         },
-                        useHapticFeedback = settingsRepository.useHapticFeedback
+                        useHapticFeedback = viewModel.useHapticFeedback.collectAsState().value
                     )
                 } else {
                     val windowSize = calculateWindowSizeClass(this)
                     SimplePhoneApp(
                         widthSizeClass = windowSize.widthSizeClass,
                         onMakeCall = { phoneNumber, contactName -> 
-                            if (settingsRepository.useVoiceAnnouncements) {
+                            if (viewModel.useVoiceAnnouncements.value) {
                                 textToSpeech?.speak("Calling $contactName", TextToSpeech.QUEUE_FLUSH, null, null)
                             }
                             initiatePhoneCall(phoneNumber) 
                         },
-                        settingsRepository = settingsRepository,
-                        contactRepository = contactRepository,
-                        onDarkModeOptionChange = { darkModeOption.value = it },
+                        viewModel = viewModel,
                         isDefaultDialer = isDefaultDialer,
                         onSetDefaultDialer = { requestDefaultDialerRole() }
                     )
@@ -167,15 +141,8 @@ class MainActivity : ComponentActivity() {
     
     override fun onResume() {
         super.onResume()
-        // Prompt user to set this app as default phone app if not already
-        // We don't do this automatically on resume anymore to avoid annoying the user
-        // offerReplacingDefaultDialer()
-        
         // Refresh widget in case contacts or permissions changed
         FavoritesWidget.sendRefreshBroadcast(this)
-        
-        // Release wake lock when returning to app (call ended or minimized)
-
     }
     
     override fun onDestroy() {
@@ -286,11 +253,8 @@ class MainActivity : ComponentActivity() {
         val notificationId = phoneNumber.replace(Regex("[^0-9]"), "").hashCode()
         notificationManager.cancel(notificationId)
         
-
-        
         startActivity(intent)
     }
-    
     
     @Deprecated("Deprecated in Java")
     override fun onRequestPermissionsResult(
@@ -305,6 +269,10 @@ class MainActivity : ComponentActivity() {
                 pendingPhoneNumber?.let { makePhoneCall(it) }
             }
             pendingPhoneNumber = null
+        }
+        // Also reload contacts if permission granted
+        if (requestCode == CONTACTS_PERMISSION_REQUEST) {
+             viewModel.loadData()
         }
     }
     
@@ -326,9 +294,7 @@ class MainActivity : ComponentActivity() {
 fun SimplePhoneApp(
     widthSizeClass: WindowWidthSizeClass,
     onMakeCall: (String, String) -> Unit,
-    settingsRepository: SettingsRepository,
-    contactRepository: ContactRepository,
-    onDarkModeOptionChange: (Int) -> Unit = {},
+    viewModel: SimplePhoneViewModel,
     isDefaultDialer: Boolean = false,
     onSetDefaultDialer: () -> Unit = {}
 ) {
@@ -336,18 +302,19 @@ fun SimplePhoneApp(
     val context = LocalContext.current
     val hapticFeedback = LocalHapticFeedback.current
     
-    // Settings state
-    var useHugeText by remember { mutableStateOf(settingsRepository.useHugeText) }
-    var useHugeContactPicture by remember { mutableStateOf(settingsRepository.useHugeContactPicture) }
-    var useGridContactImages by remember { mutableStateOf(settingsRepository.useGridContactImages) }
-    var missedCallsHours by remember { mutableStateOf(settingsRepository.missedCallsHours) }
-    var darkModeOption by remember { mutableStateOf(settingsRepository.darkModeOption) }
-    var confirmBeforeCall by remember { mutableStateOf(settingsRepository.confirmBeforeCall) }
-    var useHapticFeedback by remember { mutableStateOf(settingsRepository.useHapticFeedback) }
-    var useVoiceAnnouncements by remember { mutableStateOf(settingsRepository.useVoiceAnnouncements) }
-    var isDemoMode by remember { mutableStateOf(settingsRepository.isDemoMode) }
-
-    var answerOnSpeakerIfFlat by remember { mutableStateOf(settingsRepository.answerOnSpeakerIfFlat) }
+    // State from ViewModel
+    val contacts by viewModel.contacts.collectAsState()
+    val missedCalls by viewModel.missedCalls.collectAsState()
+    val useHugeText by viewModel.useHugeText.collectAsState()
+    val useHugeContactPicture by viewModel.useHugeContactPicture.collectAsState()
+    val useGridContactImages by viewModel.useGridContactImages.collectAsState()
+    val missedCallsHours by viewModel.missedCallsHours.collectAsState()
+    val darkModeOption by viewModel.darkModeOption.collectAsState()
+    val confirmBeforeCall by viewModel.confirmBeforeCall.collectAsState()
+    val useHapticFeedback by viewModel.useHapticFeedback.collectAsState()
+    val useVoiceAnnouncements by viewModel.useVoiceAnnouncements.collectAsState()
+    val isDemoMode by viewModel.isDemoMode.collectAsState()
+    val answerOnSpeakerIfFlat by viewModel.answerOnSpeakerIfFlat.collectAsState()
 
     // Triple tap logic
     var titleTapCount by remember { androidx.compose.runtime.mutableIntStateOf(0) }
@@ -363,10 +330,9 @@ fun SimplePhoneApp(
         lastTitleTapTime = now
 
         if (titleTapCount >= 3) {
-            isDemoMode = !isDemoMode
-            settingsRepository.isDemoMode = isDemoMode
+            viewModel.setDemoMode(!isDemoMode)
             titleTapCount = 0
-            android.widget.Toast.makeText(context, if (isDemoMode) "Demo Mode Enabled" else "Demo Mode Disabled", android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(context, if (!isDemoMode) "Demo Mode Enabled" else "Demo Mode Disabled", android.widget.Toast.LENGTH_SHORT).show()
             // Refresh widget
             FavoritesWidget.sendRefreshBroadcast(context)
         }
@@ -380,40 +346,21 @@ fun SimplePhoneApp(
     var showCallConfirmDialog by remember { mutableStateOf(false) }
     var pendingCallContact by remember { mutableStateOf<Contact?>(null) }
     
-    // Contacts and call logs from device
-    var contacts by remember { mutableStateOf<List<Contact>>(emptyList()) }
-    var missedCalls by remember { mutableStateOf<List<CallLogEntry>>(emptyList()) }
-    
-    // Load contacts and call logs
-    fun loadData() {
-        val loadedContacts = if (isDemoMode) MockData.demoContacts else contactRepository.getContacts()
-        
-        // Apply saved favorites order
-        val savedOrder = settingsRepository.getFavoritesOrder()
-        val orderedContacts = if (savedOrder.isNotEmpty()) {
-            loadedContacts.map { contact ->
-                val savedIndex = savedOrder.indexOf(contact.id)
-                if (savedIndex >= 0) contact.copy(sortOrder = savedIndex) else contact.copy(sortOrder = Int.MAX_VALUE)
-            }.sortedWith(compareBy({ !it.isFavorite }, { it.sortOrder }, { it.name }))
-        } else {
-            loadedContacts
+    // Check permissions on start
+    LaunchedEffect(Unit) {
+        if (contacts.isEmpty() && !isDemoMode) {
+             if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+                 showPermissionMessage = true
+                 permissionMessageText = "Please grant contacts permission to see your contacts"
+             }
         }
-        
-        contacts = orderedContacts
-        if (loadedContacts.isEmpty() && !isDemoMode) {
-            showPermissionMessage = true
-            permissionMessageText = "Please grant contacts permission to see your contacts"
-        }
-        missedCalls = contactRepository.getMissedCallsInLastHours(missedCallsHours)
     }
 
+    // Register content observer for contact changes
     LaunchedEffect(Unit) {
-        loadData()
-        
-        // Register content observer for contact changes
         val observer = object : android.database.ContentObserver(android.os.Handler(android.os.Looper.getMainLooper())) {
             override fun onChange(selfChange: Boolean) {
-                loadData()
+                viewModel.loadData()
             }
         }
         context.contentResolver.registerContentObserver(
@@ -421,22 +368,12 @@ fun SimplePhoneApp(
             true, 
             observer
         )
-        
         // Also listen for call log changes
         context.contentResolver.registerContentObserver(
             android.provider.CallLog.Calls.CONTENT_URI,
             true,
             observer
         )
-    }
-
-    LaunchedEffect(isDemoMode) {
-        loadData()
-    }
-    
-    // Refresh missed calls when hours change
-    LaunchedEffect(missedCallsHours) {
-        missedCalls = contactRepository.getMissedCallsInLastHours(missedCallsHours)
     }
     
     // In-call state
@@ -459,7 +396,6 @@ fun SimplePhoneApp(
         if (useHapticFeedback) {
             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
         }
-        // Just make the call directly - system dialer will handle the UI
         onMakeCall(contact.number, contact.name)
     }
 
@@ -587,7 +523,7 @@ fun SimplePhoneApp(
                         initialNumber = number,
                         useHugeText = useHugeText,
                         onSave = {
-                            loadData() // Refresh data
+                            viewModel.loadData() // Refresh data
                             navController.popBackStack()
                         },
                         onCancel = { navController.popBackStack() }
@@ -596,65 +532,28 @@ fun SimplePhoneApp(
                 composable(Screen.Settings.route) {
                     SettingsScreen(
                         useHugeText = useHugeText,
-                        onHugeTextChange = {
-                            useHugeText = it
-                            settingsRepository.useHugeText = it
-                        },
+                        onHugeTextChange = { viewModel.setUseHugeText(it) },
                         useHugeContactPicture = useHugeContactPicture,
-                        onHugeContactPictureChange = {
-                            useHugeContactPicture = it
-                            settingsRepository.useHugeContactPicture = it
-                        },
+                        onHugeContactPictureChange = { viewModel.setUseHugeContactPicture(it) },
                         useGridContactImages = useGridContactImages,
-                        onGridContactImagesChange = {
-                            useGridContactImages = it
-                            settingsRepository.useGridContactImages = it
-                        },
+                        onGridContactImagesChange = { viewModel.setUseGridContactImages(it) },
                         missedCallsHours = missedCallsHours,
-                        onMissedCallsHoursChange = {
-                            missedCallsHours = it
-                            settingsRepository.missedCallsHours = it
-                        },
+                        onMissedCallsHoursChange = { viewModel.setMissedCallsHours(it) },
                         darkModeOption = darkModeOption,
-                        onDarkModeOptionChange = {
-                            darkModeOption = it
-                            settingsRepository.darkModeOption = it
-                            onDarkModeOptionChange(it)
-                        },
-                        blockUnknownCallers = settingsRepository.blockUnknownCallers,
-                        onBlockUnknownCallersChange = {
-                            settingsRepository.blockUnknownCallers = it
-                        },
+                        onDarkModeOptionChange = { viewModel.setDarkModeOption(it) },
+                        blockUnknownCallers = viewModel.blockUnknownCallers.collectAsState().value,
+                        onBlockUnknownCallersChange = { viewModel.setBlockUnknownCallers(it) },
                         answerOnSpeakerIfFlat = answerOnSpeakerIfFlat,
-                        onAnswerOnSpeakerIfFlatChange = {
-                             answerOnSpeakerIfFlat = it
-                             settingsRepository.answerOnSpeakerIfFlat = it
-                        },
+                        onAnswerOnSpeakerIfFlatChange = { viewModel.setAnswerOnSpeakerIfFlat(it) },
                         confirmBeforeCall = confirmBeforeCall,
-                        onConfirmBeforeCallChange = {
-                            confirmBeforeCall = it
-                            settingsRepository.confirmBeforeCall = it
-                        },
+                        onConfirmBeforeCallChange = { viewModel.setConfirmBeforeCall(it) },
                         useHapticFeedback = useHapticFeedback,
-                        onHapticFeedbackChange = {
-                            useHapticFeedback = it
-                            settingsRepository.useHapticFeedback = it
-                        },
+                        onHapticFeedbackChange = { viewModel.setUseHapticFeedback(it) },
                         useVoiceAnnouncements = useVoiceAnnouncements,
-                        onVoiceAnnouncementsChange = {
-                            useVoiceAnnouncements = it
-                            settingsRepository.useVoiceAnnouncements = it
-                        },
+                        onVoiceAnnouncementsChange = { viewModel.setUseVoiceAnnouncements(it) },
                         favorites = contacts.filter { it.isFavorite },
                         onFavoritesReorder = { newOrder ->
-                            // Save the order to preferences
-                            settingsRepository.saveFavoritesOrder(newOrder.map { it.id })
-                            // Update the contacts list with new favorites order
-                            contacts = contacts.map { contact ->
-                                val newIndex = newOrder.indexOfFirst { it.id == contact.id }
-                                if (newIndex >= 0) contact.copy(sortOrder = newIndex) else contact
-                            }.sortedWith(compareBy({ !it.isFavorite }, { it.sortOrder }))
-                            
+                            viewModel.saveFavoritesOrder(newOrder.map { it.id })
                             // Update widget
                             FavoritesWidget.sendRefreshBroadcast(context)
                         },
@@ -734,146 +633,6 @@ fun SimplePhoneApp(
                                 ch.heuscher.simplephone.call.CallService.sendDtmf(digit)
                             },
                             useHapticFeedback = useHapticFeedback
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-/**
- * Large, accessible call confirmation dialog
- */
-@Composable
-fun CallConfirmationDialog(
-    contactName: String,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp)),
-            color = MaterialTheme.colorScheme.surface
-        ) {
-            Column(
-                modifier = Modifier.padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Call $contactName?",
-                    style = MaterialTheme.typography.displaySmall,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                
-                Spacer(modifier = Modifier.height(32.dp))
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // No button
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(80.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(HighContrastBlue)
-                            .pressClickEffect(
-                                onClick = onDismiss,
-                                onPressedChange = {} // We don't track press for color change here? But wait, background is static HighContrastBlue
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "No",
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                    
-                    // Yes button
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(80.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(GreenCall)
-                            .pressClickEffect(
-                                onClick = onConfirm,
-                                onPressedChange = {}
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "Yes",
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-/**
- * Permission message dialog for friendly error messages
- */
-@Composable
-fun PermissionMessageDialog(
-    message: String,
-    onDismiss: () -> Unit
-) {
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp)),
-            color = MaterialTheme.colorScheme.surface
-        ) {
-            Column(
-                modifier = Modifier.padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Permission Needed",
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Text(
-                    text = message,
-                    style = MaterialTheme.typography.bodyLarge,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(64.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(HighContrastBlue),
-                    contentAlignment = Alignment.Center
-                ) {
-                    androidx.compose.material3.TextButton(onClick = onDismiss) {
-                        Text(
-                            "OK",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = androidx.compose.ui.graphics.Color.White
                         )
                     }
                 }
