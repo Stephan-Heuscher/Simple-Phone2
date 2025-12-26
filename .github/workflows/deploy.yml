@@ -20,8 +20,11 @@ jobs:
       - name: Decode Keystore
         run: echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 --decode > app/release.keystore
 
-      - name: Install Fastlane
-        run: bundle install
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
 
       - name: Execute Fastlane
         run: bundle exec fastlane deploy_internal

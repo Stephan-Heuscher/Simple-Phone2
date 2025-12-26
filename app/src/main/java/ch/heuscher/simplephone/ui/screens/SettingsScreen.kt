@@ -5,7 +5,8 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,42 +15,56 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import ch.heuscher.simplephone.model.Contact
+import ch.heuscher.simplephone.ui.components.ContactAvatar
 import ch.heuscher.simplephone.ui.components.pressClickEffect
 import ch.heuscher.simplephone.ui.theme.GreenCall
 import ch.heuscher.simplephone.ui.theme.HighContrastBlue
@@ -82,8 +97,14 @@ fun SettingsScreen(
     onSetDefaultDialer: () -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
-    val context = LocalContext.current
+    // Remember favorites order for reordering
+    val mutableFavorites = remember { mutableStateListOf<Contact>() }
+    LaunchedEffect(favorites) {
+        mutableFavorites.clear()
+        mutableFavorites.addAll(favorites)
+    }
 
+    val context = LocalContext.current
     fun vibrate(force: Boolean = false) {
         if (useHapticFeedback || force) {
             val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -104,6 +125,9 @@ fun SettingsScreen(
             }
         }
     }
+
+    // Track item height for drag-swap calculation (approximate)
+    var itemHeightPx by remember { mutableFloatStateOf(0f) }
 
     LazyColumn(
         modifier = Modifier
@@ -140,7 +164,7 @@ fun SettingsScreen(
             }
         }
 
-        // --- Contact List Appearance Section ---
+        // --- Appearance Section (Text Size, Huge Picture, Grid View) ---
         item {
             Text(
                 androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_appearance),
@@ -150,34 +174,68 @@ fun SettingsScreen(
             Text(
                 androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_appearance_desc),
                 style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
             )
 
             // Text Size
-            SettingsToggleRow(
-                title = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_huge_text),
-                description = null,
-                isChecked = useHugeText,
-                onToggle = { vibrate(); onHugeTextChange(!useHugeText) }
+            Text(
+                androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.text_size_desc),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 8.dp)
             )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                BigToggleButton(
+                    isEnabled = useHugeText,
+                    onToggle = { vibrate(); onHugeTextChange(!useHugeText) },
+                    label = if (useHugeText) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
+                )
+            }
 
             // Huge Picture
-            SettingsToggleRow(
-                title = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_huge_picture),
-                description = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_huge_picture_desc),
-                isChecked = useHugeContactPicture,
-                onToggle = { vibrate(); onHugeContactPictureChange(!useHugeContactPicture) }
+            Text(
+                androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_huge_picture_desc),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                 modifier = Modifier.padding(bottom = 8.dp)
             )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                BigToggleButton(
+                    isEnabled = useHugeContactPicture,
+                    onToggle = { vibrate(); onHugeContactPictureChange(!useHugeContactPicture) },
+                    label = if (useHugeContactPicture) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
+                )
+            }
 
             // Grid View
-            SettingsToggleRow(
-                title = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_grid_view),
-                description = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_grid_view_desc),
-                isChecked = useGridContactImages,
-                onToggle = { vibrate(); onGridContactImagesChange(!useGridContactImages) }
+            Text(
+                androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_grid_view_desc),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                 modifier = Modifier.padding(bottom = 8.dp)
             )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                BigToggleButton(
+                    isEnabled = useGridContactImages,
+                    onToggle = { vibrate(); onGridContactImagesChange(!useGridContactImages) },
+                    label = if (useGridContactImages) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
+                )
+            }
 
-            HorizontalDivider(thickness = 2.dp, modifier = Modifier.padding(vertical = 24.dp))
+            HorizontalDivider(thickness = 2.dp)
+            Spacer(modifier = Modifier.height(24.dp))
         }
 
         // --- Dark Mode Section ---
@@ -193,148 +251,630 @@ fun SettingsScreen(
                 modifier = Modifier.padding(top = 8.dp)
             )
 
-            Column(modifier = Modifier.padding(top = 16.dp)) {
-                val options = listOf(
-                    androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.mode_system),
-                    androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.mode_light),
-                    androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.mode_dark)
-                )
+            Column(
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // System Default
+                    SettingsOptionButton(
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.mode_system),
+                        isSelected = darkModeOption == 0,
+                        onClick = { vibrate(); onDarkModeOptionChange(0) },
+                        modifier = Modifier.weight(1f)
+                    )
 
-                options.forEachIndexed { index, label ->
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .clickable { vibrate(); onDarkModeOptionChange(index) }
-                            .padding(vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = (darkModeOption == index),
-                            onClick = { vibrate(); onDarkModeOptionChange(index) }
-                        )
-                        Text(
-                            text = label,
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.padding(start = 16.dp)
-                        )
-                    }
+                    // Light
+                    SettingsOptionButton(
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.mode_light),
+                        isSelected = darkModeOption == 1,
+                        onClick = { vibrate(); onDarkModeOptionChange(1) },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    // Dark
+                    SettingsOptionButton(
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.mode_dark),
+                        isSelected = darkModeOption == 2,
+                        onClick = { vibrate(); onDarkModeOptionChange(2) },
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
-            HorizontalDivider(thickness = 2.dp, modifier = Modifier.padding(vertical = 24.dp))
+
+            HorizontalDivider(thickness = 2.dp)
+            Spacer(modifier = Modifier.height(24.dp))
         }
 
-        // --- Behavior Section ---
+        // --- Missed Calls Section ---
         item {
             Text(
-                "Call Behavior", // TODO: Add string resource for this header if needed
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.missed_calls_display),
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold
             )
-
-            // Block Unknown
-            SettingsToggleRow(
-                title = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.block_unknown),
-                description = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.block_unknown_desc),
-                isChecked = blockUnknownCallers,
-                onToggle = { vibrate(); onBlockUnknownCallersChange(!blockUnknownCallers) }
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.missed_calls_desc),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
             )
 
-            // Confirm Before Call
-            SettingsToggleRow(
-                title = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.call_confirm),
-                description = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.call_confirm_desc),
-                isChecked = confirmBeforeCall,
-                onToggle = { vibrate(); onConfirmBeforeCallChange(!confirmBeforeCall) }
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth()
+            ) {
+                BigIconButton(
+                    icon = Icons.Filled.Remove,
+                    contentDescription = "Decrease hours",
+                    onClick = { vibrate(); if (missedCallsHours > 1) onMissedCallsHoursChange(missedCallsHours - 1) },
+                    modifier = Modifier.weight(1f)
+                )
 
-            // Speaker if Flat
-            SettingsToggleRow(
-                title = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.answer_speaker_table),
-                description = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.answer_speaker_table_desc),
-                isChecked = answerOnSpeakerIfFlat,
-                onToggle = { vibrate(); onAnswerOnSpeakerIfFlatChange(!answerOnSpeakerIfFlat) }
-            )
+                Text(
+                    androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.hours_format, missedCallsHours),
+                    style = MaterialTheme.typography.displayMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
 
-            // Voice Announcements
-            SettingsToggleRow(
-                title = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.voice_announcements),
-                description = null,
-                isChecked = useVoiceAnnouncements,
-                onToggle = { vibrate(); onVoiceAnnouncementsChange(!useVoiceAnnouncements) }
-            )
+                BigIconButton(
+                    icon = Icons.Filled.Add,
+                    contentDescription = "Increase hours",
+                    onClick = { vibrate(); onMissedCallsHoursChange(missedCallsHours + 1) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
-            // Haptic Feedback
-            SettingsToggleRow(
-                title = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.vibration_feedback),
-                description = null,
-                isChecked = useHapticFeedback,
-                onToggle = { vibrate(); onHapticFeedbackChange(!useHapticFeedback) }
-            )
-
-            HorizontalDivider(thickness = 2.dp, modifier = Modifier.padding(vertical = 24.dp))
+            HorizontalDivider(thickness = 2.dp)
+            Spacer(modifier = Modifier.height(24.dp))
         }
 
+        // --- Favorites Order Section ---
+        item {
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.favorites_order),
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.favorites_order_desc),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
+            )
+        }
+
+        itemsIndexed(mutableFavorites) { index, contact ->
+            var isDragging by remember { mutableStateOf(false) }
+            var offsetY by remember { mutableFloatStateOf(0f) }
+
+            Box(
+                modifier = Modifier
+                    .zIndex(if (isDragging) 1f else 0f)
+                    .graphicsLayer {
+                        translationY = offsetY
+                        shadowElevation = if (isDragging) 8.dp.toPx() else 0f
+                    }
+                    .onGloballyPositioned { coordinates ->
+                        if (itemHeightPx == 0f) itemHeightPx = coordinates.size.height.toFloat()
+                    }
+            ) {
+                FavoriteReorderRow(
+                    contact = contact,
+                    canMoveUp = index > 0,
+                    canMoveDown = index < mutableFavorites.size - 1,
+                    useHugeText = useHugeText,
+                    onMoveUp = {
+                        vibrate()
+                        if (index > 0) {
+                            val item = mutableFavorites.removeAt(index)
+                            mutableFavorites.add(index - 1, item)
+                            onFavoritesReorder(mutableFavorites.toList())
+                        }
+                    },
+                    onMoveDown = {
+                        vibrate()
+                        if (index < mutableFavorites.size - 1) {
+                            val item = mutableFavorites.removeAt(index)
+                            mutableFavorites.add(index + 1, item)
+                            onFavoritesReorder(mutableFavorites.toList())
+                        }
+                    },
+                    // Add Modifier for Dragging on the Left Side
+                    dragModifier = Modifier.pointerInput(Unit) {
+                        detectDragGesturesAfterLongPress(
+                            onDragStart = {
+                                isDragging = true
+                                vibrate(true)
+                            },
+                            onDragEnd = {
+                                isDragging = false
+                                offsetY = 0f
+                                onFavoritesReorder(mutableFavorites.toList())
+                            },
+                            onDragCancel = {
+                                isDragging = false
+                                offsetY = 0f
+                            },
+                            onDrag = { change, dragAmount ->
+                                change.consume()
+                                offsetY += dragAmount.y
+
+                                val threshold = itemHeightPx * 0.7f
+                                if (itemHeightPx > 0) {
+                                    if (offsetY > threshold && index < mutableFavorites.lastIndex) {
+                                        val nextItem = mutableFavorites[index + 1]
+                                        mutableFavorites[index + 1] = contact
+                                        mutableFavorites[index] = nextItem
+                                        offsetY -= itemHeightPx
+                                        vibrate()
+                                    } else if (offsetY < -threshold && index > 0) {
+                                        val prevItem = mutableFavorites[index - 1]
+                                        mutableFavorites[index - 1] = contact
+                                        mutableFavorites[index] = prevItem
+                                        offsetY += itemHeightPx
+                                        vibrate()
+                                    }
+                                }
+                            }
+                        )
+                    }
+                )
+            }
+            if (index < mutableFavorites.size - 1) {
+                HorizontalDivider()
+            }
+        }
+
+        // --- Advanced Options Header ---
+        item {
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.advanced_settings),
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // --- Block Unknown Numbers Section ---
+        item {
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.block_unknown),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.block_unknown_desc),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                BigToggleButton(
+                    isEnabled = blockUnknownCallers,
+                    onToggle = { vibrate(); onBlockUnknownCallersChange(!blockUnknownCallers) },
+                    label = if (blockUnknownCallers) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
+                )
+            }
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // --- Answer on Speaker if Flat ---
+        item {
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.answer_speaker_table),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.answer_speaker_table_desc),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                BigToggleButton(
+                    isEnabled = answerOnSpeakerIfFlat,
+                    onToggle = { vibrate(); onAnswerOnSpeakerIfFlatChange(!answerOnSpeakerIfFlat) },
+                    label = if (answerOnSpeakerIfFlat) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
+                )
+            }
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // --- Call Confirmation Section ---
+        item {
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.call_confirm),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.call_confirm_desc),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                BigToggleButton(
+                    isEnabled = confirmBeforeCall,
+                    onToggle = { vibrate(); onConfirmBeforeCallChange(!confirmBeforeCall) },
+                    label = if (confirmBeforeCall) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
+                )
+            }
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // --- Voice Announcements Section ---
+        item {
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.voice_announcements),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.voice_desc),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                BigToggleButton(
+                    isEnabled = useVoiceAnnouncements,
+                    onToggle = { vibrate(); onVoiceAnnouncementsChange(!useVoiceAnnouncements) },
+                    label = if (useVoiceAnnouncements) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
+                )
+            }
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // --- Haptic Feedback Section ---
+        item {
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.vibration_feedback),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.vibration_desc),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                BigToggleButton(
+                    isEnabled = useHapticFeedback,
+                    onToggle = {
+                        vibrate(force = true)
+                        onHapticFeedbackChange(!useHapticFeedback)
+                    },
+                    label = if (useHapticFeedback) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
+                )
+            }
+        }
+        
         // --- Back Button ---
         item {
             Spacer(modifier = Modifier.height(32.dp))
-            SettingsButton( // Use SettingsButton here instead of manual Button for consistency? OR keep Button since it has an Icon...
-                // The original code used Button with Icon. Let's keep it but maybe use pressClickEffect?
-                // Actually the original used standard Button. Let's stick to standard button for "Back" if it wasn't broken.
-                // But wait, the user wanted to replace pointerInteropFilter.
-                // The Back button uses `onClick`. Standard Button handles clicks correctly WITHOUT pointerInteropFilter.
-                // It's only CUSTOM buttons that used pointerInteropFilter.
-                // So standard Button is fine.
-                // I'll keep the Back button implementation from step 256.
-                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.back),
+            Button(
                 onClick = { vibrate(); onBackClick() },
-                modifier = Modifier.fillMaxWidth().height(60.dp),
-                // But SettingsButton doesn't support Icon easily.
-                // I'll just use standard Button here.
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Icon(Icons.Default.ArrowBack, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.back),
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+
+    }
+}
+
+/**
+ * Row for reordering favorites with big up/down arrows
+ */
+@Composable
+fun FavoriteReorderRow(
+    contact: Contact,
+    canMoveUp: Boolean,
+    canMoveDown: Boolean,
+    useHugeText: Boolean,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
+    dragModifier: Modifier = Modifier
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .background(MaterialTheme.colorScheme.background), // Opaque background for dragging
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        // Left side: Avatar + Name (Draggable)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .weight(1f)
+                .then(dragModifier) // Apply drag logic here
+        ) {
+            ContactAvatar(
+                contact = contact,
+                size = 56.dp,
+                showFavoriteStar = true
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            val textStyle = if (useHugeText) {
+                MaterialTheme.typography.displayMedium
+            } else {
+                MaterialTheme.typography.headlineMedium
+            }
+
+            Box(
+                modifier = Modifier.weight(1f)
+            ) {
+                val scrollState = rememberScrollState()
+                Text(
+                    text = contact.name,
+                    style = textStyle,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(scrollState)
+                )
+            }
+        }
+
+        // Right side: Big Up/Down arrows with 16dp spacing for better accessibility
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            BigArrowButton(
+                icon = Icons.Filled.KeyboardArrowUp,
+                contentDescription = "Move ${contact.name} up",
+                onClick = onMoveUp,
+                enabled = canMoveUp
+            )
+
+            BigArrowButton(
+                icon = Icons.Filled.KeyboardArrowDown,
+                contentDescription = "Move ${contact.name} down",
+                onClick = onMoveDown,
+                enabled = canMoveDown
             )
         }
     }
 }
 
-// Helper Composables
-
+/**
+ * Large arrow button for reordering - triggers on press
+ */
 @Composable
-fun SettingsToggleRow(
-    title: String,
-    description: String?,
-    isChecked: Boolean,
-    onToggle: () -> Unit
+fun BigArrowButton(
+    icon: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .padding(vertical = 12.dp)
-            .fillMaxWidth()
-            .clickable { onToggle() },
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-            )
-            if (description != null) {
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
+    var isPressed by remember { mutableStateOf(false) }
 
-        SettingsToggleButton(
-            isEnabled = isChecked,
-            onToggle = onToggle,
-            label = if (isChecked) "ON" else "OFF", // Ideally use string resources
-            modifier = Modifier.size(width = 90.dp, height = 45.dp)
+    val backgroundColor = when {
+        !enabled -> Color.Gray.copy(alpha = 0.3f)
+        isPressed -> HighContrastBlue.copy(alpha = 0.7f)
+        else -> HighContrastBlue
+    }
+
+    Box(
+        modifier = modifier
+            .size(64.dp)
+            .clip(CircleShape)
+            .background(backgroundColor)
+            .semantics {
+                this.contentDescription = contentDescription
+                role = Role.Button
+            }
+            .then(
+                 if(enabled) {
+                    Modifier.pressClickEffect(
+                        onClick = onClick,
+                        onPressedChange = { isPressed = it }
+                    )
+                 } else Modifier
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = if (enabled) Color.White else Color.Gray,
+            modifier = Modifier.size(48.dp)
         )
     }
 }
 
+/**
+ * Large icon button for filter controls - triggers on press
+ */
+@Composable
+fun BigIconButton(
+    icon: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isPressed by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = modifier
+            .size(80.dp)
+            .clip(CircleShape)
+            .background(if (isPressed) HighContrastBlue.copy(alpha = 0.7f) else HighContrastBlue)
+            .semantics {
+                this.contentDescription = contentDescription
+                role = Role.Button
+            }
+            .pressClickEffect(
+                onClick = onClick,
+                onPressedChange = { isPressed = it }
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(48.dp)
+        )
+    }
+}
+
+/**
+ * Option button for settings (like Dark Mode)
+ */
+@Composable
+fun SettingsOptionButton(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isPressed by remember { mutableStateOf(false) }
+
+    val backgroundColor = when {
+        isPressed -> if (isSelected) GreenCall.copy(alpha = 0.7f) else Color.Gray
+        isSelected -> GreenCall
+        else -> Color.LightGray
+    }
+
+    val textColor = if (isSelected) Color.White else Color.Black
+
+    Box(
+        modifier = modifier
+            .height(60.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(backgroundColor)
+            .semantics {
+                role = Role.RadioButton
+                this.selected = isSelected
+            }
+            .pressClickEffect(
+                onClick = onClick,
+                onPressedChange = { isPressed = it }
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelLarge,
+            color = textColor,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+/**
+ * Large toggle button for huge text/picture settings - triggers on press
+ */
+@Composable
+fun BigToggleButton(
+    isEnabled: Boolean,
+    onToggle: () -> Unit,
+    label: String,
+    modifier: Modifier = Modifier
+) {
+    var isPressed by remember { mutableStateOf(false) }
+
+    val backgroundColor = when {
+        isPressed -> if (isEnabled) GreenCall.copy(alpha = 0.7f) else HighContrastBlue.copy(alpha = 0.7f)
+        isEnabled -> GreenCall
+        else -> HighContrastBlue
+    }
+
+    Box(
+        modifier = modifier
+            .size(width = 160.dp, height = 80.dp)
+            .clip(CircleShape)
+            .background(backgroundColor)
+            .semantics {
+                contentDescription = "$label toggle"
+                role = Role.Switch
+            }
+            .pressClickEffect(
+                onClick = onToggle,
+                onPressedChange = { isPressed = it }
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            color = Color.White,
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+/**
+ * Standard large button for settings actions
+ */
 @Composable
 fun SettingsButton(
     text: String,
@@ -345,6 +885,7 @@ fun SettingsButton(
 
     Box(
         modifier = modifier
+            .height(60.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(if (isPressed) HighContrastBlue.copy(alpha = 0.7f) else HighContrastBlue)
             .semantics {
@@ -359,44 +900,6 @@ fun SettingsButton(
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
-    }
-}
-
-@Composable
-fun SettingsToggleButton(
-    isEnabled: Boolean,
-    onToggle: () -> Unit,
-    label: String,
-    modifier: Modifier = Modifier
-) {
-    var isPressed by remember { mutableStateOf(false) }
-    
-    val backgroundColor = when {
-        isPressed -> if (isEnabled) HighContrastBlue.copy(alpha = 0.7f) else Color.Gray.copy(alpha = 0.7f)
-        isEnabled -> HighContrastBlue
-        else -> Color.Gray
-    }
-
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(backgroundColor)
-            .semantics {
-                contentDescription = "$label toggle"
-                role = Role.Switch
-            }
-            .pressClickEffect(
-                onClick = onToggle,
-                onPressedChange = { isPressed = it }
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = label,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = Color.White

@@ -50,7 +50,8 @@
     <string name="missed_calls_desc">Show missed calls from the last:</string>
     <string name="hours_format">%d hours</string>
     <string name="favorites_order">Favorites Order</string>
-    <string name="favorites_order_desc">Use the arrows to reorder your favorites:</string>
+    <string name="favorites_order_desc">Long press and drag photos to reorder</string>
+    <string name="call_behavior">Call Behavior</string>
     <string name="block_unknown">Block Unknown Numbers</string>
     <string name="block_unknown_desc">Automatically block calls from numbers not in your contacts:</string>
     <string name="on">ON</string>
