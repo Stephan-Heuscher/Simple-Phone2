@@ -1,0 +1,31 @@
+name: Android Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  distribute:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Decode Keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 --decode > app/release.keystore
+
+      - name: Install Fastlane
+        run: bundle install
+
+      - name: Execute Fastlane
+        run: bundle exec fastlane deploy_internal
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          SUPPLY_JSON_KEY_DATA: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+          BUILD_NUMBER: ${{ github.run_number }}

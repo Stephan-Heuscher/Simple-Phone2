@@ -1,0 +1,13 @@
+default_platform(:android)
+
+platform :android do
+  desc "Build and upload to Play Store Internal Track"
+  lane :deploy_internal do
+    gradle(task: "bundle", build_type: "Release")
+    upload_to_play_store(
+      track: 'internal',
+      package_name: 'ch.heuscher.simplephone'
+      # json_key_data is picked up from SUPPLY_JSON_KEY_DATA environment variable
+    )
+  end
+end
