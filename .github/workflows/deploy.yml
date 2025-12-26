@@ -2,7 +2,7 @@ name: Android Deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   distribute:
