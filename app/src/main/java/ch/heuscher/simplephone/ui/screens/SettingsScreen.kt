@@ -337,7 +337,7 @@ fun SettingsScreen(
             )
         }
 
-        itemsIndexed(mutableFavorites) { index, contact ->
+        itemsIndexed(mutableFavorites, key = { _, contact -> contact.id }) { index, contact ->
             var isDragging by remember { mutableStateOf(false) }
             var offsetY by remember { mutableFloatStateOf(0f) }
 
@@ -358,7 +358,6 @@ fun SettingsScreen(
                     canMoveDown = index < mutableFavorites.size - 1,
                     useHugeText = displayMode == 1, // Large Text mode
                     onMoveUp = {
-                        vibrate()
                         if (index > 0) {
                             val item = mutableFavorites.removeAt(index)
                             mutableFavorites.add(index - 1, item)
@@ -366,52 +365,16 @@ fun SettingsScreen(
                         }
                     },
                     onMoveDown = {
-                        vibrate()
                         if (index < mutableFavorites.size - 1) {
                             val item = mutableFavorites.removeAt(index)
                             mutableFavorites.add(index + 1, item)
                             onFavoritesReorder(mutableFavorites.toList())
                         }
                     },
-                    // Add Modifier for Dragging on the Left Side
-                    dragModifier = Modifier.pointerInput(Unit) {
-                        detectDragGesturesAfterLongPress(
-                            onDragStart = {
-                                isDragging = true
-                                vibrate(true)
-                            },
-                            onDragEnd = {
-                                isDragging = false
-                                offsetY = 0f
-                                onFavoritesReorder(mutableFavorites.toList())
-                            },
-                            onDragCancel = {
-                                isDragging = false
-                                offsetY = 0f
-                            },
-                            onDrag = { change, dragAmount ->
-                                change.consume()
-                                offsetY += dragAmount.y
-
-                                val threshold = itemHeightPx * 0.7f
-                                if (itemHeightPx > 0) {
-                                    if (offsetY > threshold && index < mutableFavorites.lastIndex) {
-                                        val nextItem = mutableFavorites[index + 1]
-                                        mutableFavorites[index + 1] = contact
-                                        mutableFavorites[index] = nextItem
-                                        offsetY -= itemHeightPx
-                                        vibrate()
-                                    } else if (offsetY < -threshold && index > 0) {
-                                        val prevItem = mutableFavorites[index - 1]
-                                        mutableFavorites[index - 1] = contact
-                                        mutableFavorites[index] = prevItem
-                                        offsetY += itemHeightPx
-                                        vibrate()
-                                    }
-                                }
-                            }
-                        )
-                    }
+                    itemHeightPx = itemHeightPx,
+                    isDraggingUpdate = { isDragging = it },
+                    offsetYUpdate = { offsetY = it },
+                    vibrateFunc = { force -> vibrate(force) }
                 )
             }
             if (index < mutableFavorites.size - 1) {
@@ -619,8 +582,14 @@ fun FavoriteReorderRow(
     useHugeText: Boolean,
     onMoveUp: () -> Unit,
     onMoveDown: () -> Unit,
-    dragModifier: Modifier = Modifier
+    itemHeightPx: Float,
+    isDraggingUpdate: (Boolean) -> Unit,
+    offsetYUpdate: (Float) -> Unit,
+    vibrateFunc: (Boolean) -> Unit
 ) {
+    var offsetY by remember(contact.id) { mutableFloatStateOf(0f) }
+    LaunchedEffect(offsetY) { offsetYUpdate(offsetY) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -629,37 +598,47 @@ fun FavoriteReorderRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        // Left side: Avatar + Name (Draggable)
-        var offsetY by remember { mutableFloatStateOf(0f) }
-        val density = LocalDensity.current
-        val threshold = with(density) { 50.dp.toPx() }
-
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .weight(1f)
-                .pointerInput(Unit) {
-                    detectVerticalDragGestures(
-                        onDragEnd = { offsetY = 0f },
-                        onDragCancel = { offsetY = 0f }
-                    ) { change, dragAmount ->
-                        change.consume()
-                        offsetY += dragAmount
-                        
-                        if (offsetY < -threshold && canMoveUp) {
-                            onMoveUp()
-                            offsetY = 0f // Reset after move
-                        } else if (offsetY > threshold && canMoveDown) {
-                            onMoveDown()
-                            offsetY = 0f // Reset after move
-                        }
-                    }
-                }
+            modifier = Modifier.weight(1f)
         ) {
             ContactAvatar(
                 contact = contact,
                 size = 56.dp,
-                showFavoriteStar = true
+                showFavoriteStar = true,
+                modifier = Modifier.pointerInput(contact.id) {
+                    detectDragGesturesAfterLongPress(
+                        onDragStart = {
+                            isDraggingUpdate(true)
+                            vibrateFunc(true)
+                        },
+                        onDragEnd = {
+                            isDraggingUpdate(false)
+                            offsetY = 0f
+                        },
+                        onDragCancel = {
+                            isDraggingUpdate(false)
+                            offsetY = 0f
+                        },
+                        onDrag = { change, dragAmount ->
+                            change.consume()
+                            offsetY += dragAmount.y
+
+                            val threshold = itemHeightPx * 0.7f
+                            if (itemHeightPx > 0) {
+                                if (offsetY > threshold && canMoveDown) {
+                                    vibrateFunc(false)
+                                    onMoveDown()
+                                    offsetY -= itemHeightPx
+                                } else if (offsetY < -threshold && canMoveUp) {
+                                    vibrateFunc(false)
+                                    onMoveUp()
+                                    offsetY += itemHeightPx
+                                }
+                            }
+                        }
+                    )
+                }
             )
 
             Spacer(modifier = Modifier.width(12.dp))
