@@ -67,7 +67,7 @@ class SimplePhoneViewModel @JvmOverloads constructor(
     }
 
     fun loadData() {
-        viewModelScope.launch {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             val loadedContacts = if (_isDemoMode.value) MockData.demoContacts else contactRepository.getContacts()
 
             val savedOrder = settingsRepository.getFavoritesOrder()
