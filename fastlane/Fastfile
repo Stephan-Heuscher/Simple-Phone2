@@ -3,6 +3,70 @@ default_platform(:android)
 platform :android do
   desc "Build and upload to Play Store Internal Track"
   lane :deploy_internal do
+    build_number = ENV['BUILD_NUMBER'] || 'local'
+    api_key = ENV['GOOGLE_API_KEY']
+    
+    # 1. Fetch raw commits
+    raw_commits = changelog_from_git_commits(
+      commits_count: 15, 
+      merge_commit_filtering: "exclude_merges",
+      pretty: "- %s" 
+    )
+
+    # Helper to ask Gemini
+    def ask_gemini(api_key, system_prompt, user_text)
+      require 'net/http'
+      require 'json'
+      require 'uri'
+
+      uri = URI("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=#{api_key}")
+      request = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
+      
+      request.body = {
+        contents: [{
+          parts: [{ text: "#{system_prompt}\n\nCommits to process:\n#{user_text}" }]
+        }]
+      }.to_json
+
+      response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| http.request(request) }
+      json = JSON.parse(response.body)
+      return json.dig('candidates', 0, 'content', 'parts', 0, 'text')&.strip
+    rescue => e
+      puts "Gemini API failed: #{e.message}"
+      return nil
+    end
+
+    ['en-US', 'de-DE'].each do |locale|
+      final_notes = nil
+
+      # 2. Try AI Generation if Key exists
+      if api_key
+        language = locale == 'de-DE' ? "German" : "English"
+        prompt = "Summarize these git commits into a friendly, professional release notes list (bullet points) for a mobile app. " \
+                 "Target Audience: Seniors. Language: #{language}. " \
+                 "Rules: Exclude technical chores/docs/CI. Focus on user-facing features/fixes. " \
+                 "CRITICAL: Output must be under 480 characters. No markdown bolding, just plain text bullets."
+        
+        final_notes = ask_gemini(api_key, prompt, raw_commits)
+      end
+
+      # 3. Fallback: Smart Filter (Rubylogic)
+      unless final_notes && !final_notes.empty?
+        header = locale == 'de-DE' ? "Neuigkeiten:" : "What's New:"
+        filtered = raw_commits.split("\n").select do |line|
+           !line.match?(/^(- (chore|docs|test|refactor|style|ci)(\(.*\))?:)/i)
+        end.take(10).join("\n")
+        final_notes = "#{header}\n#{filtered}"
+        
+        # Strict Truncation
+        final_notes = final_notes[0..485] + "..." if final_notes.length > 490
+      end
+      
+      # Write result
+      new_changelog_path = "fastlane/metadata/android/#{locale}/changelogs/#{build_number}.txt"
+      File.write(new_changelog_path, final_notes)
+    end
+
     gradle(task: "bundle", build_type: "Release")
     upload_to_play_store(
       track: 'internal',

@@ -33,3 +33,4 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           SUPPLY_JSON_KEY_DATA: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           BUILD_NUMBER: ${{ github.run_number }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
