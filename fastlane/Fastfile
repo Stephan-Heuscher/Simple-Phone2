@@ -6,11 +6,7 @@ platform :android do
     gradle(task: "bundle", build_type: "Release")
     upload_to_play_store(
       track: 'internal',
-      package_name: 'ch.heuscher.simplephone',
-      release_notes: {
-        'en-US' => 'Initial release of Simple-Phone - The easy-to-use phone app for seniors and people with visual impairments.',
-        'de-DE' => 'Initialer Release von Simple-Phone - Die einfache Telefon-App für Senioren und Menschen mit Sehbehinderungen.'
-      }
+      package_name: 'ch.heuscher.simplephone'
       # json_key_data is picked up from SUPPLY_JSON_KEY_DATA environment variable
     )
   end
