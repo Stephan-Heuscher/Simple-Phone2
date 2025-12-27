@@ -6,6 +6,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -54,6 +55,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -628,11 +630,31 @@ fun FavoriteReorderRow(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         // Left side: Avatar + Name (Draggable)
+        var offsetY by remember { mutableFloatStateOf(0f) }
+        val density = LocalDensity.current
+        val threshold = with(density) { 50.dp.toPx() }
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .weight(1f)
-                .then(dragModifier) // Apply drag logic here
+                .pointerInput(Unit) {
+                    detectVerticalDragGestures(
+                        onDragEnd = { offsetY = 0f },
+                        onDragCancel = { offsetY = 0f }
+                    ) { change, dragAmount ->
+                        change.consume()
+                        offsetY += dragAmount
+                        
+                        if (offsetY < -threshold && canMoveUp) {
+                            onMoveUp()
+                            offsetY = 0f // Reset after move
+                        } else if (offsetY > threshold && canMoveDown) {
+                            onMoveDown()
+                            offsetY = 0f // Reset after move
+                        }
+                    }
+                }
         ) {
             ContactAvatar(
                 contact = contact,
