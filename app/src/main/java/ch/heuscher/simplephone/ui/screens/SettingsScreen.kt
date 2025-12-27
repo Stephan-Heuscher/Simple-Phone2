@@ -6,7 +6,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -44,7 +45,10 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -97,9 +101,13 @@ fun SettingsScreen(
 ) {
     // Remember favorites order for reordering
     val mutableFavorites = remember { mutableStateListOf<Contact>() }
+    var activeDraggingId by remember { mutableStateOf<String?>(null) }
+    
     LaunchedEffect(favorites) {
-        mutableFavorites.clear()
-        mutableFavorites.addAll(favorites)
+        if (activeDraggingId == null) {
+            mutableFavorites.clear()
+            mutableFavorites.addAll(favorites)
+        }
     }
 
     val context = LocalContext.current
@@ -124,13 +132,53 @@ fun SettingsScreen(
         }
     }
 
-    // Track item height for drag-swap calculation (approximate)
     var itemHeightPx by remember { mutableFloatStateOf(0f) }
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+    
+    // Auto-scroll logic
+    var draggingPointerY by remember { mutableFloatStateOf(0f) }
+    var listTopY by remember { mutableFloatStateOf(0f) }
+    
+    LaunchedEffect(activeDraggingId) {
+        if (activeDraggingId != null) {
+            while (activeDraggingId != null) {
+                val viewportHeight = listState.layoutInfo.viewportSize.height
+                // Relative to LazyColumn top
+                val relativeY = draggingPointerY - listTopY
+                val topThreshold = viewportHeight * 0.15f
+                val bottomThreshold = viewportHeight * 0.85f
+                
+                if (relativeY < topThreshold && listState.firstVisibleItemIndex > 0 || 
+                    (listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset > 0)) {
+                    listState.scrollBy(-20f)
+                } else if (relativeY > bottomThreshold) {
+                    listState.scrollBy(20f)
+                }
+                delay(10)
+            }
+        }
+    }
 
     LazyColumn(
+        state = listState,
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .onGloballyPositioned { coords ->
+                listTopY = coords.localToRoot(Offset.Zero).y
+            }
+            .pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        if (activeDraggingId != null) {
+                            val change = event.changes.first()
+                            draggingPointerY = change.position.y
+                        }
+                    }
+                }
+            }
     ) {
         // --- Default Dialer Section ---
         if (!isDefaultDialer) {
@@ -338,8 +386,8 @@ fun SettingsScreen(
         }
 
         itemsIndexed(mutableFavorites, key = { _, contact -> contact.id }) { index, contact ->
-            var isDragging by remember { mutableStateOf(false) }
-            var offsetY by remember { mutableFloatStateOf(0f) }
+            var isDragging by remember(contact.id) { mutableStateOf(false) }
+            var offsetY by remember(contact.id) { mutableFloatStateOf(0f) }
 
             Box(
                 modifier = Modifier
@@ -355,9 +403,10 @@ fun SettingsScreen(
                 FavoriteReorderRow(
                     contact = contact,
                     canMoveUp = index > 0,
-                    canMoveDown = index < mutableFavorites.size - 1,
-                    useHugeText = displayMode == 1, // Large Text mode
+                    canMoveDown = index < mutableFavorites.lastIndex,
+                    useHugeText = displayMode == 1,
                     onMoveUp = {
+                        vibrate()
                         if (index > 0) {
                             val item = mutableFavorites.removeAt(index)
                             mutableFavorites.add(index - 1, item)
@@ -365,15 +414,21 @@ fun SettingsScreen(
                         }
                     },
                     onMoveDown = {
-                        if (index < mutableFavorites.size - 1) {
+                        vibrate()
+                        if (index < mutableFavorites.lastIndex) {
                             val item = mutableFavorites.removeAt(index)
                             mutableFavorites.add(index + 1, item)
                             onFavoritesReorder(mutableFavorites.toList())
                         }
                     },
                     itemHeightPx = itemHeightPx,
-                    isDraggingUpdate = { isDragging = it },
-                    offsetYUpdate = { offsetY = it },
+                    isDragging = isDragging,
+                    onDraggingChange = { dragging ->
+                        isDragging = dragging
+                        activeDraggingId = if (dragging) contact.id else null
+                    },
+                    offsetY = offsetY,
+                    onOffsetYChange = { offsetY = it },
                     vibrateFunc = { force -> vibrate(force) }
                 )
             }
@@ -583,18 +638,26 @@ fun FavoriteReorderRow(
     onMoveUp: () -> Unit,
     onMoveDown: () -> Unit,
     itemHeightPx: Float,
-    isDraggingUpdate: (Boolean) -> Unit,
-    offsetYUpdate: (Float) -> Unit,
+    isDragging: Boolean,
+    onDraggingChange: (Boolean) -> Unit,
+    offsetY: Float,
+    onOffsetYChange: (Float) -> Unit,
     vibrateFunc: (Boolean) -> Unit
 ) {
-    var offsetY by remember(contact.id) { mutableFloatStateOf(0f) }
-    LaunchedEffect(offsetY) { offsetYUpdate(offsetY) }
+    val currentOffsetY by rememberUpdatedState(offsetY)
+    val currentOnOffsetYChange by rememberUpdatedState(onOffsetYChange)
+    val currentOnDraggingChange by rememberUpdatedState(onDraggingChange)
+    val currentVibrateFunc by rememberUpdatedState(vibrateFunc)
+    val currentOnMoveUp by rememberUpdatedState(onMoveUp)
+    val currentOnMoveDown by rememberUpdatedState(onMoveDown)
+    val currentCanMoveUp by rememberUpdatedState(canMoveUp)
+    val currentCanMoveDown by rememberUpdatedState(canMoveDown)
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .background(MaterialTheme.colorScheme.background), // Opaque background for dragging
+            .background(MaterialTheme.colorScheme.background),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -608,32 +671,33 @@ fun FavoriteReorderRow(
                 showFavoriteStar = true,
                 modifier = Modifier.pointerInput(contact.id) {
                     detectDragGesturesAfterLongPress(
-                        onDragStart = {
-                            isDraggingUpdate(true)
-                            vibrateFunc(true)
+                        onDragStart = { offset ->
+                            currentOnDraggingChange(true)
+                            currentVibrateFunc(true)
                         },
                         onDragEnd = {
-                            isDraggingUpdate(false)
-                            offsetY = 0f
+                            currentOnDraggingChange(false)
+                            currentOnOffsetYChange(0f)
                         },
                         onDragCancel = {
-                            isDraggingUpdate(false)
-                            offsetY = 0f
+                            currentOnDraggingChange(false)
+                            currentOnOffsetYChange(0f)
                         },
                         onDrag = { change, dragAmount ->
                             change.consume()
-                            offsetY += dragAmount.y
+                            val newOffsetY = currentOffsetY + dragAmount.y
+                            currentOnOffsetYChange(newOffsetY)
 
                             val threshold = itemHeightPx * 0.7f
                             if (itemHeightPx > 0) {
-                                if (offsetY > threshold && canMoveDown) {
-                                    vibrateFunc(false)
-                                    onMoveDown()
-                                    offsetY -= itemHeightPx
-                                } else if (offsetY < -threshold && canMoveUp) {
-                                    vibrateFunc(false)
-                                    onMoveUp()
-                                    offsetY += itemHeightPx
+                                if (newOffsetY > threshold && currentCanMoveDown) {
+                                    currentVibrateFunc(false)
+                                    currentOnMoveDown()
+                                    currentOnOffsetYChange(newOffsetY - itemHeightPx)
+                                } else if (newOffsetY < -threshold && currentCanMoveUp) {
+                                    currentVibrateFunc(false)
+                                    currentOnMoveUp()
+                                    currentOnOffsetYChange(newOffsetY + itemHeightPx)
                                 }
                             }
                         }
