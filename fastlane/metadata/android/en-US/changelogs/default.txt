@@ -1,0 +1,6 @@
+Features:
+* Large, clear contact photos and names.
+* Simplified dialer with high-contrast buttons.
+* Completely offline - your data stays on your phone.
+* Emergency contact support.
+* No ads, 100% free.

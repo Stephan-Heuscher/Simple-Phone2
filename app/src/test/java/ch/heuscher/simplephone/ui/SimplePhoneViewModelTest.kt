@@ -41,9 +41,9 @@ class SimplePhoneViewModelTest {
         Dispatchers.setMain(testDispatcher)
 
         // Default mocks
-        whenever(settingsRepository.useHugeText).thenReturn(false)
-        whenever(settingsRepository.useHugeContactPicture).thenReturn(false)
-        whenever(settingsRepository.useGridContactImages).thenReturn(false)
+        whenever(settingsRepository.displayMode).thenReturn(SettingsRepository.DISPLAY_MODE_STANDARD)
+        whenever(settingsRepository.useHugeText).thenReturn(false) // Still need these if accessed directly internally or by mapping?
+        // Actually VM now uses displayMode.
         whenever(settingsRepository.missedCallsHours).thenReturn(24)
         whenever(settingsRepository.darkModeOption).thenReturn(0)
         whenever(settingsRepository.confirmBeforeCall).thenReturn(false)
@@ -73,10 +73,10 @@ class SimplePhoneViewModelTest {
     }
 
     @Test
-    fun `setUseHugeText updates state and repository`() = runTest {
-        viewModel.setUseHugeText(true)
-        assertEquals(true, viewModel.useHugeText.value)
-        verify(settingsRepository).useHugeText = true
+    fun `setDisplayMode updates state and repository`() = runTest {
+        viewModel.setDisplayMode(SettingsRepository.DISPLAY_MODE_LARGE_TEXT)
+        assertEquals(SettingsRepository.DISPLAY_MODE_LARGE_TEXT, viewModel.displayMode.value)
+        verify(settingsRepository).displayMode = SettingsRepository.DISPLAY_MODE_LARGE_TEXT
     }
 
     @Test

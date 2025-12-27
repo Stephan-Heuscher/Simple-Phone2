@@ -1,0 +1,9 @@
+Simple-Phone is designed to be the easiest phone app for seniors and people with visual impairments.
+Features:
+- Large buttons and text
+- High contrast
+- Simplified interface
+- Photo contacts
+- Easy navigation
+
+No complicated menus or small icons. Just the phone functions you need.

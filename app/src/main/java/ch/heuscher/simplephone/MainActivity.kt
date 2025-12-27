@@ -531,12 +531,8 @@ fun SimplePhoneApp(
                 }
                 composable(Screen.Settings.route) {
                     SettingsScreen(
-                        useHugeText = useHugeText,
-                        onHugeTextChange = { viewModel.setUseHugeText(it) },
-                        useHugeContactPicture = useHugeContactPicture,
-                        onHugeContactPictureChange = { viewModel.setUseHugeContactPicture(it) },
-                        useGridContactImages = useGridContactImages,
-                        onGridContactImagesChange = { viewModel.setUseGridContactImages(it) },
+                        displayMode = viewModel.displayMode.collectAsState().value,
+                        onDisplayModeChange = { viewModel.setDisplayMode(it) },
                         missedCallsHours = missedCallsHours,
                         onMissedCallsHoursChange = { viewModel.setMissedCallsHours(it) },
                         darkModeOption = darkModeOption,

@@ -10,6 +10,8 @@ import ch.heuscher.simplephone.model.Contact
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import ch.heuscher.simplephone.data.MockData
 
@@ -26,14 +28,18 @@ class SimplePhoneViewModel @JvmOverloads constructor(
     private val _missedCalls = MutableStateFlow<List<CallLogEntry>>(emptyList())
     val missedCalls: StateFlow<List<CallLogEntry>> = _missedCalls.asStateFlow()
 
-    private val _useHugeText = MutableStateFlow(settingsRepository.useHugeText)
-    val useHugeText: StateFlow<Boolean> = _useHugeText.asStateFlow()
+    private val _displayMode = MutableStateFlow(settingsRepository.displayMode)
+    val displayMode: StateFlow<Int> = _displayMode.asStateFlow()
 
-    private val _useHugeContactPicture = MutableStateFlow(settingsRepository.useHugeContactPicture)
-    val useHugeContactPicture: StateFlow<Boolean> = _useHugeContactPicture.asStateFlow()
+    // Derived state for UI convenience (optional, but good for migration)
+    val useHugeText: StateFlow<Boolean> = _displayMode.map { it == SettingsRepository.DISPLAY_MODE_LARGE_TEXT }
+        .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.Eagerly, settingsRepository.useHugeText)
 
-    private val _useGridContactImages = MutableStateFlow(settingsRepository.useGridContactImages)
-    val useGridContactImages: StateFlow<Boolean> = _useGridContactImages.asStateFlow()
+    val useHugeContactPicture: StateFlow<Boolean> = _displayMode.map { it == SettingsRepository.DISPLAY_MODE_BIG_PHOTOS }
+        .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.Eagerly, settingsRepository.useHugeContactPicture)
+
+    val useGridContactImages: StateFlow<Boolean> = _displayMode.map { it == SettingsRepository.DISPLAY_MODE_GRID }
+        .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.Eagerly, settingsRepository.useGridContactImages)
 
     private val _missedCallsHours = MutableStateFlow(settingsRepository.missedCallsHours)
     val missedCallsHours: StateFlow<Int> = _missedCallsHours.asStateFlow()
@@ -85,19 +91,9 @@ class SimplePhoneViewModel @JvmOverloads constructor(
         }
     }
 
-    fun setUseHugeText(enabled: Boolean) {
-        settingsRepository.useHugeText = enabled
-        _useHugeText.value = enabled
-    }
-
-    fun setUseHugeContactPicture(enabled: Boolean) {
-        settingsRepository.useHugeContactPicture = enabled
-        _useHugeContactPicture.value = enabled
-    }
-
-    fun setUseGridContactImages(enabled: Boolean) {
-        settingsRepository.useGridContactImages = enabled
-        _useGridContactImages.value = enabled
+    fun setDisplayMode(mode: Int) {
+        settingsRepository.displayMode = mode
+        _displayMode.value = mode
     }
 
     fun setMissedCallsHours(hours: Int) {
