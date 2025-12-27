@@ -19,7 +19,7 @@ platform :android do
       require 'json'
       require 'uri'
 
-      uri = URI("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=#{api_key}")
+      uri = URI("https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=#{api_key}")
       request = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
       
       request.body = {
@@ -62,8 +62,9 @@ platform :android do
         final_notes = final_notes[0..485] + "..." if final_notes.length > 490
       end
       
-      # Write result
+      # Write to version-specific file that Supply will pick up
       new_changelog_path = "fastlane/metadata/android/#{locale}/changelogs/#{build_number}.txt"
+      FileUtils.mkdir_p(File.dirname(new_changelog_path))
       File.write(new_changelog_path, final_notes)
     end
 
