@@ -71,12 +71,8 @@ import ch.heuscher.simplephone.ui.theme.HighContrastBlue
 
 @Composable
 fun SettingsScreen(
-    useHugeText: Boolean = false,
-    onHugeTextChange: (Boolean) -> Unit = {},
-    useHugeContactPicture: Boolean = false,
-    onHugeContactPictureChange: (Boolean) -> Unit = {},
-    useGridContactImages: Boolean = false,
-    onGridContactImagesChange: (Boolean) -> Unit = {},
+    displayMode: Int = 0, // 0=Standard, 1=LargeText, 2=BigPhotos, 3=Grid
+    onDisplayModeChange: (Int) -> Unit = {},
     missedCallsHours: Int = 24,
     onMissedCallsHoursChange: (Int) -> Unit = {},
     darkModeOption: Int = 0, // 0=System, 1=Light, 2=Dark
@@ -164,7 +160,7 @@ fun SettingsScreen(
             }
         }
 
-        // --- Appearance Section (Text Size, Huge Picture, Grid View) ---
+        // --- Display Mode Section (unified layout selector) ---
         item {
             Text(
                 androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_appearance),
@@ -177,61 +173,49 @@ fun SettingsScreen(
                 modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
             )
 
-            // Text Size
-            Text(
-                androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.text_size_desc),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
-                horizontalArrangement = Arrangement.Center
+            // 2x2 Grid of Display Mode Options (for accessibility - bigger touch targets)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                BigToggleButton(
-                    isEnabled = useHugeText,
-                    onToggle = { vibrate(); onHugeTextChange(!useHugeText) },
-                    label = if (useHugeText) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
-                )
-            }
-
-            // Huge Picture
-            Text(
-                androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_huge_picture_desc),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                 modifier = Modifier.padding(bottom = 8.dp)
-            )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                BigToggleButton(
-                    isEnabled = useHugeContactPicture,
-                    onToggle = { vibrate(); onHugeContactPictureChange(!useHugeContactPicture) },
-                    label = if (useHugeContactPicture) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
-                )
-            }
-
-            // Grid View
-            Text(
-                androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_grid_view_desc),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                 modifier = Modifier.padding(bottom = 8.dp)
-            )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                BigToggleButton(
-                    isEnabled = useGridContactImages,
-                    onToggle = { vibrate(); onGridContactImagesChange(!useGridContactImages) },
-                    label = if (useGridContactImages) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
-                )
+                // Row 1: Standard + Large Text
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    SettingsOptionButton(
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.display_mode_standard),
+                        isSelected = displayMode == 0,
+                        onClick = { vibrate(); onDisplayModeChange(0) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    SettingsOptionButton(
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.display_mode_large_text),
+                        isSelected = displayMode == 1,
+                        onClick = { vibrate(); onDisplayModeChange(1) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                // Row 2: Big Photos + Grid
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    SettingsOptionButton(
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.display_mode_big_photos),
+                        isSelected = displayMode == 2,
+                        onClick = { vibrate(); onDisplayModeChange(2) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    SettingsOptionButton(
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.display_mode_grid),
+                        isSelected = displayMode == 3,
+                        onClick = { vibrate(); onDisplayModeChange(3) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
 
             HorizontalDivider(thickness = 2.dp)
@@ -370,7 +354,7 @@ fun SettingsScreen(
                     contact = contact,
                     canMoveUp = index > 0,
                     canMoveDown = index < mutableFavorites.size - 1,
-                    useHugeText = useHugeText,
+                    useHugeText = displayMode == 1, // Large Text mode
                     onMoveUp = {
                         vibrate()
                         if (index > 0) {

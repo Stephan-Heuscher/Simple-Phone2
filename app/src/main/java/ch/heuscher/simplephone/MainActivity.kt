@@ -337,9 +337,11 @@ fun SimplePhoneApp(
     val hapticFeedback = LocalHapticFeedback.current
     
     // Settings state
-    var useHugeText by remember { mutableStateOf(settingsRepository.useHugeText) }
-    var useHugeContactPicture by remember { mutableStateOf(settingsRepository.useHugeContactPicture) }
-    var useGridContactImages by remember { mutableStateOf(settingsRepository.useGridContactImages) }
+    var displayMode by remember { mutableStateOf(settingsRepository.displayMode) }
+    // Derived display values for existing components
+    val useHugeText = displayMode == 1
+    val useHugeContactPicture = displayMode == 2
+    val useGridContactImages = displayMode == 3
     var missedCallsHours by remember { mutableStateOf(settingsRepository.missedCallsHours) }
     var darkModeOption by remember { mutableStateOf(settingsRepository.darkModeOption) }
     var confirmBeforeCall by remember { mutableStateOf(settingsRepository.confirmBeforeCall) }
@@ -595,20 +597,10 @@ fun SimplePhoneApp(
                 }
                 composable(Screen.Settings.route) {
                     SettingsScreen(
-                        useHugeText = useHugeText,
-                        onHugeTextChange = {
-                            useHugeText = it
-                            settingsRepository.useHugeText = it
-                        },
-                        useHugeContactPicture = useHugeContactPicture,
-                        onHugeContactPictureChange = {
-                            useHugeContactPicture = it
-                            settingsRepository.useHugeContactPicture = it
-                        },
-                        useGridContactImages = useGridContactImages,
-                        onGridContactImagesChange = {
-                            useGridContactImages = it
-                            settingsRepository.useGridContactImages = it
+                        displayMode = displayMode,
+                        onDisplayModeChange = {
+                            displayMode = it
+                            settingsRepository.displayMode = it
                         },
                         missedCallsHours = missedCallsHours,
                         onMissedCallsHoursChange = {

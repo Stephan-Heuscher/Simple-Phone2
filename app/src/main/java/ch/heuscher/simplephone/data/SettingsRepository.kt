@@ -28,6 +28,8 @@ class SettingsRepository(context: Context) {
         private const val KEY_ANSWER_SPEAKER_TABLE = "answer_speaker_table"
         private const val KEY_USE_HUGE_CONTACT_PICTURE = "use_huge_contact_picture"
         private const val KEY_USE_GRID_CONTACT_IMAGES = "use_grid_contact_images"
+        private const val KEY_DISPLAY_MODE = "display_mode"
+        private const val KEY_DISPLAY_MODE_MIGRATED = "display_mode_migrated"
         
         private const val DEFAULT_FILTER_HOURS = 2
         private const val DEFAULT_MISSED_CALLS_HOURS = 4
@@ -36,6 +38,12 @@ class SettingsRepository(context: Context) {
         const val DARK_MODE_SYSTEM = 0
         const val DARK_MODE_LIGHT = 1
         const val DARK_MODE_DARK = 2
+        
+        // Display Mode Options
+        const val DISPLAY_MODE_STANDARD = 0
+        const val DISPLAY_MODE_LARGE_TEXT = 1
+        const val DISPLAY_MODE_BIG_PHOTOS = 2
+        const val DISPLAY_MODE_GRID = 3
     }
     
     /**
@@ -56,10 +64,6 @@ class SettingsRepository(context: Context) {
     var filterHours: Int
         get() = prefs.getInt(KEY_FILTER_HOURS, DEFAULT_FILTER_HOURS)
         set(value) = prefs.edit().putInt(KEY_FILTER_HOURS, value).apply()
-    
-    var useHugeText: Boolean
-        get() = prefs.getBoolean(KEY_USE_HUGE_TEXT, false)
-        set(value) = prefs.edit().putBoolean(KEY_USE_HUGE_TEXT, value).apply()
     
     var missedCallsHours: Int
         get() = prefs.getInt(KEY_MISSED_CALLS_HOURS, DEFAULT_MISSED_CALLS_HOURS)
@@ -104,11 +108,46 @@ class SettingsRepository(context: Context) {
         get() = prefs.getBoolean(KEY_ANSWER_SPEAKER_TABLE, false)
         set(value) = prefs.edit().putBoolean(KEY_ANSWER_SPEAKER_TABLE, value).apply()
 
-    var useHugeContactPicture: Boolean
-        get() = prefs.getBoolean(KEY_USE_HUGE_CONTACT_PICTURE, false)
-        set(value) = prefs.edit().putBoolean(KEY_USE_HUGE_CONTACT_PICTURE, value).apply()
+    /**
+     * Unified display mode (replaces useHugeText, useHugeContactPicture, useGridContactImages)
+     * 0 = Standard (default)
+     * 1 = Large Text
+     * 2 = Big Photos
+     * 3 = Grid View
+     */
+    var displayMode: Int
+        get() {
+            // Migrate from old boolean settings on first access
+            if (!prefs.getBoolean(KEY_DISPLAY_MODE_MIGRATED, false)) {
+                val oldGrid = prefs.getBoolean(KEY_USE_GRID_CONTACT_IMAGES, false)
+                val oldHugePic = prefs.getBoolean(KEY_USE_HUGE_CONTACT_PICTURE, false)
+                val oldHugeText = prefs.getBoolean(KEY_USE_HUGE_TEXT, false)
+                
+                val migratedMode = when {
+                    oldGrid -> DISPLAY_MODE_GRID
+                    oldHugePic -> DISPLAY_MODE_BIG_PHOTOS
+                    oldHugeText -> DISPLAY_MODE_LARGE_TEXT
+                    else -> DISPLAY_MODE_STANDARD
+                }
+                
+                prefs.edit()
+                    .putInt(KEY_DISPLAY_MODE, migratedMode)
+                    .putBoolean(KEY_DISPLAY_MODE_MIGRATED, true)
+                    .apply()
+                
+                return migratedMode
+            }
+            return prefs.getInt(KEY_DISPLAY_MODE, DISPLAY_MODE_STANDARD)
+        }
+        set(value) = prefs.edit().putInt(KEY_DISPLAY_MODE, value).apply()
 
-    var useGridContactImages: Boolean
-        get() = prefs.getBoolean(KEY_USE_GRID_CONTACT_IMAGES, false)
-        set(value) = prefs.edit().putBoolean(KEY_USE_GRID_CONTACT_IMAGES, value).apply()
+    // Backward-compatible computed properties (derived from displayMode)
+    val useHugeText: Boolean
+        get() = displayMode == DISPLAY_MODE_LARGE_TEXT
+
+    val useHugeContactPicture: Boolean
+        get() = displayMode == DISPLAY_MODE_BIG_PHOTOS
+
+    val useGridContactImages: Boolean
+        get() = displayMode == DISPLAY_MODE_GRID
 }

@@ -23,8 +23,12 @@
     
     <!-- Settings -->
     <string name="settings_title">Options</string>
-    <string name="settings_appearance">Appearance</string>
-    <string name="settings_appearance_desc">Customize how contacts are displayed:</string>
+    <string name="settings_appearance">Display Mode</string>
+    <string name="settings_appearance_desc">Choose how contacts are displayed:</string>
+    <string name="display_mode_standard">Standard</string>
+    <string name="display_mode_large_text">Large Text</string>
+    <string name="display_mode_big_photos">Big Photos</string>
+    <string name="display_mode_grid">Grid View</string>
     <string name="settings_huge_text">Huge Text</string>
     <string name="settings_huge_picture">Huge Picture</string>
     <string name="settings_huge_picture_desc">Half screen with big multi-line name</string>
