@@ -14,6 +14,8 @@ import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.lifecycle.ViewModelProvider
+import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -76,6 +78,7 @@ import ch.heuscher.simplephone.ui.screens.SettingsScreen
 import ch.heuscher.simplephone.ui.theme.GreenCall
 import ch.heuscher.simplephone.ui.theme.HighContrastBlue
 import ch.heuscher.simplephone.ui.theme.SimplePhoneTheme
+import ch.heuscher.simplephone.ui.MainViewModel
 import java.util.Locale
 
 import ch.heuscher.simplephone.widget.FavoritesWidget
@@ -105,8 +108,11 @@ class MainActivity : ComponentActivity() {
 
         
         settingsRepository = SettingsRepository(this)
-        contactRepository = ContactRepository(this)
+        contactRepository = ContactRepository(this) // Kept for Activity usage if any, but VM handles data
         
+        // Initialize View Model
+        val viewModel = ViewModelProvider(this)[MainViewModel::class.java]
+
         // Initialize Text-to-Speech
         textToSpeech = TextToSpeech(this) { status ->
             if (status == TextToSpeech.SUCCESS) {
@@ -116,6 +122,10 @@ class MainActivity : ComponentActivity() {
         
         // Request permissions at startup
         requestPermissionsIfNeeded()
+        
+        // Notify VM about permissions (optimistic or check)
+        val hasContactsPerm = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
+        viewModel.updatePermissionsState(hasContactsPerm)
         
         setContent {
             val darkModeOption = remember { mutableStateOf(settingsRepository.darkModeOption) }
@@ -127,6 +137,8 @@ class MainActivity : ComponentActivity() {
                 val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
                     if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
                         isDefaultDialer = checkIsDefaultDialer()
+                        // Refresh logic if needed
+                        viewModel.refresh()
                     }
                 }
                 lifecycleOwner.lifecycle.addObserver(observer)
@@ -147,6 +159,7 @@ class MainActivity : ComponentActivity() {
                 } else {
                     val windowSize = calculateWindowSizeClass(this)
                     SimplePhoneApp(
+                        viewModel = viewModel,
                         widthSizeClass = windowSize.widthSizeClass,
                         onMakeCall = { phoneNumber, contactName -> 
                             if (settingsRepository.useVoiceAnnouncements) {
@@ -155,7 +168,7 @@ class MainActivity : ComponentActivity() {
                             initiatePhoneCall(phoneNumber) 
                         },
                         settingsRepository = settingsRepository,
-                        contactRepository = contactRepository,
+                        // contactRepository removed
                         onDarkModeOptionChange = { darkModeOption.value = it },
                         isDefaultDialer = isDefaultDialer,
                         onSetDefaultDialer = { requestDefaultDialerRole() }
@@ -303,6 +316,9 @@ class MainActivity : ComponentActivity() {
         if (requestCode == CALL_PHONE_PERMISSION_REQUEST) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 pendingPhoneNumber?.let { makePhoneCall(it) }
+                // Notify VM
+                val viewModel = ViewModelProvider(this)[MainViewModel::class.java]
+                viewModel.updatePermissionsState(true)
             }
             pendingPhoneNumber = null
         }
@@ -324,10 +340,10 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun SimplePhoneApp(
+    viewModel: MainViewModel,
     widthSizeClass: WindowWidthSizeClass,
     onMakeCall: (String, String) -> Unit,
     settingsRepository: SettingsRepository,
-    contactRepository: ContactRepository,
     onDarkModeOptionChange: (Int) -> Unit = {},
     isDefaultDialer: Boolean = false,
     onSetDefaultDialer: () -> Unit = {}
@@ -382,63 +398,17 @@ fun SimplePhoneApp(
     var showCallConfirmDialog by remember { mutableStateOf(false) }
     var pendingCallContact by remember { mutableStateOf<Contact?>(null) }
     
-    // Contacts and call logs from device
-    var contacts by remember { mutableStateOf<List<Contact>>(emptyList()) }
-    var missedCalls by remember { mutableStateOf<List<CallLogEntry>>(emptyList()) }
+    val contacts by viewModel.contacts.collectAsState()
+    val missedCalls by viewModel.missedCalls.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
     
-    // Load contacts and call logs
-    fun loadData() {
-        val loadedContacts = if (isDemoMode) MockData.demoContacts else contactRepository.getContacts()
-        
-        // Apply saved favorites order
-        val savedOrder = settingsRepository.getFavoritesOrder()
-        val orderedContacts = if (savedOrder.isNotEmpty()) {
-            loadedContacts.map { contact ->
-                val savedIndex = savedOrder.indexOf(contact.id)
-                if (savedIndex >= 0) contact.copy(sortOrder = savedIndex) else contact.copy(sortOrder = Int.MAX_VALUE)
-            }.sortedWith(compareBy({ !it.isFavorite }, { it.sortOrder }, { it.name }))
-        } else {
-            loadedContacts
-        }
-        
-        contacts = orderedContacts
-        if (loadedContacts.isEmpty() && !isDemoMode) {
-            showPermissionMessage = true
-            permissionMessageText = "Please grant contacts permission to see your contacts"
-        }
-        missedCalls = contactRepository.getMissedCallsInLastHours(missedCallsHours)
-    }
+    // Logic moved to ViewModel
+    // function loadData() removed
+    // ContentObservers removed (handled in ViewModel)
 
-    LaunchedEffect(Unit) {
-        loadData()
-        
-        // Register content observer for contact changes
-        val observer = object : android.database.ContentObserver(android.os.Handler(android.os.Looper.getMainLooper())) {
-            override fun onChange(selfChange: Boolean) {
-                loadData()
-            }
-        }
-        context.contentResolver.registerContentObserver(
-            android.provider.ContactsContract.Contacts.CONTENT_URI, 
-            true, 
-            observer
-        )
-        
-        // Also listen for call log changes
-        context.contentResolver.registerContentObserver(
-            android.provider.CallLog.Calls.CONTENT_URI,
-            true,
-            observer
-        )
-    }
-
-    LaunchedEffect(isDemoMode) {
-        loadData()
-    }
-    
     // Refresh missed calls when hours change
     LaunchedEffect(missedCallsHours) {
-        missedCalls = contactRepository.getMissedCallsInLastHours(missedCallsHours)
+        viewModel.refresh()
     }
     
     // In-call state
@@ -589,7 +559,7 @@ fun SimplePhoneApp(
                         initialNumber = number,
                         useHugeText = useHugeText,
                         onSave = {
-                            loadData() // Refresh data
+                            viewModel.refresh() // Refresh data
                             navController.popBackStack()
                         },
                         onCancel = { navController.popBackStack() }
@@ -639,13 +609,8 @@ fun SimplePhoneApp(
                         },
                         favorites = contacts.filter { it.isFavorite },
                         onFavoritesReorder = { newOrder ->
-                            // Save the order to preferences
-                            settingsRepository.saveFavoritesOrder(newOrder.map { it.id })
-                            // Update the contacts list with new favorites order
-                            contacts = contacts.map { contact ->
-                                val newIndex = newOrder.indexOfFirst { it.id == contact.id }
-                                if (newIndex >= 0) contact.copy(sortOrder = newIndex) else contact
-                            }.sortedWith(compareBy({ !it.isFavorite }, { it.sortOrder }))
+                            // Use ViewModel to save order
+                            viewModel.onFavoritesReorder(newOrder)
                             
                             // Update widget
                             FavoritesWidget.sendRefreshBroadcast(context)
