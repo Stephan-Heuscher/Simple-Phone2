@@ -62,10 +62,14 @@ platform :android do
         final_notes = final_notes[0..485] + "..." if final_notes.length > 490
       end
       
-      # Write to version-specific file that Supply will pick up
+      # Write to version-specific file that Supply
       new_changelog_path = "fastlane/metadata/android/#{locale}/changelogs/#{build_number}.txt"
       FileUtils.mkdir_p(File.dirname(new_changelog_path))
       File.write(new_changelog_path, final_notes)
+      
+      puts "--- Generated Release Notes for #{locale} (Version #{build_number}) ---"
+      puts final_notes
+      puts "-----------------------------------------------------------------------"
     end
 
     gradle(task: "bundle", build_type: "Release")
