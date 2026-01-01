@@ -456,6 +456,10 @@ class CallService : InCallService() {
              
              if (isBlocked) {
                  Log.i(TAG, "Rejecting blocked call from $callerNumber")
+                 val blockedNumber = callerNumber ?: "Unknown"
+                 settingsRepository.lastBlockedNumber = blockedNumber
+                 showBlockedCallNotification(blockedNumber)
+                 
                  call.reject(false, null)
                  // It will be logged by system or we can let it be logged as rejected
                  return
@@ -686,6 +690,44 @@ class CallService : InCallService() {
             .build()
             
         notificationManager.notify(ONGOING_NOTIFICATION_ID, notification)
+    }
+
+    private val BLOCKED_CALL_NOTIFICATION_ID = 54321
+
+    private fun showBlockedCallNotification(number: String) {
+        val context = this
+        val notificationManager = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+        val channelId = "blocked_calls"
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = android.app.NotificationChannel(
+                channelId,
+                "Blocked Calls",
+                android.app.NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Notifications for blocked calls"
+            }
+            notificationManager.createNotificationChannel(channel)
+        }
+        
+        val intent = Intent(context, ch.heuscher.simplephone.MainActivity::class.java).apply {
+             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        val pendingIntent = android.app.PendingIntent.getActivity(
+            context, 0, intent, 
+            android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        
+        val notification = androidx.core.app.NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(android.R.drawable.stat_notify_missed_call)
+            .setContentTitle("Call Blocked")
+            .setContentText("Blocked number: $number")
+            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_LOW)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .build()
+            
+        notificationManager.notify(BLOCKED_CALL_NOTIFICATION_ID, notification)
     }
 
     private fun cancelOngoingCallNotification() {

@@ -44,6 +44,8 @@ class SettingsRepository(context: Context) {
         const val DISPLAY_MODE_LARGE_TEXT = 1
         const val DISPLAY_MODE_BIG_PHOTOS = 2
         const val DISPLAY_MODE_GRID = 3
+        
+        private const val KEY_LAST_BLOCKED_NUMBER = "last_blocked_number"
     }
     
     /**
@@ -150,4 +152,8 @@ class SettingsRepository(context: Context) {
 
     val useGridContactImages: Boolean
         get() = displayMode == DISPLAY_MODE_GRID
+        
+    var lastBlockedNumber: String?
+        get() = prefs.getString(KEY_LAST_BLOCKED_NUMBER, null)
+        set(value) = prefs.edit().putString(KEY_LAST_BLOCKED_NUMBER, value).apply()
 }

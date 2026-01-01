@@ -89,6 +89,7 @@ fun SettingsScreen(
     onDarkModeOptionChange: (Int) -> Unit = {},
     blockUnknownCallers: Boolean = false,
     onBlockUnknownCallersChange: (Boolean) -> Unit = {},
+    lastBlockedNumber: String? = null,
     answerOnSpeakerIfFlat: Boolean = false,
     onAnswerOnSpeakerIfFlatChange: (Boolean) -> Unit = {},
     confirmBeforeCall: Boolean = false,
@@ -462,8 +463,16 @@ fun SettingsScreen(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
+            
+            val description = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.block_unknown_desc)
+            val fullDescription = if (lastBlockedNumber != null) {
+                "$description\n(Last blocked: $lastBlockedNumber)"
+            } else {
+                description
+            }
+            
             Text(
-                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.block_unknown_desc),
+                text = fullDescription,
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(top = 8.dp)
             )

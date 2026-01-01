@@ -591,6 +591,7 @@ fun SimplePhoneApp(
                         onBlockUnknownCallersChange = {
                             settingsRepository.blockUnknownCallers = it
                         },
+                        lastBlockedNumber = settingsRepository.lastBlockedNumber,
                         answerOnSpeakerIfFlat = answerOnSpeakerIfFlat,
                         onAnswerOnSpeakerIfFlatChange = {
                              answerOnSpeakerIfFlat = it
