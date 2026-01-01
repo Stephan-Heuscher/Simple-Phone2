@@ -145,4 +145,9 @@
     <string name="cd_call_button">Make phone call</string>
     <string name="cd_favorite">Favorite</string>
     <string name="cd_contact_photo">Photo of %s</string>
+
+    <!-- Blocked Calls -->
+    <string name="notification_blocked_call_title">Call Blocked</string>
+    <string name="notification_blocked_call_content">Blocked number: %s</string>
+    <string name="settings_last_blocked">(Last blocked: %s)</string>
 </resources>

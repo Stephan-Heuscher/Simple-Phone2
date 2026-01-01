@@ -403,6 +403,9 @@ fun SimplePhoneApp(
     var useVoiceAnnouncements by remember { mutableStateOf(settingsRepository.useVoiceAnnouncements) }
     var isDemoMode by remember { mutableStateOf(settingsRepository.isDemoMode) }
 
+    var amountOfCallsToKeep by remember { mutableStateOf(50) } // Example if needed, but here:
+    var blockUnknownCallers by remember { mutableStateOf(settingsRepository.blockUnknownCallers) }
+
     var answerOnSpeakerIfFlat by remember { mutableStateOf(settingsRepository.answerOnSpeakerIfFlat) }
 
     // Triple tap logic
@@ -587,8 +590,9 @@ fun SimplePhoneApp(
                             settingsRepository.darkModeOption = it
                             onDarkModeOptionChange(it)
                         },
-                        blockUnknownCallers = settingsRepository.blockUnknownCallers,
+                        blockUnknownCallers = blockUnknownCallers,
                         onBlockUnknownCallersChange = {
+                            blockUnknownCallers = it
                             settingsRepository.blockUnknownCallers = it
                         },
                         lastBlockedNumber = settingsRepository.lastBlockedNumber,

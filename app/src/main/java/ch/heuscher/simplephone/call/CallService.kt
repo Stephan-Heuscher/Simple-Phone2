@@ -720,8 +720,8 @@ class CallService : InCallService() {
         
         val notification = androidx.core.app.NotificationCompat.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.stat_notify_missed_call)
-            .setContentTitle("Call Blocked")
-            .setContentText("Blocked number: $number")
+            .setContentTitle(context.getString(ch.heuscher.simplephone.R.string.notification_blocked_call_title))
+            .setContentText(context.getString(ch.heuscher.simplephone.R.string.notification_blocked_call_content, number))
             .setPriority(androidx.core.app.NotificationCompat.PRIORITY_LOW)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)

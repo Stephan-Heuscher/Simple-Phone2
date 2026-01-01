@@ -146,4 +146,9 @@
     <string name="cd_call_button">Anruf tätigen</string>
     <string name="cd_favorite">Favorit</string>
     <string name="cd_contact_photo">Foto von %s</string>
+
+    <!-- Blocked Calls -->
+    <string name="notification_blocked_call_title">Anruf blockiert</string>
+    <string name="notification_blocked_call_content">Blockierte Nummer: %s</string>
+    <string name="settings_last_blocked">(Zuletzt blockiert: %s)</string>
 </resources>

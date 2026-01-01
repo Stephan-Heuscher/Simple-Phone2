@@ -466,7 +466,7 @@ fun SettingsScreen(
             
             val description = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.block_unknown_desc)
             val fullDescription = if (lastBlockedNumber != null) {
-                "$description\n(Last blocked: $lastBlockedNumber)"
+                "$description\n${androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_last_blocked, lastBlockedNumber)}"
             } else {
                 description
             }
