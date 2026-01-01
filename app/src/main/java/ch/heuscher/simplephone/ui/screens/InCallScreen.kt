@@ -1,5 +1,9 @@
 package ch.heuscher.simplephone.ui.screens
 
+import androidx.compose.ui.res.stringResource
+import ch.heuscher.simplephone.R
+
+
 import android.view.MotionEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -133,7 +137,7 @@ fun InCallScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = "Audio Output",
+                text = stringResource(R.string.audio_output_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
@@ -169,7 +173,7 @@ fun InCallScreen(
             ) {
                 Icon(Icons.Default.Dialpad, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Keypad")
+                Text(stringResource(R.string.keypad))
             }
         }
 
@@ -183,7 +187,7 @@ fun InCallScreen(
             Spacer(modifier = Modifier.height(16.dp))
             
             Text(
-                text = "End Call",
+                text = stringResource(R.string.end_call),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = RedHangup,
@@ -234,7 +238,7 @@ fun KeypadOverlay(
             Spacer(modifier = Modifier.height(32.dp))
             
             androidx.compose.material3.Button(onClick = onDismiss) {
-                Text("Hide Keypad")
+                Text(stringResource(R.string.hide_keypad))
             }
         }
     }
@@ -276,11 +280,11 @@ fun AudioOutputButton(
     }
 
     val label = when (audioOutput) {
-        AudioOutput.EARPIECE -> "Phone"
-        AudioOutput.SPEAKER -> "Speaker"
-        AudioOutput.BLUETOOTH -> "Bluetooth"
-        AudioOutput.WIRED_HEADSET -> "Headset"
-        AudioOutput.HEARING_AID -> "Hearing Aid"
+        AudioOutput.EARPIECE -> stringResource(R.string.earpiece)
+        AudioOutput.SPEAKER -> stringResource(R.string.speaker)
+        AudioOutput.BLUETOOTH -> stringResource(R.string.bluetooth)
+        AudioOutput.WIRED_HEADSET -> stringResource(R.string.wired_headset)
+        AudioOutput.HEARING_AID -> stringResource(R.string.hearing_aid)
     }
 
     val backgroundColor = when {
@@ -288,6 +292,8 @@ fun AudioOutputButton(
         isSelected -> SpeakerActive
         else -> SpeakerInactive
     }
+
+    val cdAudioOutput = stringResource(R.string.cd_audio_output, label)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -299,7 +305,7 @@ fun AudioOutputButton(
                 .clip(CircleShape)
                 .background(backgroundColor)
                 .semantics {
-                    contentDescription = "$label audio output"
+                    contentDescription = cdAudioOutput
                     role = Role.Button
                 }
                 .pointerInteropFilter { event ->
@@ -346,6 +352,7 @@ fun HangupButton(
     modifier: Modifier = Modifier
 ) {
     var isPressed by remember { mutableStateOf(false) }
+    val cdEndCall = stringResource(R.string.cd_end_call)
     
     Box(
         modifier = modifier
@@ -353,7 +360,7 @@ fun HangupButton(
             .clip(CircleShape)
             .background(if (isPressed) RedHangup.copy(alpha = 0.7f) else RedHangup)
             .semantics {
-                contentDescription = "End call"
+                contentDescription = cdEndCall
                 role = Role.Button
             }
             .pointerInteropFilter { event ->

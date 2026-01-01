@@ -18,8 +18,11 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material3.BottomAppBar 
 import androidx.compose.material3.ExperimentalMaterial3Api
+
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import ch.heuscher.simplephone.R
+
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -46,15 +49,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 
-sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
-    object Home : Screen("home", "Home", Icons.Filled.Home)
-    object Recents : Screen("recents", "Recent", Icons.Filled.History)
-    object Favorites : Screen("favorites", "Stars", Icons.Filled.Star)
+sealed class Screen(val route: String, val titleRes: Int, val icon: ImageVector) {
+    object Home : Screen("home", R.string.screen_home, Icons.Filled.Home)
+    object Recents : Screen("recents", R.string.screen_recents, Icons.Filled.History)
+    object Favorites : Screen("favorites", R.string.favorites, Icons.Filled.Star)
 
-    object Settings : Screen("settings", "Options", Icons.Filled.Settings)
-    object InCall : Screen("incall", "Call", Icons.Filled.Home)
-    object Dialer : Screen("dialer", "Dialer", Icons.Filled.Call)
-    object CallLog : Screen("calllog", "Call Log", Icons.Filled.History)
+    object Settings : Screen("settings", R.string.settings_title, Icons.Filled.Settings)
+    object InCall : Screen("incall", R.string.screen_home, Icons.Filled.Home) // InCall title is usually dynamic or "Call"
+    object Dialer : Screen("dialer", R.string.screen_dialer, Icons.Filled.Call)
+    object CallLog : Screen("calllog", R.string.screen_call_log, Icons.Filled.History)
 
 }
 
@@ -91,7 +94,7 @@ fun AppScaffold(
                         // Large back arrow button - triggers on press
                         AccessibleIconButton(
                             icon = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Go back",
+                            contentDescription = stringResource(R.string.cd_go_back),
                             onClick = { navController.popBackStack() },
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
@@ -102,7 +105,7 @@ fun AppScaffold(
                         // Settings button - triggers on press
                         AccessibleIconButton(
                             icon = Screen.Settings.icon,
-                            contentDescription = "Open settings",
+                            contentDescription = stringResource(R.string.cd_open_settings),
                             onClick = { navController.navigate(Screen.Settings.route) },
                             tint = MaterialTheme.colorScheme.onPrimary
                         )

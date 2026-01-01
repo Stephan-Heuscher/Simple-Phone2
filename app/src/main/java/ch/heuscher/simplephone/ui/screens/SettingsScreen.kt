@@ -1,5 +1,9 @@
 package ch.heuscher.simplephone.ui.screens
 
+import androidx.compose.ui.res.stringResource
+import ch.heuscher.simplephone.R
+
+
 import android.content.Context
 import android.os.Build
 import android.os.VibrationEffect
@@ -347,7 +351,7 @@ fun SettingsScreen(
             ) {
                 BigIconButton(
                     icon = Icons.Filled.Remove,
-                    contentDescription = "Decrease hours",
+                    contentDescription = stringResource(R.string.cd_decrease_hours),
                     onClick = { vibrate(); if (missedCallsHours > 1) onMissedCallsHoursChange(missedCallsHours - 1) },
                     modifier = Modifier.weight(1f)
                 )
@@ -361,7 +365,7 @@ fun SettingsScreen(
 
                 BigIconButton(
                     icon = Icons.Filled.Add,
-                    contentDescription = "Increase hours",
+                    contentDescription = stringResource(R.string.cd_increase_hours),
                     onClick = { vibrate(); onMissedCallsHoursChange(missedCallsHours + 1) },
                     modifier = Modifier.weight(1f)
                 )
@@ -735,14 +739,14 @@ fun FavoriteReorderRow(
         ) {
             BigArrowButton(
                 icon = Icons.Filled.KeyboardArrowUp,
-                contentDescription = "Move ${contact.name} up",
+                contentDescription = stringResource(R.string.cd_move_up, contact.name),
                 onClick = onMoveUp,
                 enabled = canMoveUp
             )
 
             BigArrowButton(
                 icon = Icons.Filled.KeyboardArrowDown,
-                contentDescription = "Move ${contact.name} down",
+                contentDescription = stringResource(R.string.cd_move_down, contact.name),
                 onClick = onMoveDown,
                 enabled = canMoveDown
             )

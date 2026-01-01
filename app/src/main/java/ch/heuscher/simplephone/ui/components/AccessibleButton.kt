@@ -1,5 +1,9 @@
 package ch.heuscher.simplephone.ui.components
 
+import androidx.compose.ui.res.stringResource
+import ch.heuscher.simplephone.R
+
+
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -123,7 +127,7 @@ fun GreenCallButton(
 ) {
     CallActionButton(
         icon = Icons.Filled.Call,
-        contentDescription = "Make phone call",
+        contentDescription = stringResource(R.string.cd_call_button),
         onClick = onClick,
         backgroundColor = GreenCall,
         size = size,
@@ -142,7 +146,7 @@ fun RedHangupButton(
 ) {
     CallActionButton(
         icon = Icons.Filled.CallEnd,
-        contentDescription = "End call",
+        contentDescription = stringResource(R.string.cd_end_call),
         onClick = onClick,
         backgroundColor = RedHangup,
         size = size,

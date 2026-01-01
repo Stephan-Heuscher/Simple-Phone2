@@ -3,8 +3,8 @@
     <string name="widget_description">Schneller Zugriff auf Favoriten. Foto oder grüne Taste tippen zum Anrufen.</string>
     
     <!-- Main Screen -->
-    <string name="missed_calls">Verpasste Anrufe</string>
-    <string name="show_all">Alle anzeigen ></string>
+    <string name="missed_calls">Verpasst</string>
+    <string name="show_all">Alle ></string>
     <string name="no_missed_calls">Keine verpassten Anrufe</string>
     <string name="favorites">Favoriten</string>
     <string name="no_favorites">Keine Favoriten</string>
@@ -20,6 +20,7 @@
     <!-- Call Log -->
     <string name="call_history">Anrufverlauf</string>
     <string name="unknown_contact">Unbekannt</string>
+    <string name="no_recent_calls">Keine kürzlichen Anrufe</string>
     
     <!-- Settings -->
     <string name="settings_title">Optionen</string>
@@ -65,4 +66,84 @@
     <string name="answer_speaker_table">Lautsprecher wenn flach</string>
     <string name="answer_speaker_table_desc">Lautsprecher nutzen, wenn das Telefon flach auf dem Tisch liegt:</string>
     <string name="calls">Anrufe</string>
+
+    <string name="settings_appearance">Anzeigemodus</string>
+    <string name="settings_appearance_desc">Wählen Sie, wie Kontakte angezeigt werden:</string>
+    <string name="display_mode_standard">Standard</string>
+    <string name="display_mode_large_text">Großer Text</string>
+    <string name="display_mode_big_photos">Große Fotos</string>
+    <string name="display_mode_grid">Rasteransicht</string>
+    <string name="settings_huge_text">Riesiger Text</string>
+    <string name="settings_huge_picture">Riesiges Bild</string>
+    <string name="settings_huge_picture_desc">Halber Bildschirm mit riesigem, mehrzeiligem Namen</string>
+    <string name="settings_grid_view">Rasteransicht</string>
+    <string name="settings_grid_view_desc">Nur Kontaktbilder (2 pro Zeile)</string>
+    <string name="call_behavior">Anrufverhalten</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">Willkommen beim Einfachen Telefon</string>
+    <string name="onboarding_welcome_desc">Eine einfach zu bedienende Telefon-App, entwickelt für Barrierefreiheit mit großen Tasten und klarer Optik.</string>
+    <string name="onboarding_favorites_title">Schneller Zugriff auf Favoriten</string>
+    <string name="onboarding_favorites_desc">Ihre markierten Kontakte erscheinen ganz oben für Anrufe mit einem Tipp. Tippen Sie auf das Foto oder die grüne Taste zum Anrufen.</string>
+    <string name="onboarding_search_title">Einfache Kontaktsuche</string>
+    <string name="onboarding_search_desc">Nutzen Sie die Suchleiste, um Kontakte schnell zu finden. Namen eingeben und zum Anrufen tippen.</string>
+    <string name="onboarding_missed_title">Verpasste Anrufe</string>
+    <string name="onboarding_missed_desc">Sehen Sie Ihre verpassten Anrufe auf einen Blick im Reiter "Verpasst".</string>
+    <string name="onboarding_audio_title">Audio-Optionen während Anrufen</string>
+    <string name="onboarding_audio_desc">Wechseln Sie während Anrufen einfach zwischen Lautsprecher, Bluetooth und Hörer.</string>
+    <string name="onboarding_settings_title">Anpassbare Einstellungen</string>
+    <string name="onboarding_settings_desc">Passen Sie Textgröße, Dunkelmodus, Anrufbestätigung, Vibration und Sprachansagen in den Einstellungen an.</string>
+    <string name="onboarding_default_title">Als Standard-Telefon-App setzen</string>
+    <string name="onboarding_default_desc">Für das beste Erlebnis, setzen Sie das Einfache Telefon als Ihre Standard-App. Sie werden dazu aufgefordert.</string>
+    <string name="skip">Überspringen</string>
+    <string name="next">Weiter</string>
+    <string name="get_started">Loslegen</string>
+
+    <!-- Accessibility -->
+
+    <string name="cd_backspace_button">Löschen</string>
+    <string name="cd_decrease_hours">Stunden verringern</string>
+    <string name="cd_increase_hours">Stunden erhöhen</string>
+    <string name="cd_move_up">%s nach oben verschieben</string>
+    <string name="cd_move_down">%s nach unten verschieben</string>
+    <string name="cd_toggle">%s umschalten</string>
+    <string name="cd_button">Taste %s</string>
+    <string name="cd_open_dialer">Wähltastatur öffnen</string>
+    <string name="cd_clear_search">Suche leeren</string>
+    <string name="cd_search">Suchen</string>
+    <string name="cd_contact_action">Kontakt %s, tippen Sie auf das Bild oder die grüne Taste zum Anrufen</string>
+    <string name="cd_call_contact">%s anrufen</string>
+    <string name="cd_contact_huge">Kontakt %s, großes Bild</string>
+    <string name="cd_audio_output">%s Audioausgabe</string>
+    <string name="cd_end_call">Auflegen</string>
+    <string name="audio_output_title">Audioausgabe</string>
+    <string name="keypad">Tastenfeld</string>
+    <string name="hide_keypad">Tastenfeld ausblenden</string>
+    <string name="wired_headset">Headset</string>
+    <string name="hearing_aid">Hörgerät</string>
+
+    <!-- MainActivity & Dialogs -->
+    <string name="calling_announcement">Rufe %s an</string>
+    <string name="toast_already_default">Bereits Standard-Dialer oder nicht verfügbar</string>
+    <string name="toast_default_dialer_set">App ist jetzt Standard-Dialer!</string>
+    <string name="toast_default_dialer_declined">Anfrage abgelehnt.</string>
+    <string name="demo_mode_enabled">Demo-Modus aktiviert</string>
+    <string name="demo_mode_disabled">Demo-Modus deaktiviert</string>
+    <string name="calling_title">Rufe an...</string>
+    <string name="call_confirmation_title">%s anrufen?</string>
+    <string name="yes">Ja</string>
+    <string name="no">Nein</string>
+
+    <!-- Screen Titles -->
+    <string name="screen_home">Start</string>
+    <string name="screen_recents">Kürzlich</string>
+    <string name="screen_dialer">Wähltastatur</string>
+    <string name="screen_call_log">Anrufverlauf</string>
+
+    <!-- Accessibility -->
+    <string name="cd_go_back">Zurück</string>
+    <string name="cd_open_settings">Einstellungen öffnen</string>
+    <string name="cd_call_button">Anruf tätigen</string>
+    <string name="cd_favorite">Favorit</string>
+    <string name="cd_contact_photo">Foto von %s</string>
 </resources>

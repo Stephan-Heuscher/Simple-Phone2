@@ -276,7 +276,7 @@ fun CallLogItem(
         // Green call button - same as MainScreen
         GreenCallIcon(
             onClick = onCallClick,
-            contentDescription = "Call ${contact.name}",
+            contentDescription = stringResource(R.string.cd_call_contact, contact.name),
             size = if (useHugeText) 72 else 56
         )
     }

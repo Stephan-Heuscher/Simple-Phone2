@@ -1,5 +1,9 @@
 package ch.heuscher.simplephone.ui.screens
 
+import androidx.compose.ui.res.stringResource
+import ch.heuscher.simplephone.R
+
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -142,6 +146,8 @@ fun MainScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val cdOpenDialer = stringResource(R.string.cd_open_dialer)
+
 
             Box(
                 modifier = Modifier
@@ -155,7 +161,7 @@ fun MainScreen(
                         },
                         role = Role.Button
                     )
-                    .semantics { contentDescription = "Open Dialer" }
+                    .semantics { contentDescription = cdOpenDialer }
             ) {
                 // High contrast buttons for better visibility
                 val buttonSize = 28.dp
@@ -231,7 +237,7 @@ fun MainScreen(
                     .height(56.dp),
                 placeholder = { 
                     Text(
-                        "Search...",
+                        stringResource(R.string.search_placeholder),
                         style = MaterialTheme.typography.bodyLarge
                     ) 
                 },
@@ -245,14 +251,14 @@ fun MainScreen(
                         }) {
                             Icon(
                                 imageVector = Icons.Default.Clear,
-                                contentDescription = "Clear search",
+                                contentDescription = stringResource(R.string.cd_clear_search),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     } else {
                         Icon(
                             imageVector = Icons.Default.Search,
-                            contentDescription = "Search",
+                            contentDescription = stringResource(R.string.cd_search),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -285,13 +291,13 @@ fun MainScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "⚠️ Not set as default phone app",
+                            text = stringResource(R.string.default_app_warning),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
                         Text(
-                            text = "Tap here to enable call handling & notifications",
+                            text = stringResource(R.string.default_app_enable),
                             style = MaterialTheme.typography.bodyLarge,
                             color = Color.White
                         )
@@ -338,7 +344,7 @@ fun MainScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No missed calls",
+                            text = stringResource(R.string.no_missed_calls),
                             style = if (useHugeText) MaterialTheme.typography.displaySmall else MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Medium,
                             color = GreenCall,
@@ -385,13 +391,13 @@ fun MainScreen(
         // --- Favorites Section (only shown when not searching) ---
         if (searchQuery.isBlank()) {
             item {
-                SectionHeader(title = "Favorites")
+                SectionHeader(title = stringResource(R.string.favorites))
             }
 
             if (favorites.isEmpty()) {
                 item(key = "no_favorites") {
                     Text(
-                        "No favorites",
+                        stringResource(R.string.no_favorites),
                         modifier = Modifier.padding(16.dp),
                         style = MaterialTheme.typography.bodyLarge,
                         maxLines = 1,
@@ -451,7 +457,7 @@ fun MainScreen(
 
         // --- Phone Book Section (or Search Results) ---
         item(key = "phone_book_header") {
-            SectionHeader(title = if (searchQuery.isBlank()) "Phone Book" else "Search Results")
+            SectionHeader(title = if (searchQuery.isBlank()) stringResource(R.string.phone_book) else stringResource(R.string.search_results))
         }
         
 
@@ -459,7 +465,7 @@ fun MainScreen(
         if (searchQuery.isNotBlank()) {
             item(key = "search_count") {
                 Text(
-                    text = "${filteredContacts.size} contact${if (filteredContacts.size != 1) "s" else ""} found",
+                    text = stringResource(R.string.contacts_found, filteredContacts.size),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -541,6 +547,7 @@ fun ContactRow(
     modifier: Modifier = Modifier,
     useHugeText: Boolean = false
 ) {
+    val cdContactAction = stringResource(R.string.cd_contact_action, contact.name)
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -551,7 +558,7 @@ fun ContactRow(
                 )
             }
             .semantics {
-                contentDescription = "Contact ${contact.name}, tap picture or green button to call"
+                contentDescription = cdContactAction
             }
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -607,7 +614,7 @@ fun ContactRow(
         // Right side: Green call button (clickable)
         GreenCallIcon(
             onClick = onCallClick,
-            contentDescription = "Call ${contact.name}"
+            contentDescription = stringResource(R.string.cd_call_contact, contact.name)
         )
     }
 }
@@ -689,6 +696,7 @@ fun HugeContactRow(
     onOpenContact: () -> Unit,
     showFavoriteStar: Boolean
 ) {
+    val cdContactHuge = stringResource(R.string.cd_contact_huge, contact.name)
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -699,7 +707,7 @@ fun HugeContactRow(
                 )
             }
             .semantics {
-                contentDescription = "Contact ${contact.name}, huge picture mode"
+                contentDescription = cdContactHuge
             },
         verticalAlignment = Alignment.CenterVertically
     ) {

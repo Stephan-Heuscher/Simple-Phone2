@@ -41,6 +41,9 @@ import java.util.Locale
 import ch.heuscher.simplephone.ui.theme.GreenCall
 import ch.heuscher.simplephone.ui.utils.vibrate
 
+import androidx.compose.ui.res.stringResource
+import ch.heuscher.simplephone.R
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DialerScreen(
@@ -151,7 +154,7 @@ fun DialerScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.Call,
-                    contentDescription = "Call",
+                    contentDescription = stringResource(R.string.cd_call_button),
                     tint = Color.White,
                     modifier = Modifier.size(40.dp)
                 )
@@ -182,7 +185,7 @@ fun DialerScreen(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Backspace,
-                    contentDescription = "Backspace",
+                    contentDescription = stringResource(R.string.cd_backspace_button),
                     modifier = Modifier.size(32.dp),
                     tint = MaterialTheme.colorScheme.onSurface
                 )
@@ -190,6 +193,7 @@ fun DialerScreen(
         }
     }
 }
+
 
 @Composable
 fun DialerButton(

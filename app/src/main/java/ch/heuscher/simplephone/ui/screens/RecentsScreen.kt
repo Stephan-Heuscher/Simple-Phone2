@@ -1,5 +1,9 @@
 package ch.heuscher.simplephone.ui.screens
 
+import androidx.compose.ui.res.stringResource
+import ch.heuscher.simplephone.R
+
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -44,13 +48,13 @@ fun RecentsScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("No recent calls", style = MaterialTheme.typography.displaySmall)
+            Text(stringResource(R.string.no_recent_calls), style = MaterialTheme.typography.displaySmall)
         }
     } else {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(recents) { call ->
                 val contact = MockData.getContactById(call.contactId)
-                val name = contact?.name ?: "Unknown"
+                val name = contact?.name ?: stringResource(R.string.unknown_contact)
                 val formatter = DateTimeFormatter.ofPattern("HH:mm")
 
                 Row(
@@ -77,7 +81,7 @@ fun RecentsScreen(
                         
                         Column {
                             Text(name, style = MaterialTheme.typography.headlineSmall) // Big Name
-                            Text(contact?.number ?: "Unknown", style = MaterialTheme.typography.bodyLarge)
+                            Text(contact?.number ?: stringResource(R.string.unknown_contact), style = MaterialTheme.typography.bodyLarge)
                         }
                     }
                     Text(

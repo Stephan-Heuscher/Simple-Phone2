@@ -47,7 +47,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+
+import androidx.compose.ui.res.stringResource
 import ch.heuscher.simplephone.ui.components.pressClickEffect
+
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -166,7 +169,7 @@ class MainActivity : ComponentActivity() {
                         onAddContact = { number -> openNativeContactEditor(number) },
                         onMakeCall = { phoneNumber, contactName -> 
                             if (settingsRepository.useVoiceAnnouncements) {
-                                textToSpeech?.speak("Calling $contactName", TextToSpeech.QUEUE_FLUSH, null, null)
+                                textToSpeech?.speak(getString(R.string.calling_announcement, contactName), TextToSpeech.QUEUE_FLUSH, null, null)
                             }
                             initiatePhoneCall(phoneNumber) 
                         },
@@ -210,7 +213,7 @@ class MainActivity : ComponentActivity() {
                 startActivityForResult(intent, REQUEST_CODE_SET_DEFAULT_DIALER)
             } else {
                 // Already default or role not available
-                android.widget.Toast.makeText(this, "Already default dialer or not available", android.widget.Toast.LENGTH_SHORT).show()
+                android.widget.Toast.makeText(this, getString(R.string.toast_already_default), android.widget.Toast.LENGTH_SHORT).show()
             }
         } else {
             offerReplacingDefaultDialer()
@@ -363,9 +366,9 @@ class MainActivity : ComponentActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CODE_SET_DEFAULT_DIALER) {
             if (resultCode == android.app.Activity.RESULT_OK) {
-                android.widget.Toast.makeText(this, "App is now the default dialer!", android.widget.Toast.LENGTH_SHORT).show()
+                android.widget.Toast.makeText(this, getString(R.string.toast_default_dialer_set), android.widget.Toast.LENGTH_SHORT).show()
             } else {
-                android.widget.Toast.makeText(this, "Default dialer request declined.", android.widget.Toast.LENGTH_SHORT).show()
+                android.widget.Toast.makeText(this, getString(R.string.toast_default_dialer_declined), android.widget.Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -419,7 +422,7 @@ fun SimplePhoneApp(
             isDemoMode = !isDemoMode
             settingsRepository.isDemoMode = isDemoMode
             titleTapCount = 0
-            android.widget.Toast.makeText(context, if (isDemoMode) "Demo Mode Enabled" else "Demo Mode Disabled", android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(context, if (isDemoMode) context.getString(R.string.demo_mode_enabled) else context.getString(R.string.demo_mode_disabled), android.widget.Toast.LENGTH_SHORT).show()
             // Refresh widget
             FavoritesWidget.sendRefreshBroadcast(context)
         }
@@ -455,10 +458,10 @@ fun SimplePhoneApp(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val currentTitle = when(currentRoute) {
-        Screen.Settings.route -> Screen.Settings.title
-        Screen.Dialer.route -> Screen.Dialer.title
-        Screen.InCall.route -> "Calling..."
-        else -> "Simple Phone"
+        Screen.Settings.route -> stringResource(Screen.Settings.titleRes)
+        Screen.Dialer.route -> stringResource(Screen.Dialer.titleRes)
+        Screen.InCall.route -> stringResource(R.string.calling_title)
+        else -> stringResource(R.string.app_name)
     }
 
     // Function to actually make the call
@@ -721,7 +724,7 @@ fun CallConfirmationDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Call $contactName?",
+                    text = stringResource(R.string.call_confirmation_title, contactName),
                     style = MaterialTheme.typography.displaySmall,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
@@ -748,7 +751,7 @@ fun CallConfirmationDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            "No",
+                            stringResource(R.string.no),
                             style = MaterialTheme.typography.displaySmall,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -769,7 +772,7 @@ fun CallConfirmationDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            "Yes",
+                            stringResource(R.string.yes),
                             style = MaterialTheme.typography.displaySmall,
                             fontWeight = FontWeight.Bold,
                             color = Color.White

@@ -20,6 +20,7 @@
     <!-- Call Log -->
     <string name="call_history">Call History</string>
     <string name="unknown_contact">Unknown</string>
+    <string name="no_recent_calls">No recent calls</string>
     
     <!-- Settings -->
     <string name="settings_title">Options</string>
@@ -77,4 +78,71 @@
     <string name="answer_speaker_table">Answer on Speaker if flat</string>
     <string name="answer_speaker_table_desc">Use loudspeaker when answering while phone is lying flat on a table:</string>
     <string name="calls">Calls</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">Welcome to Simple Phone</string>
+    <string name="onboarding_welcome_desc">An easy-to-use phone app designed for accessibility with large buttons and clear visuals.</string>
+    <string name="onboarding_favorites_title">Quick Access to Favorites</string>
+    <string name="onboarding_favorites_desc">Your starred contacts appear at the top for one-tap calling. Tap the photo or the green button to call.</string>
+    <string name="onboarding_search_title">Easy Contact Search</string>
+    <string name="onboarding_search_desc">Use the search bar to quickly find any contact. Type a name and tap to call.</string>
+    <string name="onboarding_missed_title">Missed Calls</string>
+    <string name="onboarding_missed_desc">See your recent missed calls at a glance on the Recents tab.</string>
+    <string name="onboarding_audio_title">Audio Options During Calls</string>
+    <string name="onboarding_audio_desc">Switch between speaker, Bluetooth, and earpiece during calls with easy-to-tap buttons.</string>
+    <string name="onboarding_settings_title">Customizable Settings</string>
+    <string name="onboarding_settings_desc">Adjust text size, enable dark mode, call confirmation, vibration, and voice announcements in Settings.</string>
+    <string name="onboarding_default_title">Set as Default Dialer</string>
+    <string name="onboarding_default_desc">For the best experience, set Simple Phone as your default phone app. You\'ll be prompted to do this.</string>
+    <string name="skip">Skip</string>
+    <string name="next">Next</string>
+    <string name="get_started">Get Started</string>
+
+    <!-- Accessibility -->
+
+    <string name="cd_backspace_button">Backspace</string>
+    <string name="cd_decrease_hours">Decrease hours</string>
+    <string name="cd_increase_hours">Increase hours</string>
+    <string name="cd_move_up">Move %s up</string>
+    <string name="cd_move_down">Move %s down</string>
+    <string name="cd_toggle">Toggle %s</string>
+    <string name="cd_button">Button %s</string>
+    <string name="cd_open_dialer">Open Dialer</string>
+    <string name="cd_clear_search">Clear search</string>
+    <string name="cd_search">Search</string>
+    <string name="cd_contact_action">Contact %s, tap picture or green button to call</string>
+    <string name="cd_call_contact">Call %s</string>
+    <string name="cd_contact_huge">Contact %s, huge picture mode</string>
+    <string name="cd_audio_output">%s audio output</string>
+    <string name="cd_end_call">End call</string>
+    <string name="audio_output_title">Audio Output</string>
+    <string name="keypad">Keypad</string>
+    <string name="hide_keypad">Hide Keypad</string>
+    <string name="wired_headset">Headset</string>
+    <string name="hearing_aid">Hearing Aid</string>
+    
+    <!-- MainActivity & Dialogs -->
+    <string name="calling_announcement">Calling %s</string>
+    <string name="toast_already_default">Already default dialer or not available</string>
+    <string name="toast_default_dialer_set">App is now the default dialer!</string>
+    <string name="toast_default_dialer_declined">Default dialer request declined.</string>
+    <string name="demo_mode_enabled">Demo Mode Enabled</string>
+    <string name="demo_mode_disabled">Demo Mode Disabled</string>
+    <string name="calling_title">Calling...</string>
+    <string name="call_confirmation_title">Call %s?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    
+    <!-- Screen Titles -->
+    <string name="screen_home">Home</string>
+    <string name="screen_recents">Recent</string>
+    <string name="screen_dialer">Dialer</string>
+    <string name="screen_call_log">Call Log</string>
+    
+    <!-- Accessibility -->
+    <string name="cd_go_back">Go back</string>
+    <string name="cd_open_settings">Open settings</string>
+    <string name="cd_call_button">Make phone call</string>
+    <string name="cd_favorite">Favorite</string>
+    <string name="cd_contact_photo">Photo of %s</string>
 </resources>

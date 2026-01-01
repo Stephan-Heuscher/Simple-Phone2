@@ -1,5 +1,9 @@
 package ch.heuscher.simplephone.ui.components
 
+import androidx.compose.ui.res.stringResource
+import ch.heuscher.simplephone.R
+
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -71,7 +75,7 @@ fun ContactAvatar(
         if (contact.imageUri != null) {
             AsyncImage(
                 model = contact.imageUri,
-                contentDescription = "Photo of ${contact.name}",
+                contentDescription = stringResource(R.string.cd_contact_photo, contact.name),
                 modifier = Modifier
                     .size(size)
                     .clip(avatarShape)
@@ -111,7 +115,7 @@ fun ContactAvatar(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Star,
-                    contentDescription = "Favorite",
+                    contentDescription = stringResource(R.string.cd_favorite),
                     tint = FavoriteGold,
                     modifier = Modifier.size(size * 0.3f)
                 )

@@ -26,47 +26,49 @@ import ch.heuscher.simplephone.ui.theme.GreenCall
 import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.res.stringResource
+import ch.heuscher.simplephone.R
 
 data class OnboardingPage(
-    val title: String,
-    val description: String,
+    val titleRes: Int,
+    val descriptionRes: Int,
     val icon: ImageVector
 )
 
 val onboardingPages = listOf(
     OnboardingPage(
-        title = "Welcome to Simple Phone",
-        description = "An easy-to-use phone app designed for accessibility with large buttons and clear visuals.",
+        titleRes = R.string.onboarding_welcome_title,
+        descriptionRes = R.string.onboarding_welcome_desc,
         icon = Icons.Default.Phone
     ),
     OnboardingPage(
-        title = "Quick Access to Favorites",
-        description = "Your starred contacts appear at the top for one-tap calling. Tap the photo or the green button to call.",
+        titleRes = R.string.onboarding_favorites_title,
+        descriptionRes = R.string.onboarding_favorites_desc,
         icon = Icons.Default.Star
     ),
     OnboardingPage(
-        title = "Easy Contact Search",
-        description = "Use the search bar to quickly find any contact. Type a name and tap to call.",
+        titleRes = R.string.onboarding_search_title,
+        descriptionRes = R.string.onboarding_search_desc,
         icon = Icons.Default.Search
     ),
     OnboardingPage(
-        title = "Missed Calls",
-        description = "See your recent missed calls at a glance on the Recents tab.",
+        titleRes = R.string.onboarding_missed_title,
+        descriptionRes = R.string.onboarding_missed_desc,
         icon = Icons.Default.History
     ),
     OnboardingPage(
-        title = "Audio Options During Calls",
-        description = "Switch between speaker, Bluetooth, and earpiece during calls with easy-to-tap buttons.",
+        titleRes = R.string.onboarding_audio_title,
+        descriptionRes = R.string.onboarding_audio_desc,
         icon = Icons.AutoMirrored.Filled.VolumeUp
     ),
     OnboardingPage(
-        title = "Customizable Settings",
-        description = "Adjust text size, enable dark mode, call confirmation, vibration, and voice announcements in Settings.",
+        titleRes = R.string.onboarding_settings_title,
+        descriptionRes = R.string.onboarding_settings_desc,
         icon = Icons.Default.Settings
     ),
     OnboardingPage(
-        title = "Set as Default Dialer",
-        description = "For the best experience, set Simple Phone as your default phone app. You'll be prompted to do this.",
+        titleRes = R.string.onboarding_default_title,
+        descriptionRes = R.string.onboarding_default_desc,
         icon = Icons.Default.PhoneEnabled
     )
 )
@@ -100,7 +102,7 @@ fun OnboardingScreen(
         ) {
             TextButton(onClick = { vibrate(); onComplete() }) {
                 Text(
-                    text = "Skip",
+                    text = stringResource(R.string.skip),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -164,7 +166,7 @@ fun OnboardingScreen(
                         .width(120.dp)
                 ) {
                     Text(
-                        text = "Back",
+                        text = stringResource(R.string.back),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -195,7 +197,10 @@ fun OnboardingScreen(
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
-                    text = if (pagerState.currentPage == onboardingPages.size - 1) "Get Started" else "Next",
+                    text = if (pagerState.currentPage == onboardingPages.size - 1) 
+                        stringResource(R.string.get_started) 
+                    else 
+                        stringResource(R.string.next),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -233,7 +238,7 @@ fun OnboardingPageContent(page: OnboardingPage) {
         
         // Title
         Text(
-            text = page.title,
+            text = stringResource(page.titleRes),
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
@@ -244,7 +249,7 @@ fun OnboardingPageContent(page: OnboardingPage) {
         
         // Description
         Text(
-            text = page.description,
+            text = stringResource(page.descriptionRes),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
             textAlign = TextAlign.Center,
