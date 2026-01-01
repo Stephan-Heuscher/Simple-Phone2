@@ -35,6 +35,8 @@ import ch.heuscher.simplephone.ui.components.HorizontalScrollbar
 import ch.heuscher.simplephone.ui.theme.GreenCall
 import ch.heuscher.simplephone.ui.theme.RedHangup
 import ch.heuscher.simplephone.ui.utils.vibrate
+import java.util.Locale
+import android.telephony.PhoneNumberUtils
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -92,14 +94,9 @@ fun CallLogScreen(
             ) {
                 items(callLogs) { log ->
                     // Find contact
-                    val normalizedLogNumber = log.contactId.replace(Regex("[^0-9+]"), "")
+                    // Find contact
                     val foundContact = contacts.find { 
-                        val normalizedContact = it.number.replace(Regex("[^0-9+]"), "")
-                        if (normalizedLogNumber.length > 6 && normalizedContact.length > 6) {
-                            normalizedLogNumber.endsWith(normalizedContact) || normalizedContact.endsWith(normalizedLogNumber)
-                        } else {
-                            normalizedLogNumber == normalizedContact
-                        }
+                        PhoneNumberUtils.compare(context, it.number, log.contactId)
                     }
                     
                     // Check if this is a known contact or unknown number

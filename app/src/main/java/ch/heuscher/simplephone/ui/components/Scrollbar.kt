@@ -38,20 +38,7 @@ fun VerticalScrollbar(
     val scrollbarHeightRatio = visibleItemCount.toFloat() / totalItemCount.toFloat()
     val scrollbarOffsetRatio = firstVisibleItemIndex.toFloat() / totalItemCount.toFloat()
 
-    Box(
-        modifier = modifier
-            .fillMaxHeight()
-            .width(width)
-            .background(Color.Transparent)
-    ) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .fillMaxHeight(scrollbarHeightRatio)
-                .fillMaxWidth()
-                .padding(top = 0.dp) // We'll use a custom layout or offset, but simple Box with bias is easier
-        )
-    }
+    // Removed dead code block that was here
     
     // Simplified approach using bias alignment
     // Since we can't easily set absolute offset in a simple Box without complex calculations involving pixel density,

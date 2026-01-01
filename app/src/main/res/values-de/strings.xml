@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Einfaches Telefon</string>
+    <string name="app_name">Simple Phone</string>
     <string name="widget_description">Schneller Zugriff auf Favoriten. Foto oder grüne Taste tippen zum Anrufen.</string>
     
     <!-- Main Screen -->
