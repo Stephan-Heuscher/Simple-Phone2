@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.net.Uri
+import android.provider.ContactsContract
 import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
@@ -161,6 +162,7 @@ class MainActivity : ComponentActivity() {
                     SimplePhoneApp(
                         viewModel = viewModel,
                         widthSizeClass = windowSize.widthSizeClass,
+                        onOpenContact = { id -> openNativeContactApp(id) },
                         onMakeCall = { phoneNumber, contactName -> 
                             if (settingsRepository.useVoiceAnnouncements) {
                                 textToSpeech?.speak("Calling $contactName", TextToSpeech.QUEUE_FLUSH, null, null)
@@ -289,6 +291,23 @@ class MainActivity : ComponentActivity() {
         }
     }
     
+    private fun openNativeContactApp(contactId: String) {
+        try {
+            val id = contactId.toLongOrNull()
+            if (id != null) {
+                val intent = Intent(Intent.ACTION_VIEW)
+                val uri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_URI, contactId)
+                intent.data = uri
+                startActivity(intent)
+            } else {
+                 android.widget.Toast.makeText(this, "Cannot open contact details", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "Error opening contact", e)
+            android.widget.Toast.makeText(this, "Error opening contact app", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun makePhoneCall(phoneNumber: String) {
         val intent = Intent(Intent.ACTION_CALL).apply {
             data = Uri.parse("tel:$phoneNumber")
@@ -342,6 +361,7 @@ class MainActivity : ComponentActivity() {
 fun SimplePhoneApp(
     viewModel: MainViewModel,
     widthSizeClass: WindowWidthSizeClass,
+    onOpenContact: (String) -> Unit,
     onMakeCall: (String, String) -> Unit,
     settingsRepository: SettingsRepository,
     onDarkModeOptionChange: (Int) -> Unit = {},
@@ -496,6 +516,7 @@ fun SimplePhoneApp(
                 composable(Screen.Home.route) {
                     MainScreen(
                         onCallClick = handleCall,
+                        onOpenContact = onOpenContact,
                         onContactClick = { contactId -> 
                             val contact = contacts.find { it.id == contactId }
                             contact?.let { handleCall(it.number) }

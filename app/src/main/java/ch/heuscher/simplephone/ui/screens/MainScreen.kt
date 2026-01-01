@@ -72,7 +72,9 @@ import ch.heuscher.simplephone.ui.utils.vibrate
 @Composable
 fun MainScreen(
     onCallClick: (String) -> Unit,
+
     onContactClick: (String) -> Unit,
+    onOpenContact: (String) -> Unit,
     onCallLogClick: () -> Unit = {},
     onDialerClick: () -> Unit = {},
     onEditClick: (String?, String?) -> Unit = { _, _ -> },
@@ -129,9 +131,13 @@ fun MainScreen(
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().imePadding()) {
-        // Search Bar Row
-        Row(
+    Box(modifier = Modifier.fillMaxSize().imePadding()) {
+        val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+        
+        LazyColumn(modifier = Modifier.fillMaxSize(), state = listState) {
+            item {
+                // Search Bar Row
+                Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -260,14 +266,9 @@ fun MainScreen(
                 )
             )
         }
+            }
 
-        Box(modifier = Modifier.fillMaxSize().weight(1f)) {
-            val listState = androidx.compose.foundation.lazy.rememberLazyListState()
-            
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                state = listState
-            ) {
+            // Continue with items directly
 
             // --- Default Dialer Warning Banner ---
             if (!isDefaultDialer) {
@@ -378,6 +379,7 @@ fun MainScreen(
                             val isKnown = allContacts.any { it.id == contact.id }
                             onEditClick(if (isKnown) contact.id else null, contact.number) 
                         },
+                        onOpenContact = { onOpenContact(contact.id) },
                         showFavoriteStar = false,
                         useHugeText = useHugeText
                     )
@@ -414,7 +416,8 @@ fun MainScreen(
                                             if (useHapticFeedback) vibrate(context)
                                             onCallClick(contact.number)
                                         },
-                                        onEditClick = { onEditClick(contact.id, contact.number) }
+                                        onEditClick = { onEditClick(contact.id, contact.number) },
+                                        onOpenContact = { onOpenContact(contact.id) }
                                      )
                                 }
                             }
@@ -433,6 +436,7 @@ fun MainScreen(
                                     onCallClick(contact.number)
                                 },
                                 onEditClick = { onEditClick(contact.id, contact.number) },
+                                onOpenContact = { onOpenContact(contact.id) },
                                 showFavoriteStar = true
                             )
                         } else {
@@ -443,6 +447,7 @@ fun MainScreen(
                                     onCallClick(contact.number)
                                 },
                                 onEditClick = { onEditClick(contact.id, contact.number) },
+                                onOpenContact = { onOpenContact(contact.id) },
                                 showFavoriteStar = true,
                                 useHugeText = useHugeText
                             )
@@ -484,7 +489,8 @@ fun MainScreen(
                                         if (useHapticFeedback) vibrate(context)
                                         onCallClick(contact.number)
                                     },
-                                    onEditClick = { onEditClick(contact.id, contact.number) }
+                                    onEditClick = { onEditClick(contact.id, contact.number) },
+                                    onOpenContact = { onOpenContact(contact.id) }
                                     )
                             }
                         }
@@ -504,6 +510,7 @@ fun MainScreen(
                                 onCallClick(contact.number)
                             },
                             onEditClick = { onEditClick(contact.id, contact.number) },
+                            onOpenContact = { onOpenContact(contact.id) },
                             showFavoriteStar = true
                         )
                     } else {
@@ -514,6 +521,7 @@ fun MainScreen(
                                 onCallClick(contact.number)
                             },
                             onEditClick = { onEditClick(contact.id, contact.number) },
+                            onOpenContact = { onOpenContact(contact.id) },
                             showFavoriteStar = true,
                             useHugeText = useHugeText
                         )
@@ -523,11 +531,12 @@ fun MainScreen(
             }
         }
         
+
+
         VerticalScrollbar(
             modifier = Modifier.align(Alignment.CenterEnd),
             listState = listState
         )
-    }
     }
 }
 
@@ -540,6 +549,7 @@ fun ContactRow(
     contact: Contact,
     onCallClick: () -> Unit,
     onEditClick: () -> Unit = {},
+    onOpenContact: () -> Unit = {},
     showFavoriteStar: Boolean = true,
     modifier: Modifier = Modifier,
     useHugeText: Boolean = false
@@ -549,7 +559,7 @@ fun ContactRow(
             .fillMaxWidth()
             .pointerInput(Unit) {
                 detectTapGestures(
-                    onDoubleTap = { onEditClick() },
+                    onDoubleTap = { onOpenContact() },
                     onTap = { /* Let children handle tap or add listener here if needed, but row isn't clickable as whole? */ }
                 )
             }
@@ -690,6 +700,7 @@ fun HugeContactRow(
     contact: Contact,
     onCallClick: () -> Unit,
     onEditClick: () -> Unit,
+    onOpenContact: () -> Unit,
     showFavoriteStar: Boolean
 ) {
     Row(
@@ -698,7 +709,7 @@ fun HugeContactRow(
             .height(180.dp)
             .pointerInput(Unit) {
                 detectTapGestures(
-                    onDoubleTap = { onEditClick() }
+                    onDoubleTap = { onOpenContact() }
                 )
             }
             .semantics {
@@ -750,7 +761,8 @@ fun HugeContactRow(
 fun GridContactItem(
     contact: Contact,
     onCallClick: () -> Unit,
-    onEditClick: () -> Unit
+    onEditClick: () -> Unit,
+    onOpenContact: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -758,7 +770,7 @@ fun GridContactItem(
             .padding(8.dp)
             .pointerInput(Unit) {
                 detectTapGestures(
-                    onDoubleTap = { onEditClick() },
+                    onDoubleTap = { onOpenContact() },
                     onTap = { onCallClick() }
                 )
             },
