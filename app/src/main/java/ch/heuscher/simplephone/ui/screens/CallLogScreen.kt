@@ -46,7 +46,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 fun CallLogScreen(
     onCallClick: (String) -> Unit,
     onBackClick: () -> Unit,
-    onEditContactClick: (String?, String) -> Unit = { _, _ -> },
+    onAddContact: (String) -> Unit = {},
     callLogRepository: CallLogRepository,
     contacts: List<Contact>,
     useHugeText: Boolean = false,
@@ -118,8 +118,10 @@ fun CallLogScreen(
                             if (useHapticFeedback) vibrate(context)
                             onCallClick(contact.number)
                         },
-                        onEditContactClick = { 
-                            onEditContactClick(if (isKnownContact) contact.id else null, contact.number)
+                        onAddContact = { 
+                            if (!isKnownContact) {
+                                onAddContact(contact.number)
+                            }
                         },
                         useHugeText = useHugeText
                     )
@@ -142,7 +144,7 @@ fun CallLogItem(
     contact: Contact,
     isKnownContact: Boolean,
     onCallClick: () -> Unit,
-    onEditContactClick: () -> Unit = {},
+    onAddContact: () -> Unit = {},
     useHugeText: Boolean
 ) {
     val context = LocalContext.current
@@ -152,7 +154,7 @@ fun CallLogItem(
             .fillMaxWidth()
             .pointerInput(Unit) {
                 detectTapGestures(
-                    onDoubleTap = { onEditContactClick() }
+                    onDoubleTap = { onAddContact() }
                 )
             }
             .padding(if (useHugeText) 20.dp else 16.dp),

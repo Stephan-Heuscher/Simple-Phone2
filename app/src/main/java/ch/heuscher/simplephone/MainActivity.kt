@@ -73,7 +73,7 @@ import ch.heuscher.simplephone.ui.screens.InCallScreen
 import ch.heuscher.simplephone.ui.screens.MainScreen
 import ch.heuscher.simplephone.ui.screens.DialerScreen
 import ch.heuscher.simplephone.ui.screens.OnboardingScreen
-import ch.heuscher.simplephone.ui.screens.PhoneBookScreen
+
 import ch.heuscher.simplephone.ui.screens.RecentsScreen
 import ch.heuscher.simplephone.ui.screens.SettingsScreen
 import ch.heuscher.simplephone.ui.theme.GreenCall
@@ -163,6 +163,7 @@ class MainActivity : ComponentActivity() {
                         viewModel = viewModel,
                         widthSizeClass = windowSize.widthSizeClass,
                         onOpenContact = { id -> openNativeContactApp(id) },
+                        onAddContact = { number -> openNativeContactEditor(number) },
                         onMakeCall = { phoneNumber, contactName -> 
                             if (settingsRepository.useVoiceAnnouncements) {
                                 textToSpeech?.speak("Calling $contactName", TextToSpeech.QUEUE_FLUSH, null, null)
@@ -308,6 +309,19 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun openNativeContactEditor(phoneNumber: String) {
+        try {
+            val intent = Intent(Intent.ACTION_INSERT_OR_EDIT).apply {
+                type = ContactsContract.Contacts.CONTENT_ITEM_TYPE
+                putExtra(ContactsContract.Intents.Insert.PHONE, phoneNumber)
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "Error opening contact editor", e)
+            android.widget.Toast.makeText(this, "Error opening contact app", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun makePhoneCall(phoneNumber: String) {
         val intent = Intent(Intent.ACTION_CALL).apply {
             data = Uri.parse("tel:$phoneNumber")
@@ -362,6 +376,7 @@ fun SimplePhoneApp(
     viewModel: MainViewModel,
     widthSizeClass: WindowWidthSizeClass,
     onOpenContact: (String) -> Unit,
+    onAddContact: (String) -> Unit,
     onMakeCall: (String, String) -> Unit,
     settingsRepository: SettingsRepository,
     onDarkModeOptionChange: (Int) -> Unit = {},
@@ -523,10 +538,6 @@ fun SimplePhoneApp(
                         },
                         onCallLogClick = { navController.navigate(Screen.CallLog.route) },
                         onDialerClick = { navController.navigate(Screen.Dialer.route) },
-                        onEditClick = { contactId, number ->
-                            val route = "contact_edit?contactId=${contactId ?: ""}&number=${number ?: ""}"
-                            navController.navigate(route)
-                        },
                         missedCalls = missedCalls,
                         missedCallsHours = missedCallsHours,
                         useHugeText = useHugeText,
@@ -548,42 +559,11 @@ fun SimplePhoneApp(
                     ch.heuscher.simplephone.ui.screens.CallLogScreen(
                         onCallClick = handleCall,
                         onBackClick = { navController.popBackStack() },
-                        onEditContactClick = { contactId, number ->
-                            val route = "contact_edit?contactId=${contactId ?: ""}&number=$number"
-                            navController.navigate(route)
-                        },
+                        onAddContact = onAddContact,
                         callLogRepository = ch.heuscher.simplephone.data.CallLogRepository(context),
                         contacts = contacts,
                         useHugeText = useHugeText,
                         useHapticFeedback = useHapticFeedback
-                    )
-                }
-                composable(
-                    route = Screen.ContactEdit.route,
-                    arguments = listOf(
-                        androidx.navigation.navArgument("contactId") {
-                            type = androidx.navigation.NavType.StringType
-                            nullable = true
-                        },
-                        androidx.navigation.navArgument("number") {
-                            type = androidx.navigation.NavType.StringType
-                            nullable = true
-                        }
-                    )
-                ) { backStackEntry ->
-                    val contactId = backStackEntry.arguments?.getString("contactId")
-                    val number = backStackEntry.arguments?.getString("number")
-                    val contact = contacts.find { it.id == contactId }
-                    
-                    ch.heuscher.simplephone.ui.screens.ContactEditScreen(
-                        contact = contact,
-                        initialNumber = number,
-                        useHugeText = useHugeText,
-                        onSave = {
-                            viewModel.refresh() // Refresh data
-                            navController.popBackStack()
-                        },
-                        onCancel = { navController.popBackStack() }
                     )
                 }
                 composable(Screen.Settings.route) {

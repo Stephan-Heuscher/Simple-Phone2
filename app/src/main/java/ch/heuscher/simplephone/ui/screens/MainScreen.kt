@@ -77,7 +77,6 @@ fun MainScreen(
     onOpenContact: (String) -> Unit,
     onCallLogClick: () -> Unit = {},
     onDialerClick: () -> Unit = {},
-    onEditClick: (String?, String?) -> Unit = { _, _ -> },
     missedCalls: List<CallLogEntry> = emptyList(),
     missedCallsHours: Int = 24,
     useHugeText: Boolean = false,
@@ -374,11 +373,6 @@ fun MainScreen(
                             if (useHapticFeedback) vibrate(context)
                             onCallClick(contact.number) 
                         },
-                        onEditClick = { 
-                            // If contact was found in address book, use its ID. Otherwise pass null ID to create new.
-                            val isKnown = allContacts.any { it.id == contact.id }
-                            onEditClick(if (isKnown) contact.id else null, contact.number) 
-                        },
                         onOpenContact = { onOpenContact(contact.id) },
                         showFavoriteStar = false,
                         useHugeText = useHugeText
@@ -416,7 +410,6 @@ fun MainScreen(
                                             if (useHapticFeedback) vibrate(context)
                                             onCallClick(contact.number)
                                         },
-                                        onEditClick = { onEditClick(contact.id, contact.number) },
                                         onOpenContact = { onOpenContact(contact.id) }
                                      )
                                 }
@@ -435,7 +428,6 @@ fun MainScreen(
                                     if (useHapticFeedback) vibrate(context)
                                     onCallClick(contact.number)
                                 },
-                                onEditClick = { onEditClick(contact.id, contact.number) },
                                 onOpenContact = { onOpenContact(contact.id) },
                                 showFavoriteStar = true
                             )
@@ -446,7 +438,6 @@ fun MainScreen(
                                     if (useHapticFeedback) vibrate(context)
                                     onCallClick(contact.number)
                                 },
-                                onEditClick = { onEditClick(contact.id, contact.number) },
                                 onOpenContact = { onOpenContact(contact.id) },
                                 showFavoriteStar = true,
                                 useHugeText = useHugeText
@@ -489,7 +480,6 @@ fun MainScreen(
                                         if (useHapticFeedback) vibrate(context)
                                         onCallClick(contact.number)
                                     },
-                                    onEditClick = { onEditClick(contact.id, contact.number) },
                                     onOpenContact = { onOpenContact(contact.id) }
                                     )
                             }
@@ -509,7 +499,6 @@ fun MainScreen(
                                 if (useHapticFeedback) vibrate(context)
                                 onCallClick(contact.number)
                             },
-                            onEditClick = { onEditClick(contact.id, contact.number) },
                             onOpenContact = { onOpenContact(contact.id) },
                             showFavoriteStar = true
                         )
@@ -520,7 +509,6 @@ fun MainScreen(
                                 if (useHapticFeedback) vibrate(context)
                                 onCallClick(contact.number)
                             },
-                            onEditClick = { onEditClick(contact.id, contact.number) },
                             onOpenContact = { onOpenContact(contact.id) },
                             showFavoriteStar = true,
                             useHugeText = useHugeText
@@ -548,7 +536,6 @@ fun MainScreen(
 fun ContactRow(
     contact: Contact,
     onCallClick: () -> Unit,
-    onEditClick: () -> Unit = {},
     onOpenContact: () -> Unit = {},
     showFavoriteStar: Boolean = true,
     modifier: Modifier = Modifier,
@@ -699,7 +686,6 @@ fun SectionHeader(title: String) {
 fun HugeContactRow(
     contact: Contact,
     onCallClick: () -> Unit,
-    onEditClick: () -> Unit,
     onOpenContact: () -> Unit,
     showFavoriteStar: Boolean
 ) {
@@ -761,7 +747,6 @@ fun HugeContactRow(
 fun GridContactItem(
     contact: Contact,
     onCallClick: () -> Unit,
-    onEditClick: () -> Unit,
     onOpenContact: () -> Unit
 ) {
     Column(
