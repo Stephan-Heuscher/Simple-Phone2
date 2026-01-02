@@ -167,13 +167,18 @@ class MainActivity : ComponentActivity() {
                     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
                     // Calculate window size class based on current configuration/activity state
                     // Just reading configuration above forces recomposition.
-                    // calculateWindowSizeClass is @Composable and should be called directly.
-                    val windowSize = calculateWindowSizeClass(this)
+                    // User reported issues with library detection, so we use manual breakpoints (Standard Android/Material 3 breakpoints)
+                    val screenWidthDp = configuration.screenWidthDp
+                    val widthSizeClass = when {
+                        screenWidthDp < 600 -> androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Compact
+                        screenWidthDp < 840 -> androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Medium
+                        else -> androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Expanded
+                    }
                     
                     // == ZOOM FACTOR LOGIC ==
                     // 1. Get current zoom factor for this specific screen size class
-                    var currentZoomFactor by remember(windowSize.widthSizeClass) { 
-                        mutableStateOf(settingsRepository.getZoomFactor(windowSize.widthSizeClass)) 
+                    var currentZoomFactor by remember(widthSizeClass) { 
+                        mutableStateOf(settingsRepository.getZoomFactor(widthSizeClass)) 
                     }
                     
                     // 2. Create a custom Density
@@ -191,7 +196,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         SimplePhoneApp(
                             viewModel = viewModel,
-                            widthSizeClass = windowSize.widthSizeClass,
+                            widthSizeClass = widthSizeClass,
                             onOpenContact = { id -> openNativeContactApp(id) },
                             onAddContact = { number -> openNativeContactEditor(number) },
                             onMakeCall = { phoneNumber, contactName -> 
@@ -209,7 +214,7 @@ class MainActivity : ComponentActivity() {
                             currentZoomFactor = currentZoomFactor,
                             onZoomChange = { newZoom -> 
                                 currentZoomFactor = newZoom
-                                settingsRepository.setZoomFactor(windowSize.widthSizeClass, newZoom)
+                                settingsRepository.setZoomFactor(widthSizeClass, newZoom)
                             }
                         )
                     }
