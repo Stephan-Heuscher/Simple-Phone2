@@ -173,14 +173,12 @@ class MainActivity : ComponentActivity() {
                     val smallestScreenWidthDp = configuration.smallestScreenWidthDp
                     val aspectRatio = if (screenWidthDp > 0) screenHeightDp.toFloat() / screenWidthDp else 0f
                     
-                    // Logic:
-                    // 1. smallestScreenWidthDp >= 600 usually guarantees a "Tablet" or "Unfolded" state.
-                    // 2. Aspect Ratio: Unfolded is often squarish (ratio < 1.4), Folded is tall (ratio > 1.8).
+                    // Logic based on user device metrics:
+                    // Phone/Folded: AR ~= 2.45 (Tall)
+                    // Tablet/Unfolded: AR ~= 1.15 (Square-ish)
+                    // We use a threshold of 2.0 to safely distinguish.
                     val widthSizeClass = when {
-                        smallestScreenWidthDp >= 600 -> androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Expanded
-                        screenWidthDp >= 600 -> androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Medium
-                        // Fallback for weird DPI settings: if it's kinda wideish/squareish, treat as expanded?
-                        // Let's stick to swDp for now as the primary fix.
+                        aspectRatio < 2.0f -> androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Expanded
                         else -> androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Compact
                     }
                     

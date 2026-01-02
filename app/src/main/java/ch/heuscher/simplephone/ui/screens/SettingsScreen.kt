@@ -252,17 +252,6 @@ fun SettingsScreen(
             }
             
 
-            
-            // DEBUG INFO (Visible just to help diagnose)
-            val config = androidx.compose.ui.platform.LocalConfiguration.current
-            val density = androidx.compose.ui.platform.LocalDensity.current.density
-            Text(
-                text = "Debug: w${config.screenWidthDp}dp x h${config.screenHeightDp}dp, sw${config.smallestScreenWidthDp}dp, dens=$density, ar=${"%.2f".format(config.screenHeightDp.toFloat()/config.screenWidthDp)}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            
             HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 24.dp))
         }
 
