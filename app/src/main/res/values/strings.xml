@@ -150,4 +150,14 @@
     <string name="notification_blocked_call_title">Call Blocked</string>
     <string name="notification_blocked_call_content">Blocked number: %s</string>
     <string name="settings_last_blocked">(Last blocked: %s)</string>
+
+    <!-- Zoom Factor -->
+    <string name="settings_zoom_factor">UI Scale / Zoom</string>
+    <string name="zoom_factor_current_screen">Current Screen (%s)</string>
+    <string name="zoom_screen_compact">Phone / Folded</string>
+    <string name="zoom_screen_medium">Unfolded / Large Phone</string>
+    <string name="zoom_screen_expanded">Tablet / Desktop</string>
+    <string name="zoom_value_format">%d%%</string>
+    <string name="cd_decrease_zoom">Decrease zoom</string>
+    <string name="cd_increase_zoom">Increase zoom</string>
 </resources>

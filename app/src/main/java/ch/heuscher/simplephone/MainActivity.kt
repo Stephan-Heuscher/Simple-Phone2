@@ -58,6 +58,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.app.ActivityCompat
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -162,23 +164,49 @@ class MainActivity : ComponentActivity() {
                     )
                 } else {
                     val windowSize = calculateWindowSizeClass(this)
-                    SimplePhoneApp(
-                        viewModel = viewModel,
-                        widthSizeClass = windowSize.widthSizeClass,
-                        onOpenContact = { id -> openNativeContactApp(id) },
-                        onAddContact = { number -> openNativeContactEditor(number) },
-                        onMakeCall = { phoneNumber, contactName -> 
-                            if (settingsRepository.useVoiceAnnouncements) {
-                                textToSpeech?.speak(getString(R.string.calling_announcement, contactName), TextToSpeech.QUEUE_FLUSH, null, null)
+                    // == ZOOM FACTOR LOGIC ==
+                    // 1. Get current zoom factor for this specific screen size class
+                    var currentZoomFactor by remember(windowSize.widthSizeClass) { 
+                        mutableStateOf(settingsRepository.getZoomFactor(windowSize.widthSizeClass)) 
+                    }
+                    
+                    // 2. Create a custom Density
+                    val currentDensity = LocalDensity.current
+                    val customDensity = remember(currentDensity, currentZoomFactor) {
+                        androidx.compose.ui.unit.Density(
+                            density = currentDensity.density * currentZoomFactor,
+                            fontScale = currentDensity.fontScale * currentZoomFactor
+                        )
+                    }
+                    
+                    // 3. Apply customDensity to the entire app hierarchy
+                    androidx.compose.runtime.CompositionLocalProvider(
+                        LocalDensity provides customDensity
+                    ) {
+                        SimplePhoneApp(
+                            viewModel = viewModel,
+                            widthSizeClass = windowSize.widthSizeClass,
+                            onOpenContact = { id -> openNativeContactApp(id) },
+                            onAddContact = { number -> openNativeContactEditor(number) },
+                            onMakeCall = { phoneNumber, contactName -> 
+                                if (settingsRepository.useVoiceAnnouncements) {
+                                    textToSpeech?.speak(getString(R.string.calling_announcement, contactName), TextToSpeech.QUEUE_FLUSH, null, null)
+                                }
+                                initiatePhoneCall(phoneNumber) 
+                            },
+                            settingsRepository = settingsRepository,
+                            // contactRepository removed
+                            onDarkModeOptionChange = { darkModeOption.value = it },
+                            isDefaultDialer = isDefaultDialer,
+                            onSetDefaultDialer = { requestDefaultDialerRole() },
+                            // Zoom params
+                            currentZoomFactor = currentZoomFactor,
+                            onZoomChange = { newZoom -> 
+                                currentZoomFactor = newZoom
+                                settingsRepository.setZoomFactor(windowSize.widthSizeClass, newZoom)
                             }
-                            initiatePhoneCall(phoneNumber) 
-                        },
-                        settingsRepository = settingsRepository,
-                        // contactRepository removed
-                        onDarkModeOptionChange = { darkModeOption.value = it },
-                        isDefaultDialer = isDefaultDialer,
-                        onSetDefaultDialer = { requestDefaultDialerRole() }
-                    )
+                        )
+                    }
                 }
             }
         }
@@ -335,6 +363,7 @@ class MainActivity : ComponentActivity() {
         val notificationId = phoneNumber.replace(Regex("[^0-9]"), "").hashCode()
         notificationManager.cancel(notificationId)
         
+        
 
         
         startActivity(intent)
@@ -384,7 +413,10 @@ fun SimplePhoneApp(
     settingsRepository: SettingsRepository,
     onDarkModeOptionChange: (Int) -> Unit = {},
     isDefaultDialer: Boolean = false,
-    onSetDefaultDialer: () -> Unit = {}
+    onSetDefaultDialer: () -> Unit = {},
+    // New parameters 
+    currentZoomFactor: Float = 1.0f,
+    onZoomChange: (Float) -> Unit = {}
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
@@ -626,7 +658,10 @@ fun SimplePhoneApp(
                         },
                         isDefaultDialer = isDefaultDialer,
                         onSetDefaultDialer = onSetDefaultDialer,
-                        onBackClick = { navController.popBackStack() }
+                        onBackClick = { navController.popBackStack() },
+                        currentZoomFactor = currentZoomFactor,
+                        onZoomChange = onZoomChange,
+                        currentWidthSizeClass = widthSizeClass
                     )
                 }
                 composable(Screen.InCall.route) {
