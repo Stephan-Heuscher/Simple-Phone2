@@ -171,14 +171,19 @@ class MainActivity : ComponentActivity() {
                     val screenWidthDp = configuration.screenWidthDp
                     val screenHeightDp = configuration.screenHeightDp
                     val smallestScreenWidthDp = configuration.smallestScreenWidthDp
-                    val aspectRatio = if (screenWidthDp > 0) screenHeightDp.toFloat() / screenWidthDp else 0f
+                    val dim1 = if (screenWidthDp > 0) screenWidthDp.toFloat() else 1f
+                    val dim2 = if (screenHeightDp > 0) screenHeightDp.toFloat() else 1f
+                    val longDim = kotlin.math.max(dim1, dim2)
+                    val shortDim = kotlin.math.min(dim1, dim2)
                     
-                    // Logic based on user device metrics:
-                    // Phone/Folded: AR ~= 2.45 (Tall)
-                    // Tablet/Unfolded: AR ~= 1.15 (Square-ish)
-                    // We use a threshold of 2.0 to safely distinguish.
+                    // We calculate "Elongation" ratio: Max / Min
+                    // Folded (Tall/Narrow): 850 / 350 ~= 2.45 (Detects as Compact)
+                    // Unfolded (Square-ish): 900 / 800 ~= 1.15 (Detects as Expanded)
+                    // This works regardless of device orientation (Landscape vs Portrait)
+                    val elongationRatio = longDim / shortDim
+                    
                     val widthSizeClass = when {
-                        aspectRatio < 2.0f -> androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Expanded
+                        elongationRatio < 2.0f -> androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Expanded
                         else -> androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Compact
                     }
                     
