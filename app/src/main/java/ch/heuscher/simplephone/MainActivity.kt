@@ -167,12 +167,21 @@ class MainActivity : ComponentActivity() {
                     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
                     // Calculate window size class based on current configuration/activity state
                     // Just reading configuration above forces recomposition.
-                    // User reported issues with library detection, so we use manual breakpoints (Standard Android/Material 3 breakpoints)
+                    // User reported issues with library detection, so we use manual breakpoints
                     val screenWidthDp = configuration.screenWidthDp
+                    val screenHeightDp = configuration.screenHeightDp
+                    val smallestScreenWidthDp = configuration.smallestScreenWidthDp
+                    val aspectRatio = if (screenWidthDp > 0) screenHeightDp.toFloat() / screenWidthDp else 0f
+                    
+                    // Logic:
+                    // 1. smallestScreenWidthDp >= 600 usually guarantees a "Tablet" or "Unfolded" state.
+                    // 2. Aspect Ratio: Unfolded is often squarish (ratio < 1.4), Folded is tall (ratio > 1.8).
                     val widthSizeClass = when {
-                        screenWidthDp < 600 -> androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Compact
-                        screenWidthDp < 840 -> androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Medium
-                        else -> androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Expanded
+                        smallestScreenWidthDp >= 600 -> androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Expanded
+                        screenWidthDp >= 600 -> androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Medium
+                        // Fallback for weird DPI settings: if it's kinda wideish/squareish, treat as expanded?
+                        // Let's stick to swDp for now as the primary fix.
+                        else -> androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Compact
                     }
                     
                     // == ZOOM FACTOR LOGIC ==
