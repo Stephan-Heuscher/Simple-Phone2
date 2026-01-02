@@ -189,6 +189,71 @@ fun SettingsScreen(
                 }
             }
     ) {
+        // --- Zoom Factor Section (First Item) ---
+        item {
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_zoom_factor),
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            
+            // Show which screen type we are editing
+            val screenTypeLabel = when(currentWidthSizeClass) {
+                androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Compact -> 
+                    stringResource(R.string.zoom_screen_compact)
+                androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Medium -> 
+                    stringResource(R.string.zoom_screen_medium)
+                androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Expanded -> 
+                    stringResource(R.string.zoom_screen_expanded)
+                else -> ""
+            }
+            
+            Text(
+                text = stringResource(R.string.zoom_factor_current_screen, screenTypeLabel),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth()
+            ) {
+                BigIconButton(
+                    icon = Icons.Filled.Remove,
+                    contentDescription = stringResource(R.string.cd_decrease_zoom),
+                    onClick = { 
+                        vibrate()
+                        val newZoom = (currentZoomFactor - 0.05f).coerceAtLeast(0.5f)
+                        onZoomChange(newZoom)
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+
+                Text(
+                    text = stringResource(R.string.zoom_value_format, (currentZoomFactor * 100).toInt()),
+                    style = MaterialTheme.typography.displayMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+
+                BigIconButton(
+                    icon = Icons.Filled.Add,
+                    contentDescription = stringResource(R.string.cd_increase_zoom),
+                    onClick = { 
+                        vibrate()
+                        val newZoom = (currentZoomFactor + 0.05f).coerceAtMost(2.0f)
+                        onZoomChange(newZoom)
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            
+            HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 24.dp))
+        }
+
         // --- Default Dialer Section ---
         if (!isDefaultDialer) {
             item {
@@ -619,72 +684,7 @@ fun SettingsScreen(
             }
         }
         
-        // --- Zoom Factor Section ---
-        item {
-            Spacer(modifier = Modifier.height(24.dp))
-            HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.primary)
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            Text(
-                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_zoom_factor),
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-            
-            // Show which screen type we are editing
-            val screenTypeLabel = when(currentWidthSizeClass) {
-                androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Compact -> 
-                    stringResource(R.string.zoom_screen_compact)
-                androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Medium -> 
-                    stringResource(R.string.zoom_screen_medium)
-                androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Expanded -> 
-                    stringResource(R.string.zoom_screen_expanded)
-                else -> ""
-            }
-            
-            Text(
-                text = stringResource(R.string.zoom_factor_current_screen, screenTypeLabel),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(top = 8.dp)
-            )
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(top = 16.dp, bottom = 32.dp)
-                    .fillMaxWidth()
-            ) {
-                BigIconButton(
-                    icon = Icons.Filled.Remove,
-                    contentDescription = stringResource(R.string.cd_decrease_zoom),
-                    onClick = { 
-                        vibrate()
-                        val newZoom = (currentZoomFactor - 0.05f).coerceAtLeast(0.5f)
-                        onZoomChange(newZoom)
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-
-                Text(
-                    text = stringResource(R.string.zoom_value_format, (currentZoomFactor * 100).toInt()),
-                    style = MaterialTheme.typography.displayMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-
-                BigIconButton(
-                    icon = Icons.Filled.Add,
-                    contentDescription = stringResource(R.string.cd_increase_zoom),
-                    onClick = { 
-                        vibrate()
-                        val newZoom = (currentZoomFactor + 0.05f).coerceAtMost(2.0f)
-                        onZoomChange(newZoom)
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        }
 
         // --- Back Button ---
         item {

@@ -163,7 +163,13 @@ class MainActivity : ComponentActivity() {
                         useHapticFeedback = settingsRepository.useHapticFeedback
                     )
                 } else {
+                    // Observe configuration changes to trigger recomposition
+                    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+                    // Calculate window size class based on current configuration/activity state
+                    // Just reading configuration above forces recomposition.
+                    // calculateWindowSizeClass is @Composable and should be called directly.
                     val windowSize = calculateWindowSizeClass(this)
+                    
                     // == ZOOM FACTOR LOGIC ==
                     // 1. Get current zoom factor for this specific screen size class
                     var currentZoomFactor by remember(windowSize.widthSizeClass) { 
