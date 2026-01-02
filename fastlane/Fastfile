@@ -79,4 +79,15 @@ platform :android do
       # json_key_data is picked up from SUPPLY_JSON_KEY_DATA environment variable
     )
   end
+
+  desc "Sync Metadata Only (Repo -> Play Store)"
+  lane :sync_metadata do
+    upload_to_play_store(
+      package_name: 'ch.heuscher.simplephone',
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_images: false,
+      skip_upload_screenshots: false
+    )
+  end
 end
