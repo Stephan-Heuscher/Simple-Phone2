@@ -5,6 +5,8 @@ import ch.heuscher.simplephone.R
 
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -106,7 +108,8 @@ fun SettingsScreen(
     // New parameters for zoom
     currentZoomFactor: Float = 1.0f,
     onZoomChange: (Float) -> Unit = {},
-    currentWidthSizeClass: androidx.compose.material3.windowsizeclass.WindowWidthSizeClass = androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Compact
+    currentWidthSizeClass: androidx.compose.material3.windowsizeclass.WindowWidthSizeClass = androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Compact,
+    onShowOnboarding: () -> Unit = {}
 ) {
     // Remember favorites order for reordering
     val mutableFavorites = remember { mutableStateListOf<Contact>() }
@@ -686,6 +689,76 @@ fun SettingsScreen(
         }
         
 
+
+        // --- About & Legal Section ---
+        item {
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.about_legal),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Privacy Policy
+                SettingsButton(
+                    text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.privacy_policy),
+                    onClick = {
+                        vibrate()
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://raw.githubusercontent.com/Stephan-Heuscher/Simple-Phone2/master/PRIVACY_POLICY.md"))
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Terms of Service
+                SettingsButton(
+                    text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.terms_of_service),
+                    onClick = {
+                        vibrate()
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://raw.githubusercontent.com/Stephan-Heuscher/Simple-Phone2/master/TERMS_OF_SERVICE.md"))
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // How to Use / Tutorial
+                SettingsButton(
+                    text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.how_to_use),
+                    onClick = {
+                        vibrate()
+                        onShowOnboarding()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Send Feedback
+                SettingsButton(
+                    text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.send_feedback),
+                    onClick = {
+                        vibrate()
+                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = Uri.parse("mailto:") // Only email apps
+                            putExtra(Intent.EXTRA_EMAIL, arrayOf("stv.heuscher@gmail.com"))
+                            putExtra(Intent.EXTRA_SUBJECT, context.getString(ch.heuscher.simplephone.R.string.feedback_subject))
+                        }
+                        try {
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            // No email app?
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            HorizontalDivider()
+        }
 
         // --- Back Button ---
         item {

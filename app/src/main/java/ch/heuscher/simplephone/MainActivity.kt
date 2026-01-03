@@ -227,7 +227,8 @@ class MainActivity : ComponentActivity() {
                             onZoomChange = { newZoom -> 
                                 currentZoomFactor = newZoom
                                 settingsRepository.setZoomFactor(widthSizeClass, newZoom)
-                            }
+                            },
+                            onShowOnboarding = { showOnboarding = true }
                         )
                     }
                 }
@@ -439,7 +440,8 @@ fun SimplePhoneApp(
     onSetDefaultDialer: () -> Unit = {},
     // New parameters 
     currentZoomFactor: Float = 1.0f,
-    onZoomChange: (Float) -> Unit = {}
+    onZoomChange: (Float) -> Unit = {},
+    onShowOnboarding: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
@@ -684,7 +686,8 @@ fun SimplePhoneApp(
                         onBackClick = { navController.popBackStack() },
                         currentZoomFactor = currentZoomFactor,
                         onZoomChange = onZoomChange,
-                        currentWidthSizeClass = widthSizeClass
+                        currentWidthSizeClass = widthSizeClass,
+                        onShowOnboarding = onShowOnboarding
                     )
                 }
                 composable(Screen.InCall.route) {

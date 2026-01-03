@@ -160,4 +160,12 @@
     <string name="zoom_value_format">%d%%</string>
     <string name="cd_decrease_zoom">Decrease zoom</string>
     <string name="cd_increase_zoom">Increase zoom</string>
+
+    <!-- About & Legal -->
+    <string name="about_legal">About &amp; Legal</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="terms_of_service">Terms of Service</string>
+    <string name="send_feedback">Send Feedback</string>
+    <string name="feedback_subject">Simple Phone Feedback</string>
+    <string name="how_to_use">How to Use / Tutorial</string>
 </resources>

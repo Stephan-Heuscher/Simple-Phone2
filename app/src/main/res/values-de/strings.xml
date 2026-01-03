@@ -161,4 +161,12 @@
     <string name="zoom_value_format">%d%%</string>
     <string name="cd_decrease_zoom">Zoom verringern</string>
     <string name="cd_increase_zoom">Zoom vergrößern</string>
+
+    <!-- About & Legal -->
+    <string name="about_legal">Über &amp; Rechtliches</string>
+    <string name="privacy_policy">Datenschutzerklärung</string>
+    <string name="terms_of_service">Nutzungsbedingungen</string>
+    <string name="send_feedback">Feedback senden</string>
+    <string name="feedback_subject">Simple Phone Feedback</string>
+    <string name="how_to_use">Anleitung / Tutorial</string>
 </resources>

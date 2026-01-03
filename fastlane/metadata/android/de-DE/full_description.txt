@@ -1,9 +1,12 @@
-Simple-Phone wurde entwickelt, um die einfachste Telefon-App für Senioren und Menschen mit Sehbehinderungen zu sein.
-Funktionen:
-- Große Tasten und Text
-- Hoher Kontrast
-- Vereinfachte Benutzeroberfläche
-- Fotokontakte
-- Einfache Navigation
+Simple Phone: Die seniorenfreundliche Lösung
 
-Keine komplizierten Menüs oder kleinen Symbole. Einfach nur telefonieren.
+Simple Phone wurde entwickelt, um die einfachste Telefon-App für Senioren, ältere Menschen und Menschen mit Sehbehinderungen zu sein. Wir setzen auf Einfachheit, Klarheit und Benutzerfreundlichkeit.
+
+Hauptfunktionen:
+- Große Tasten & Großer Text: Einfach zu lesen und zu tippen.
+- Fotokontakte: Rufen Sie Ihre Lieben mit einer einzigen Berührung an.
+- Hoher Kontrast: Optimiert für gute Sichtbarkeit.
+- Vereinfachte Oberfläche: Kein Schnickschnack, nur das Wesentliche.
+- Datenschutz an erster Stelle: 100% offline, keine Datenerfassung.
+
+Laden Sie Simple Phone noch heute herunter und machen Sie die Kommunikation zum Kinderspiel!
