@@ -81,14 +81,14 @@ platform :android do
     )
 
     # 5. Auto-Increment Version (Properties File)
-    increment_version_properties(
+    new_version_name = increment_version_properties(
       file_path: "app/version.properties"
     )
     
     # 6. Commit the Version Bump
     git_commit(
       path: ["app/version.properties"],
-      message: "chore: bump version to #{Actions.lane_context['VERSION_NAME']}"
+      message: "chore: bump version to #{new_version_name}"
     )
     push_to_git_remote
   end
@@ -141,11 +141,9 @@ platform :android do
     # Increment
     props['VERSION_CODE'] = (props['VERSION_CODE'].to_i + 1).to_s
     props['VERSION_PATCH'] = (props['VERSION_PATCH'].to_i + 1).to_s
-    
     # Reconstruct Version Name for context
     new_version_name = "#{props['VERSION_MAJOR']}.#{props['VERSION_MINOR']}.#{props['VERSION_PATCH']}"
-    Actions.lane_context["VERSION_NAME"] = new_version_name
-
+    
     # Write back
     File.open(robust_path, 'w') do |file|
       props.each do |k, v|
@@ -154,5 +152,7 @@ platform :android do
     end
     
     puts "Bumping version to #{new_version_name} (Code: #{props['VERSION_CODE']})"
+    
+    return new_version_name
   end
 end
