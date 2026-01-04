@@ -87,12 +87,12 @@ platform :android do
     
     # 6. Commit the Version Bump
     # Configure Git for CI (Avoid 'Author identity unknown' error)
-    begin
-      sh("git config user.email 'deploy@fastlane.tools'")
-      sh("git config user.name 'Fastlane Deploy'")
-    rescue => ex
-      UI.error("Could not configure git identity: #{ex}")
-    end
+    # Configure Git for CI (Avoid 'Author identity unknown' error)
+    # We set environment variables which git respects globally for this process
+    ENV['GIT_AUTHOR_NAME'] = 'Fastlane Deploy'
+    ENV['GIT_AUTHOR_EMAIL'] = 'deploy@fastlane.tools'
+    ENV['GIT_COMMITTER_NAME'] = 'Fastlane Deploy'
+    ENV['GIT_COMMITTER_EMAIL'] = 'deploy@fastlane.tools'
 
     git_commit(
       path: ["app/version.properties"],
