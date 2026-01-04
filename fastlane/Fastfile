@@ -154,6 +154,8 @@ platform :android do
     props['VERSION_PATCH'] = (props['VERSION_PATCH'].to_i + 1).to_s
     # Reconstruct Version Name for context
     new_version_name = "#{props['VERSION_MAJOR']}.#{props['VERSION_MINOR']}.#{props['VERSION_PATCH']}"
+    # Update hash so it's written back to file
+    props['VERSION_NAME'] = new_version_name
     
     # Write back
     File.open(robust_path, 'w') do |file|
