@@ -490,6 +490,7 @@ fun SimplePhoneApp(
                 // If disabling, just disable immediately (or ask if desired, but request was for enabling check)
                 isDemoMode = false
                 settingsRepository.isDemoMode = false
+                viewModel.refresh()
                 android.widget.Toast.makeText(context, context.getString(R.string.demo_mode_disabled), android.widget.Toast.LENGTH_SHORT).show()
                 // Refresh widget
                 FavoritesWidget.sendRefreshBroadcast(context)
@@ -612,6 +613,7 @@ fun SimplePhoneApp(
                     onClick = {
                         isDemoMode = true
                         settingsRepository.isDemoMode = true
+                        viewModel.refresh()
                         showDemoModeDialog = false
                         android.widget.Toast.makeText(context, context.getString(R.string.demo_mode_enabled), android.widget.Toast.LENGTH_SHORT).show()
                         FavoritesWidget.sendRefreshBroadcast(context)
