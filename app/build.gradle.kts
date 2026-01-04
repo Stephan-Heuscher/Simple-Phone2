@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -16,8 +19,21 @@ android {
         applicationId = "ch.heuscher.simplephone"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.0.0"
+        
+        // Version Logic
+        val versionProps = Properties()
+        val versionPropsFile = rootProject.file("app/version.properties")
+        if (versionPropsFile.exists()) {
+            versionProps.load(FileInputStream(versionPropsFile))
+        }
+        
+        val code = versionProps.getProperty("VERSION_CODE", "2").toInt()
+        val major = versionProps.getProperty("VERSION_MAJOR", "1")
+        val minor = versionProps.getProperty("VERSION_MINOR", "0")
+        val patch = versionProps.getProperty("VERSION_PATCH", "0")
+        
+        versionCode = code
+        versionName = "$major.$minor.$patch"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -67,7 +83,7 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3-window-size-class:1.2.0") // Important for Fold support
+    implementation("androidx.compose.material3:material3-window-size-class:1.2.0") 
     implementation("androidx.compose.material3:material3")
     implementation("androidx.navigation:navigation-compose:2.7.7")
     
@@ -88,13 +104,4 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
-}
-
-fun getVersionProps(rootDir: File): java.util.Properties {
-    val versionProps = java.util.Properties()
-    val versionPropsFile = java.io.File(rootDir, "app/version.properties")
-    if (versionPropsFile.exists()) {
-        versionProps.load(java.io.FileInputStream(versionPropsFile))
-    }
-    return versionProps
 }
