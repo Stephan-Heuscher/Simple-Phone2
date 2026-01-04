@@ -93,6 +93,7 @@ fun OnboardingScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding()
             .padding(24.dp)
     ) {
         // Skip button
@@ -173,7 +174,18 @@ fun OnboardingScreen(
             }
             
             if (pagerState.currentPage == 0) {
-                Spacer(modifier = Modifier.width(120.dp))
+                TextButton(
+                    onClick = { vibrate(); onComplete() },
+                    modifier = Modifier
+                        .height(56.dp)
+                        .width(120.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.skip),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                    )
+                }
             }
             
             // Next/Get Started button
@@ -223,14 +235,14 @@ fun OnboardingPageContent(page: OnboardingPage) {
             modifier = Modifier
                 .size(160.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer),
+                .background(GreenCall),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = page.icon,
                 contentDescription = null,
                 modifier = Modifier.size(80.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = androidx.compose.ui.graphics.Color.White
             )
         }
         
