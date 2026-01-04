@@ -64,7 +64,10 @@ platform :android do
         final_notes = final_notes[0..485] + "..." if final_notes.length > 490
       end
       
-      new_changelog_path = "fastlane/metadata/android/#{locale}/changelogs/#{build_number}.txt"
+      # Use absolute path to ensure CI runner finds it
+      fastfile_dir = File.dirname(__FILE__)
+      new_changelog_path = File.expand_path("metadata/android/#{locale}/changelogs/#{build_number}.txt", fastfile_dir)
+      
       FileUtils.mkdir_p(File.dirname(new_changelog_path))
       File.write(new_changelog_path, final_notes)
       
