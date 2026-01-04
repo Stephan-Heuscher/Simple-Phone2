@@ -106,8 +106,23 @@ platform :android do
 
   # Helper to load properties
   def load_version_properties(file_path:)
+    # Resolve absolute path relative to this Fastfile to avoid CWD ambiguity
+    # Fastfile is in fastlane/, so we go up one level to root, then to app/version.properties
+    # If file_path is passed as "app/version.properties", we ignore it if we want strict control,
+    # or better, just default to the known robust path.
+    
+    # We ignore the passed file_path argument for safety and calculate it robustly
+    fastfile_dir = File.dirname(__FILE__)
+    robust_path = File.expand_path("../app/version.properties", fastfile_dir)
+    
+    UI.message("Loading version properties from: #{robust_path}")
+    
+    if !File.exist?(robust_path)
+      UI.user_error!("Could not find version.properties at #{robust_path}")
+    end
+
     props = {}
-    File.foreach(file_path) do |line|
+    File.foreach(robust_path) do |line|
       next if line.strip.empty? || line.strip.start_with?('#')
       key, value = line.strip.split('=', 2)
       props[key] = value
@@ -117,7 +132,11 @@ platform :android do
 
   # Helper to increment properties file
   def increment_version_properties(file_path:)
-    props = load_version_properties(file_path: file_path)
+    # Robust path resolution
+    fastfile_dir = File.dirname(__FILE__)
+    robust_path = File.expand_path("../app/version.properties", fastfile_dir)
+    
+    props = load_version_properties(file_path: robust_path)
 
     # Increment
     props['VERSION_CODE'] = (props['VERSION_CODE'].to_i + 1).to_s
@@ -128,7 +147,7 @@ platform :android do
     Actions.lane_context[SharedValues::VERSION_NAME] = new_version_name
 
     # Write back
-    File.open(file_path, 'w') do |file|
+    File.open(robust_path, 'w') do |file|
       props.each do |k, v|
         file.write("#{k}=#{v}\n")
       end
