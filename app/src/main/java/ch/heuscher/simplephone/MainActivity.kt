@@ -469,6 +469,9 @@ fun SimplePhoneApp(
     var titleTapCount by remember { androidx.compose.runtime.mutableIntStateOf(0) }
     var lastTitleTapTime by remember { androidx.compose.runtime.mutableLongStateOf(0L) }
 
+    // Demo mode confirmation dialog state
+    var showDemoModeDialog by remember { mutableStateOf(false) }
+
     fun onTitleClick() {
         val now = System.currentTimeMillis()
         if (now - lastTitleTapTime < 500) {
@@ -479,12 +482,18 @@ fun SimplePhoneApp(
         lastTitleTapTime = now
 
         if (titleTapCount >= 3) {
-            isDemoMode = !isDemoMode
-            settingsRepository.isDemoMode = isDemoMode
             titleTapCount = 0
-            android.widget.Toast.makeText(context, if (isDemoMode) context.getString(R.string.demo_mode_enabled) else context.getString(R.string.demo_mode_disabled), android.widget.Toast.LENGTH_SHORT).show()
-            // Refresh widget
-            FavoritesWidget.sendRefreshBroadcast(context)
+            if (!isDemoMode) {
+                // If enabling demo mode, ask for confirmation
+                showDemoModeDialog = true
+            } else {
+                // If disabling, just disable immediately (or ask if desired, but request was for enabling check)
+                isDemoMode = false
+                settingsRepository.isDemoMode = false
+                android.widget.Toast.makeText(context, context.getString(R.string.demo_mode_disabled), android.widget.Toast.LENGTH_SHORT).show()
+                // Refresh widget
+                FavoritesWidget.sendRefreshBroadcast(context)
+            }
         }
     }
     
@@ -578,6 +587,46 @@ fun SimplePhoneApp(
         PermissionMessageDialog(
             message = permissionMessageText,
             onDismiss = { showPermissionMessage = false }
+        )
+    }
+
+    // Demo Mode Confirmation Dialog
+    if (showDemoModeDialog) {
+        var secondsRemaining by remember { androidx.compose.runtime.mutableIntStateOf(15) }
+        
+        LaunchedEffect(Unit) {
+            while (secondsRemaining > 0) {
+                kotlinx.coroutines.delay(1000)
+                secondsRemaining--
+            }
+            // Auto-dismiss when timer hits 0
+            showDemoModeDialog = false
+        }
+        
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showDemoModeDialog = false },
+            title = { Text(stringResource(R.string.demo_mode_dialog_title)) },
+            text = { Text(stringResource(R.string.demo_mode_dialog_message, secondsRemaining)) },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        isDemoMode = true
+                        settingsRepository.isDemoMode = true
+                        showDemoModeDialog = false
+                        android.widget.Toast.makeText(context, context.getString(R.string.demo_mode_enabled), android.widget.Toast.LENGTH_SHORT).show()
+                        FavoritesWidget.sendRefreshBroadcast(context)
+                    }
+                ) {
+                    Text(stringResource(R.string.yes))
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = { showDemoModeDialog = false }
+                ) {
+                    Text(stringResource(R.string.no))
+                }
+            }
         )
     }
 

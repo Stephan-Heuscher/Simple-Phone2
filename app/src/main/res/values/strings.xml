@@ -129,6 +129,8 @@
     <string name="demo_mode_enabled">Demo Mode Enabled</string>
     <string name="demo_mode_disabled">Demo Mode Disabled</string>
     <string name="calling_title">Calling...</string>
+    <string name="demo_mode_dialog_title">Enable Demo Mode?</string>
+    <string name="demo_mode_dialog_message">This will replace your current data with example data for demonstration purposes. (will disappear in %d seconds)</string>
     <string name="call_confirmation_title">Call %s?</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>

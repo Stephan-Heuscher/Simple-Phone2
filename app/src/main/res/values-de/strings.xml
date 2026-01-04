@@ -130,6 +130,8 @@
     <string name="demo_mode_enabled">Demo-Modus aktiviert</string>
     <string name="demo_mode_disabled">Demo-Modus deaktiviert</string>
     <string name="calling_title">Rufe an...</string>
+    <string name="demo_mode_dialog_title">Demo-Modus aktivieren?</string>
+    <string name="demo_mode_dialog_message">Dies ersetzt Ihre aktuellen Daten zu Demonstrationszwecken durch Beispieldaten. (wird in %d Sekunden ausgeblendet)</string>
     <string name="call_confirmation_title">%s anrufen?</string>
     <string name="yes">Ja</string>
     <string name="no">Nein</string>
