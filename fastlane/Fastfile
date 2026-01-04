@@ -3,9 +3,9 @@ default_platform(:android)
 platform :android do
   desc "Build and upload to Play Store Internal Track"
   lane :deploy_internal do
-    # 1. Ensure Version Code matches Gradle
-    # We fetch it directly from the build file so changelogs map correctly (e.g. 2.txt instead of local.txt)
-    build_number = android_get_version_code(gradle_file: "app/build.gradle.kts")
+    # 1. Ensure Version Code matches version.properties
+    props = load_version_properties(file_path: "app/version.properties")
+    build_number = props['VERSION_CODE']
     api_key = ENV['GOOGLE_API_KEY']
     
     # 2. Fetch raw commits
@@ -41,7 +41,7 @@ platform :android do
     ['en-US', 'de-DE'].each do |locale|
       final_notes = nil
 
-      # 2. Try AI Generation if Key exists
+      # 3. Try AI Generation if Key exists
       if api_key
         language = locale == 'de-DE' ? "German" : "English"
         prompt = "Summarize these git commits into a friendly, professional release notes list (bullet points) for a mobile app. " \
@@ -52,7 +52,7 @@ platform :android do
         final_notes = ask_gemini(api_key, prompt, raw_commits)
       end
 
-      # 3. Fallback: Smart Filter (Rubylogic)
+      # 4. Fallback: Smart Filter (Rubylogic)
       unless final_notes && !final_notes.empty?
         header = locale == 'de-DE' ? "Neuigkeiten:" : "What's New:"
         filtered = raw_commits.split("\n").select do |line|
@@ -64,7 +64,6 @@ platform :android do
         final_notes = final_notes[0..485] + "..." if final_notes.length > 490
       end
       
-      # Write to version-specific file that Supply
       new_changelog_path = "fastlane/metadata/android/#{locale}/changelogs/#{build_number}.txt"
       FileUtils.mkdir_p(File.dirname(new_changelog_path))
       File.write(new_changelog_path, final_notes)
@@ -81,13 +80,14 @@ platform :android do
       # json_key_data is picked up from SUPPLY_JSON_KEY_DATA environment variable
     )
 
-    # 4. Auto-Increment Version (Standard Actions)
-    increment_version_code(gradle_file: "app/build.gradle.kts")
-    increment_version_name(gradle_file: "app/build.gradle.kts", bump_type: "patch")
+    # 5. Auto-Increment Version (Properties File)
+    increment_version_properties(
+      file_path: "app/version.properties"
+    )
     
-    # 5. Commit the Version Bump
+    # 6. Commit the Version Bump
     git_commit(
-      path: ["app/build.gradle.kts"],
+      path: ["app/version.properties"],
       message: "chore: bump version to #{Actions.lane_context[SharedValues::VERSION_NAME]}"
     )
     push_to_git_remote
@@ -102,5 +102,38 @@ platform :android do
       skip_upload_images: false,
       skip_upload_screenshots: false
     )
+  end
+
+  # Helper to load properties
+  def load_version_properties(file_path:)
+    props = {}
+    File.foreach(file_path) do |line|
+      next if line.strip.empty? || line.strip.start_with?('#')
+      key, value = line.strip.split('=', 2)
+      props[key] = value
+    end
+    props
+  end
+
+  # Helper to increment properties file
+  def increment_version_properties(file_path:)
+    props = load_version_properties(file_path: file_path)
+
+    # Increment
+    props['VERSION_CODE'] = (props['VERSION_CODE'].to_i + 1).to_s
+    props['VERSION_PATCH'] = (props['VERSION_PATCH'].to_i + 1).to_s
+    
+    # Reconstruct Version Name for context
+    new_version_name = "#{props['VERSION_MAJOR']}.#{props['VERSION_MINOR']}.#{props['VERSION_PATCH']}"
+    Actions.lane_context[SharedValues::VERSION_NAME] = new_version_name
+
+    # Write back
+    File.open(file_path, 'w') do |file|
+      props.each do |k, v|
+        file.write("#{k}=#{v}\n")
+      end
+    end
+    
+    puts "Bumping version to #{new_version_name} (Code: #{props['VERSION_CODE']})"
   end
 end

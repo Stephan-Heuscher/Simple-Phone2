@@ -89,3 +89,12 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
+
+fun getVersionProps(rootDir: File): java.util.Properties {
+    val versionProps = java.util.Properties()
+    val versionPropsFile = java.io.File(rootDir, "app/version.properties")
+    if (versionPropsFile.exists()) {
+        versionProps.load(java.io.FileInputStream(versionPropsFile))
+    }
+    return versionProps
+}
