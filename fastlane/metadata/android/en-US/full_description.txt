@@ -1,12 +1,32 @@
 Simple Phone: The Senior-Friendly Solution
 
-Simple Phone is designed to be the easiest phone app for seniors, elderly, and people with visual impairments. We prioritize simplicity, clarity, and ease of use.
+Simple Phone is designed to be the easiest phone app for seniors, elderly, and people with visual impairments or motor control challenges. We prioritize simplicity, clarity, and ease of use to keep you connected with your loved ones without the confusion of modern interfaces.
+
+Why Simple Phone?
+Modern smartphones can be overwhelming. Simple Phone strips away the complexity and brings back the basic functionality of a phone, but with a modern, accessible interface. It replaces your default dialer with an experience that just works.
 
 Key Features:
-- Big Buttons & Large Text: Easy to read and tap.
-- Photo Contacts: Call loved ones with a single touch.
-- High Contrast: Optimized for visibility.
-- Simplified Interface: No clutter, just the essentials.
-- Privacy First: 100% offline, no data collection.
+• Extra Large Touch Targets: All buttons are 48dp+ for easy tapping—no more accidental presses.
+• High Contrast Colors: Deep blue and bright green themes designed for maximum visibility.
+• Huge Text Option: Make contact names as large as photos for effortless reading.
+• Smart Contact Management: Displays only contacts with phone numbers to reduce clutter.
+• Photo Contacts: Call loved ones with a single touch on their photo.
+• Haptic Feedback: Feel a vibration on every button press for confirmation.
+• Voice Announcements: Hear contact names spoken aloud when calling (optional).
+• Call Confirmation: Optional dialog to prevent accidental calls.
+• Dark Mode: High-contrast dark theme for low-light conditions and reduced eye strain.
+• Smart Search: Quickly find any contact by name.
+• Missed Calls Display: Clear list of recent missed calls to return them easily (calls older than 24 hours are hidden to reduce clutter).
+• Audio Output Selection: Briefly switch between Speaker, Bluetooth, and Earpiece during calls.
 
-Download Simple Phone today and make communication a breeze!
+Senior & Accessibility Focused:
+- Designed for users with vision impairments and lower dexterity.
+- No confusing gestures—everything is a simple tap.
+- Respects system "Do Not Disturb" settings while allowing repeat callers (emergency breakthrough).
+
+Privacy First:
+- 100% Offline: Your contacts and call history never leave your phone.
+- No Ads: A completely clean, distraction-free experience.
+- Open Source: Transparent and secure.
+
+Download Simple Phone today and make communication a breeze again!

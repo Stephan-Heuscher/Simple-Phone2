@@ -5,11 +5,11 @@ An accessible Android phone app designed for elderly users with vision and motor
 ## 🎯 Key Features
 
 ### Accessibility First
-* **Extra Large Touch Targets** - All buttons are 48dp+ for easy tapping
-* **High Contrast Colors** - Deep blue and bright green for maximum visibility
-* **Huge Text Option** - Make contact names as large as photos
-* **Haptic Feedback** - Feel vibration on every button press
-* **Voice Announcements** - Hear contact names spoken when calling
+* **Extra Large Touch Targets** - All buttons are 48dp+ for easy tapping—no more accidental presses
+* **High Contrast Colors** - Deep blue and bright green themes designed for maximum visibility
+* **Huge Text Option** - Make contact names as large as photos for effortless reading
+* **Haptic Feedback** - Feel a vibration on every button press for confirmation
+* **Voice Announcements** - Hear contact names spoken aloud when calling (optional)
 * **Dark Mode** - High-contrast dark theme for low-light conditions
 * **Call Confirmation** - Optional dialog to prevent accidental calls
 
@@ -17,18 +17,21 @@ An accessible Android phone app designed for elderly users with vision and motor
 * **Real Phone Book Integration** - Uses your device contacts (shows only contacts with phone numbers)
 * **Starred Contacts** - Quick access to favorites at the top of the screen
 * **One-Tap Calling** - Tap the contact photo or green call button
-* **Missed Calls Display** - Shows recent missed calls
+* **Missed Calls Display** - Shows recent missed calls (calls older than 24 hours are hidden to reduce clutter)
 * **Smart Search** - Quickly find any contact by name
 
 ### Call Handling
 * **Incoming Call Screen** - Large, easy-to-tap Answer and Reject buttons
-* **Audio Output Selection** - Switch between Speaker, Bluetooth, and Earpiece during calls
-* **Do Not Disturb Aware** - Respects system DND settings
-* **Repeat Caller Exception** - Rings for repeat callers within 15 minutes (when enabled in DND)
+* **Audio Output Selection** - Briefly switch between Speaker, Bluetooth, and Earpiece during calls
+* **Do Not Disturb Aware** - Respects system DND settings but allows repeat callers (emergency breakthrough)
 
 ### Home Screen Widget
 * **Large Touch Targets** - Quick access to favorite contacts from home screen
 * **Always Visible Scrollbar** - Easy navigation through favorites
+
+## ❓ Why Simple Phone?
+
+Modern smartphones can be overwhelming. Simple Phone strips away the complexity and brings back the basic functionality of a phone, but with a modern, accessible interface. It replaces your default dialer with an experience that just works.
 
 ## 📱 Screenshots
 

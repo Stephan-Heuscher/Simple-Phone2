@@ -1,12 +1,32 @@
 Simple Phone: Die seniorenfreundliche Lösung
 
-Simple Phone wurde entwickelt, um die einfachste Telefon-App für Senioren, ältere Menschen und Menschen mit Sehbehinderungen zu sein. Wir setzen auf Einfachheit, Klarheit und Benutzerfreundlichkeit.
+Simple Phone wurde entwickelt, um die einfachste Telefon-App für Senioren, ältere Menschen und Menschen mit Seh- oder Motorikschwächen zu sein. Wir setzen auf Einfachheit, Klarheit und Benutzerfreundlichkeit, damit Sie ohne die Verwirrung moderner Schnittstellen mit Ihren Lieben in Verbindung bleiben können.
+
+Warum Simple Phone?
+Moderne Smartphones können überfordernd sein. Simple Phone beseitigt die Komplexität und bringt die grundlegenden Funktionen eines Telefons zurück – jedoch mit einer modernen, barrierefreien Oberfläche. Es ersetzt Ihre Standard-Telefon-App durch eine Erfahrung, die einfach funktioniert.
 
 Hauptfunktionen:
-- Große Tasten & Großer Text: Einfach zu lesen und zu tippen.
-- Fotokontakte: Rufen Sie Ihre Lieben mit einer einzigen Berührung an.
-- Hoher Kontrast: Optimiert für gute Sichtbarkeit.
-- Vereinfachte Oberfläche: Kein Schnickschnack, nur das Wesentliche.
-- Datenschutz an erster Stelle: 100% offline, keine Datenerfassung.
+• Extra große Schaltflächen: Alle Tasten sind extra groß (48dp+), um einfaches Tippen zu ermöglichen – keine versehentlichen Eingaben mehr.
+• Hoher Kontrast: Tiefblaues und hellgrünes Design für optimale Lesbarkeit.
+• Riesiger Text: Option für extrem große Schriftgrößen bei Kontaktnamen.
+• Intelligente Kontaktverwaltung: Zeigt nur Kontakte mit Telefonnummern an, um Unordnung zu vermeiden.
+• Fotokontakte: Rufen Sie Ihre Lieben mit einem einzigen Tippen auf deren Foto an.
+• Haptisches Feedback: Spüren Sie bei jedem Tastendruck eine Vibration als Bestätigung.
+• Sprachansage: Hören Sie den Kontaktnamen beim Anrufen laut vorgelesen (optional).
+• Anrufbestätigung: Optionaler Dialog, um versehentliche Anrufe zu verhindern.
+• Dunkelmodus: Kontrastreicher dunkler Modus für weniger Augenbelastung.
+• Intelligente Suche: Finden Sie jeden Kontakt schnell per Namen.
+• Anzeige verpasster Anrufe: Übersichtliche Liste, um Anrufe einfach zurückzurufen (Anrufe älter als 24 Stunden werden automatisch ausgeblendet, um die Übersichtlichkeit zu wahren).
+• Audio-Ausgabe: Wechseln Sie während des Anrufs einfach zwischen Lautsprecher, Bluetooth und Hörmuschel.
 
-Laden Sie Simple Phone noch heute herunter und machen Sie die Kommunikation zum Kinderspiel!
+Fokus auf Senioren & Barrierefreiheit:
+- Entwickelt für Nutzer mit Sehbehinderungen und eingeschränkter Motorik.
+- Keine verwirrenden Gesten – alles ist mit einem einfachen Tippen erreichbar.
+- Respektiert "Nicht stören"-Einstellungen, erlaubt aber wiederholte Anrufe (Notfall-Durchbruch).
+
+Datenschutz an erster Stelle:
+- 100% Offline: Ihre Kontakte und Anruflisten verlassen niemals Ihr Telefon.
+- Keine Werbung: Ein absolut sauberes, ablenkungsfreies Erlebnis.
+- Open Source: Transparent und sicher.
+
+Laden Sie Simple Phone noch heute herunter und machen Sie Kommunikation wieder kinderleicht!
