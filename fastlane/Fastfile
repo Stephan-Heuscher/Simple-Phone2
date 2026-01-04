@@ -88,7 +88,7 @@ platform :android do
     # 6. Commit the Version Bump
     git_commit(
       path: ["app/version.properties"],
-      message: "chore: bump version to #{Actions.lane_context[SharedValues::VERSION_NAME]}"
+      message: "chore: bump version to #{Actions.lane_context['VERSION_NAME']}"
     )
     push_to_git_remote
   end
@@ -144,7 +144,7 @@ platform :android do
     
     # Reconstruct Version Name for context
     new_version_name = "#{props['VERSION_MAJOR']}.#{props['VERSION_MINOR']}.#{props['VERSION_PATCH']}"
-    Actions.lane_context[SharedValues::VERSION_NAME] = new_version_name
+    Actions.lane_context["VERSION_NAME"] = new_version_name
 
     # Write back
     File.open(robust_path, 'w') do |file|
