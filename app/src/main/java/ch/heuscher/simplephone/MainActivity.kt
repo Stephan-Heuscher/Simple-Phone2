@@ -162,8 +162,7 @@ class MainActivity : ComponentActivity() {
                             settingsRepository.onboardingCompleted = true
                             showOnboarding = false
                             requestDefaultDialerRole()
-                            // Also request permissions now
-                            requestPermissionsIfNeeded()
+                            // Permissions requested via chain in requestDefaultDialerRole/onActivityResult
                         },
                         useHapticFeedback = settingsRepository.useHapticFeedback
                     )
@@ -272,6 +271,7 @@ class MainActivity : ComponentActivity() {
             } else {
                 // Already default or role not available
                 android.widget.Toast.makeText(this, getString(R.string.toast_already_default), android.widget.Toast.LENGTH_SHORT).show()
+                requestPermissionsIfNeeded()
             }
         } else {
             offerReplacingDefaultDialer()
@@ -326,6 +326,7 @@ class MainActivity : ComponentActivity() {
         } else {
             android.util.Log.d("MainActivity", "Already default dialer")
             android.widget.Toast.makeText(this, getString(R.string.toast_already_default_dialer), android.widget.Toast.LENGTH_SHORT).show()
+            requestPermissionsIfNeeded()
         }
     }
 
@@ -429,6 +430,8 @@ class MainActivity : ComponentActivity() {
             } else {
                 android.widget.Toast.makeText(this, getString(R.string.toast_default_dialer_declined), android.widget.Toast.LENGTH_SHORT).show()
             }
+            // Chain: Request permissions after default dialer dialog handles
+            requestPermissionsIfNeeded()
         }
     }
 }

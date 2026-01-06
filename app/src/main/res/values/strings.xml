@@ -92,8 +92,8 @@
     <string name="onboarding_audio_desc">Switch between speaker, Bluetooth, and earpiece during calls with easy-to-tap buttons.</string>
     <string name="onboarding_settings_title">Customizable Settings</string>
     <string name="onboarding_settings_desc">Adjust text size, enable dark mode, call confirmation, vibration, and voice announcements in Settings.</string>
-    <string name="onboarding_default_title">Set as Default Dialer</string>
-    <string name="onboarding_default_desc">For the best experience, set Simple Phone as your default phone app. You\'ll be prompted to do this.</string>
+    <string name="onboarding_default_title">Permissions &amp; Default</string>
+    <string name="onboarding_default_desc">Simple Phone needs access to contacts and call logs. You will also be asked to set it as your default phone app.</string>
     <string name="skip">Skip</string>
     <string name="next">Next</string>
     <string name="get_started">Get Started</string>
