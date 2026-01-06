@@ -270,7 +270,6 @@ class MainActivity : ComponentActivity() {
                 startActivityForResult(intent, REQUEST_CODE_SET_DEFAULT_DIALER)
             } else {
                 // Already default or role not available
-                android.widget.Toast.makeText(this, getString(R.string.toast_already_default), android.widget.Toast.LENGTH_SHORT).show()
                 requestPermissionsIfNeeded()
             }
         } else {
@@ -325,7 +324,6 @@ class MainActivity : ComponentActivity() {
             }
         } else {
             android.util.Log.d("MainActivity", "Already default dialer")
-            android.widget.Toast.makeText(this, getString(R.string.toast_already_default_dialer), android.widget.Toast.LENGTH_SHORT).show()
             requestPermissionsIfNeeded()
         }
     }

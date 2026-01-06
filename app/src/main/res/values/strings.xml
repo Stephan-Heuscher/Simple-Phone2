@@ -123,7 +123,6 @@
     
     <!-- MainActivity & Dialogs -->
     <string name="calling_announcement">Calling %s</string>
-    <string name="toast_already_default">Already default dialer or not available</string>
     <string name="toast_default_dialer_set">App is now the default dialer!</string>
     <string name="toast_default_dialer_declined">Default dialer request declined.</string>
     <string name="demo_mode_enabled">Demo Mode Enabled</string>
@@ -172,7 +171,6 @@
     <string name="how_to_use">How to Use / Tutorial</string>
     <string name="toast_open_contact_error">Cannot open contact details</string>
     <string name="toast_open_contact_exception">Error opening contact app</string>
-    <string name="toast_already_default_dialer">Already default dialer</string>
     <string name="permission_needed_title">Permission Needed</string>
     <string name="ok_button">OK</string>
 </resources>
