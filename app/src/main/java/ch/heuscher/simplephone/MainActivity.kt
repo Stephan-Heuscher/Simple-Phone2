@@ -1,8 +1,6 @@
 package ch.heuscher.simplephone
 
 import android.Manifest
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothProfile
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -66,20 +64,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import ch.heuscher.simplephone.data.ContactRepository
-import ch.heuscher.simplephone.data.MockData
 import ch.heuscher.simplephone.data.SettingsRepository
 import ch.heuscher.simplephone.model.AudioOutput
-import ch.heuscher.simplephone.model.CallLogEntry
 import ch.heuscher.simplephone.model.Contact
 import ch.heuscher.simplephone.ui.components.AppScaffold
 import ch.heuscher.simplephone.ui.components.Screen
-import ch.heuscher.simplephone.ui.screens.FavoritesScreen
 import ch.heuscher.simplephone.ui.screens.InCallScreen
 import ch.heuscher.simplephone.ui.screens.MainScreen
 import ch.heuscher.simplephone.ui.screens.DialerScreen
 import ch.heuscher.simplephone.ui.screens.OnboardingScreen
 
-import ch.heuscher.simplephone.ui.screens.RecentsScreen
 import ch.heuscher.simplephone.ui.screens.SettingsScreen
 import ch.heuscher.simplephone.ui.theme.GreenCall
 import ch.heuscher.simplephone.ui.theme.HighContrastBlue
