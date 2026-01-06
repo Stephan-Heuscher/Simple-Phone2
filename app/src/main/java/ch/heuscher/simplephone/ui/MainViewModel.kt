@@ -42,31 +42,46 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private var isObserverRegistered = false
+
     init {
-        // Observers will be registered when permissions are granted or on resume explicitly if needed.
-        // For simplicity contributing to the monolithic cleanup, we register once here 
-        // but real loading depends on permissions.
-        application.contentResolver.registerContentObserver(
-            ContactsContract.Contacts.CONTENT_URI,
-            true,
-            contentObserver
-        )
-        application.contentResolver.registerContentObserver(
-            CallLog.Calls.CONTENT_URI,
-            true,
-            contentObserver
-        )
+        // Try to register immediately
+        registerObservers()
+    }
+
+    private fun registerObservers() {
+        if (isObserverRegistered) return
+        
+        try {
+            getApplication<Application>().contentResolver.registerContentObserver(
+                ContactsContract.Contacts.CONTENT_URI,
+                true,
+                contentObserver
+            )
+            getApplication<Application>().contentResolver.registerContentObserver(
+                CallLog.Calls.CONTENT_URI,
+                true,
+                contentObserver
+            )
+            isObserverRegistered = true
+        } catch (e: SecurityException) {
+            // Permissions not granted yet. Will retry when permissions are updated.
+        } catch (e: Exception) {
+            // Log other errors if needed
+        }
     }
 
     fun updatePermissionsState(granted: Boolean) {
         _hasPermissions.value = granted
         if (granted) {
+            registerObservers()
             loadData()
         }
     }
 
     fun loadData() {
-        if (!_hasPermissions.value) return
+        val isDemo = settingsRepository.isDemoMode
+        if (!_hasPermissions.value && !isDemo) return
 
         viewModelScope.launch {
             _isLoading.value = true
@@ -97,8 +112,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _contacts.value = sortedContacts
 
             // Load Missed Calls
-            val loadedMissedCalls = withContext(Dispatchers.IO) {
-                contactRepository.getMissedCallsInLastHours(settingsRepository.missedCallsHours)
+            // Load Missed Calls (only if permissions granted, or mock them if demo mode extended to calls)
+            // For now, only load real calls if permitted, otherwise empty list check happening in repo anyway?
+            // Safer to check permission here or let repo handle it?
+            // Repo crashes if permisson denied usually.
+            
+            val loadedMissedCalls = if (_hasPermissions.value) {
+                withContext(Dispatchers.IO) {
+                    contactRepository.getMissedCallsInLastHours(settingsRepository.missedCallsHours)
+                }
+            } else {
+                emptyList()
             }
             _missedCalls.value = loadedMissedCalls
             
@@ -126,6 +150,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     override fun onCleared() {
         super.onCleared()
-        getApplication<Application>().contentResolver.unregisterContentObserver(contentObserver)
+        if (isObserverRegistered) {
+            try {
+                getApplication<Application>().contentResolver.unregisterContentObserver(contentObserver)
+            } catch (e: Exception) {
+                // Ignore
+            }
+        }
     }
 }

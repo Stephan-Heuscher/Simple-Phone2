@@ -126,8 +126,10 @@ class MainActivity : ComponentActivity() {
             }
         }
         
-        // Request permissions at startup
-        requestPermissionsIfNeeded()
+        // Request permissions at startup ONLY if onboarding is completed
+        if (settingsRepository.onboardingCompleted) {
+            requestPermissionsIfNeeded()
+        }
         
         // Notify VM about permissions (optimistic or check)
         val hasContactsPerm = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
@@ -159,6 +161,9 @@ class MainActivity : ComponentActivity() {
                         onComplete = {
                             settingsRepository.onboardingCompleted = true
                             showOnboarding = false
+                            requestDefaultDialerRole()
+                            // Also request permissions now
+                            requestPermissionsIfNeeded()
                         },
                         useHapticFeedback = settingsRepository.useHapticFeedback
                     )
@@ -238,9 +243,10 @@ class MainActivity : ComponentActivity() {
     
     override fun onResume() {
         super.onResume()
-        // Prompt user to set this app as default phone app if not already
-        // We don't do this automatically on resume anymore to avoid annoying the user
-        // offerReplacingDefaultDialer()
+        // Prompt user to set this app as default phone app if not already, but ONLY if onboarding is finished
+        if (settingsRepository.onboardingCompleted) {
+             requestDefaultDialerRole()
+        }
         
         // Refresh widget in case contacts or permissions changed
         FavoritesWidget.sendRefreshBroadcast(this)
@@ -319,7 +325,7 @@ class MainActivity : ComponentActivity() {
             }
         } else {
             android.util.Log.d("MainActivity", "Already default dialer")
-            android.widget.Toast.makeText(this, "Already default dialer", android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(this, getString(R.string.toast_already_default_dialer), android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -356,11 +362,11 @@ class MainActivity : ComponentActivity() {
                 intent.data = uri
                 startActivity(intent)
             } else {
-                 android.widget.Toast.makeText(this, "Cannot open contact details", android.widget.Toast.LENGTH_SHORT).show()
+                 android.widget.Toast.makeText(this, getString(R.string.toast_open_contact_error), android.widget.Toast.LENGTH_SHORT).show()
             }
         } catch (e: Exception) {
             android.util.Log.e("MainActivity", "Error opening contact", e)
-            android.widget.Toast.makeText(this, "Error opening contact app", android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(this, getString(R.string.toast_open_contact_exception), android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -373,7 +379,7 @@ class MainActivity : ComponentActivity() {
             startActivity(intent)
         } catch (e: Exception) {
             android.util.Log.e("MainActivity", "Error opening contact editor", e)
-            android.widget.Toast.makeText(this, "Error opening contact app", android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(this, getString(R.string.toast_open_contact_exception), android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -921,7 +927,7 @@ fun PermissionMessageDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Permission Needed",
+                    text = stringResource(R.string.permission_needed_title),
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -948,7 +954,7 @@ fun PermissionMessageDialog(
                 ) {
                     androidx.compose.material3.TextButton(onClick = onDismiss) {
                         Text(
-                            "OK",
+                            stringResource(R.string.ok_button),
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
                             color = androidx.compose.ui.graphics.Color.White

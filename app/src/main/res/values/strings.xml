@@ -170,4 +170,9 @@
     <string name="send_feedback">Send Feedback</string>
     <string name="feedback_subject">Simple Phone Feedback</string>
     <string name="how_to_use">How to Use / Tutorial</string>
+    <string name="toast_open_contact_error">Cannot open contact details</string>
+    <string name="toast_open_contact_exception">Error opening contact app</string>
+    <string name="toast_already_default_dialer">Already default dialer</string>
+    <string name="permission_needed_title">Permission Needed</string>
+    <string name="ok_button">OK</string>
 </resources>
