@@ -109,7 +109,9 @@ fun SettingsScreen(
     currentZoomFactor: Float = 1.0f,
     onZoomChange: (Float) -> Unit = {},
     currentWidthSizeClass: androidx.compose.material3.windowsizeclass.WindowWidthSizeClass = androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Compact,
-    onShowOnboarding: () -> Unit = {}
+    onShowOnboarding: () -> Unit = {},
+    simplifiedContactCallScreen: Boolean = false,
+    onSimplifiedContactCallScreenChange: (Boolean) -> Unit = {}
 ) {
     // Remember favorites order for reordering
     val mutableFavorites = remember { mutableStateListOf<Contact>() }
@@ -591,6 +593,36 @@ fun SettingsScreen(
                     isEnabled = answerOnSpeakerIfFlat,
                     onToggle = { vibrate(); onAnswerOnSpeakerIfFlatChange(!answerOnSpeakerIfFlat) },
                     label = if (answerOnSpeakerIfFlat) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
+                )
+            }
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // --- Simplified Contact Call Screen ---
+        item {
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_simplified_contact_screen),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_simplified_contact_screen_desc),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                BigToggleButton(
+                    isEnabled = simplifiedContactCallScreen,
+                    onToggle = { vibrate(); onSimplifiedContactCallScreenChange(!simplifiedContactCallScreen) },
+                    label = if (simplifiedContactCallScreen) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
                 )
             }
             HorizontalDivider()

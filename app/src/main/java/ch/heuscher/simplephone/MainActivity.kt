@@ -112,6 +112,9 @@ class MainActivity : ComponentActivity() {
         
         // Initialize View Model
         val viewModel = ViewModelProvider(this)[MainViewModel::class.java]
+        
+        // Handle incoming intent (e.g. from tel: links)
+        handleIntent(intent)
 
         // Initialize Text-to-Speech
         textToSpeech = TextToSpeech(this) { status ->
@@ -426,6 +429,21 @@ class MainActivity : ComponentActivity() {
             requestPermissionsIfNeeded()
         }
     }
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        intent?.let { handleIntent(it) }
+    }
+
+    private fun handleIntent(intent: Intent) {
+        if (intent.action == Intent.ACTION_VIEW || intent.action == Intent.ACTION_DIAL) {
+            if (intent.data?.scheme == "tel") {
+                val number = intent.data?.schemeSpecificPart
+                val viewModel = ViewModelProvider(this)[MainViewModel::class.java]
+                viewModel.setPendingDialerNumber(number)
+            }
+        }
+    }
 }
 
 @Composable
@@ -465,6 +483,8 @@ fun SimplePhoneApp(
     var blockUnknownCallers by remember { mutableStateOf(settingsRepository.blockUnknownCallers) }
 
     var answerOnSpeakerIfFlat by remember { mutableStateOf(settingsRepository.answerOnSpeakerIfFlat) }
+
+    var simplifiedContactCallScreen by remember { mutableStateOf(settingsRepository.simplifiedContactCallScreen) }
 
     // Triple tap logic
     var titleTapCount by remember { androidx.compose.runtime.mutableIntStateOf(0) }
@@ -520,6 +540,17 @@ fun SimplePhoneApp(
         viewModel.refresh()
     }
     
+    val pendingDialerNumber by viewModel.pendingDialerNumber.collectAsState()
+
+    // Navigate to dialer when a number is pending (from intent)
+    LaunchedEffect(pendingDialerNumber) {
+        if (pendingDialerNumber != null) {
+            navController.navigate(Screen.Dialer.route) {
+                launchSingleTop = true
+            }
+        }
+    }
+    
     // In-call state
     var isInCall by remember { mutableStateOf(false) }
     var currentCallContact by remember { mutableStateOf<Contact?>(null) }
@@ -547,7 +578,7 @@ fun SimplePhoneApp(
     // Function to handle call initiation (with optional confirmation)
     val handleCall: (String) -> Unit = { phoneNumber ->
         val contact = contacts.find { it.number == phoneNumber }
-            ?: Contact(id = "unknown", name = phoneNumber, number = phoneNumber)
+            ?: Contact(id = "unknown", name = ch.heuscher.simplephone.ui.utils.formatPhoneNumber(phoneNumber), number = phoneNumber)
         
         if (useHapticFeedback) {
             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -667,7 +698,9 @@ fun SimplePhoneApp(
                 composable(Screen.Dialer.route) {
                     DialerScreen(
                         onCallClick = handleCall,
-                        useHapticFeedback = useHapticFeedback
+                        useHapticFeedback = useHapticFeedback,
+                        initialNumber = pendingDialerNumber,
+                        onInitialNumberConsumed = { viewModel.consumePendingDialerNumber() }
                     )
                 }
                 composable(Screen.CallLog.route) {
@@ -739,7 +772,12 @@ fun SimplePhoneApp(
                         currentZoomFactor = currentZoomFactor,
                         onZoomChange = onZoomChange,
                         currentWidthSizeClass = widthSizeClass,
-                        onShowOnboarding = onShowOnboarding
+                        onShowOnboarding = onShowOnboarding,
+                        simplifiedContactCallScreen = simplifiedContactCallScreen,
+                        onSimplifiedContactCallScreenChange = {
+                            simplifiedContactCallScreen = it
+                            settingsRepository.simplifiedContactCallScreen = it
+                        }
                     )
                 }
                 composable(Screen.InCall.route) {

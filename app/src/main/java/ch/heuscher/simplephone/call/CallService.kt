@@ -573,9 +573,9 @@ class CallService : InCallService() {
         val handle = call.details.handle
         val number = handle?.schemeSpecificPart ?: "Unknown"
         val name = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            call.details.contactDisplayName ?: number
+            call.details.contactDisplayName ?: ch.heuscher.simplephone.ui.utils.formatPhoneNumber(number)
         } else {
-            number
+            ch.heuscher.simplephone.ui.utils.formatPhoneNumber(number)
         }
         
         // Try to get contact photo
@@ -683,7 +683,7 @@ class CallService : InCallService() {
         val notification = androidx.core.app.NotificationCompat.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.sym_call_outgoing)
             .setContentTitle("Ongoing Call")
-            .setContentText(callerName ?: callerNumber ?: "Unknown")
+            .setContentText(callerName ?: ch.heuscher.simplephone.ui.utils.formatPhoneNumber(callerNumber ?: "Unknown"))
             .setPriority(androidx.core.app.NotificationCompat.PRIORITY_LOW)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
@@ -721,7 +721,7 @@ class CallService : InCallService() {
         val notification = androidx.core.app.NotificationCompat.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.stat_notify_missed_call)
             .setContentTitle(context.getString(ch.heuscher.simplephone.R.string.notification_blocked_call_title))
-            .setContentText(context.getString(ch.heuscher.simplephone.R.string.notification_blocked_call_content, number))
+            .setContentText(context.getString(ch.heuscher.simplephone.R.string.notification_blocked_call_content, ch.heuscher.simplephone.ui.utils.formatPhoneNumber(number)))
             .setPriority(androidx.core.app.NotificationCompat.PRIORITY_LOW)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)

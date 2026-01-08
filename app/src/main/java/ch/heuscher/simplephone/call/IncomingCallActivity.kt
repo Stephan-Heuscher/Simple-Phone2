@@ -44,8 +44,10 @@ import ch.heuscher.simplephone.data.ContactRepository
 import ch.heuscher.simplephone.model.Contact
 import ch.heuscher.simplephone.ui.components.ContactAvatar
 import ch.heuscher.simplephone.ui.theme.GreenCall
+import ch.heuscher.simplephone.ui.theme.HighContrastBlue
 import ch.heuscher.simplephone.ui.theme.RedHangup
 import ch.heuscher.simplephone.ui.theme.SimplePhoneTheme
+import ch.heuscher.simplephone.data.SettingsRepository
 
 /**
  * Full-screen activity for incoming and active calls.
@@ -108,15 +110,20 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
         
         CallService.addCallStateListener(this)
         
+        // Read setting for simplified call screen
+        val settingsRepository = SettingsRepository(this)
+        val useSimplifiedScreen = settingsRepository.simplifiedContactCallScreen
+        
         setContent {
             SimplePhoneTheme(darkThemeOption = 2) { // Force Dark Mode for calls
                 CallScreen(
                     callerNumber = callerNumber,
-                    callerName = callerName ?: callerNumber ?: "Unknown",
+                    callerName = callerName ?: ch.heuscher.simplephone.ui.utils.formatPhoneNumber(callerNumber ?: ""),
                     contact = contact,
                     isIncoming = isIncoming && callState == Call.STATE_RINGING,
                     callState = callState,
                     audioState = audioState,
+                    useSimplifiedScreen = useSimplifiedScreen,
                     onAnswer = {
                         CallService.answerCall()
                         isIncoming = false
@@ -124,6 +131,9 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
                     onReject = {
                         CallService.rejectCall()
                         finish()
+                    },
+                    onSilence = {
+                        CallService.silenceRinger()
                     },
                     onHangup = {
                         CallService.endCall()
@@ -205,8 +215,10 @@ fun CallScreen(
     isIncoming: Boolean,
     callState: Int,
     audioState: CallAudioState?,
+    useSimplifiedScreen: Boolean = false,
     onAnswer: () -> Unit,
     onReject: () -> Unit,
+    onSilence: () -> Unit = {},
     onHangup: () -> Unit,
     onAudioRouteSelected: (Int) -> Unit,
     onDtmfClick: (Char) -> Unit = {}
@@ -310,7 +322,7 @@ fun CallScreen(
             if (!isKnownContact && callerNumber != null) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = callerNumber,
+                    text = ch.heuscher.simplephone.ui.utils.formatPhoneNumber(callerNumber),
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                     maxLines = 1,
@@ -377,32 +389,78 @@ fun CallScreen(
 
         // Bottom: Action buttons - larger and clearer
         if (isIncoming) {
-            // Incoming call: Reject and Answer buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                // Reject button
-                CallActionButton(
-                    icon = Icons.Filled.CallEnd,
-                    label = stringResource(R.string.reject),
-                    backgroundColor = RedHangup,
-                    onClick = {
-                        vibrate(context)
-                        onReject()
+            // Check if simplified UI should be used (for known contacts only)
+            val showSimplified = useSimplifiedScreen && isKnownContact
+            
+            if (showSimplified) {
+                // Simplified UI for contacts: Big Answer button + small Silence button
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // Big Answer button
+                    CallActionButton(
+                        icon = Icons.Filled.Call,
+                        label = stringResource(R.string.answer),
+                        backgroundColor = GreenCall,
+                        onClick = {
+                            vibrate(context)
+                            onAnswer()
+                        },
+                        size = 140.dp
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    // Smaller Silence button
+                    Button(
+                        onClick = {
+                            vibrate(context)
+                            onSilence()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = HighContrastBlue,
+                            contentColor = Color.White
+                        ),
+                        modifier = Modifier
+                            .height(56.dp)
+                            .fillMaxWidth(0.5f)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.silence),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
-                )
-                
-                // Answer button
-                CallActionButton(
-                    icon = Icons.Filled.Call,
-                    label = stringResource(R.string.answer),
-                    backgroundColor = GreenCall,
-                    onClick = {
-                        vibrate(context)
-                        onAnswer()
-                    }
-                )
+                }
+            } else {
+                // Standard UI: Reject and Answer buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    // Reject button
+                    CallActionButton(
+                        icon = Icons.Filled.CallEnd,
+                        label = stringResource(R.string.reject),
+                        backgroundColor = RedHangup,
+                        onClick = {
+                            vibrate(context)
+                            onReject()
+                        }
+                    )
+                    
+                    // Answer button
+                    CallActionButton(
+                        icon = Icons.Filled.Call,
+                        label = stringResource(R.string.answer),
+                        backgroundColor = GreenCall,
+                        onClick = {
+                            vibrate(context)
+                            onAnswer()
+                        }
+                    )
+                }
             }
         } else {
             // Active call: Keypad button and hangup button
@@ -451,15 +509,17 @@ fun CallActionButton(
     label: String,
     backgroundColor: Color,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    size: androidx.compose.ui.unit.Dp = 110.dp
 ) {
+    val iconSize = size * 0.5f // Icon is 50% of button size
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
     ) {
         Box(
             modifier = Modifier
-                .size(110.dp)
+                .size(size)
                 .clip(CircleShape)
                 .background(backgroundColor)
                 .clickable(onClick = onClick),
@@ -469,7 +529,7 @@ fun CallActionButton(
                 imageVector = icon,
                 contentDescription = label,
                 tint = Color.White,
-                modifier = Modifier.size(56.dp)
+                modifier = Modifier.size(iconSize)
             )
         }
         Spacer(modifier = Modifier.height(12.dp))

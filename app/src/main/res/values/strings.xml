@@ -173,4 +173,9 @@
     <string name="toast_open_contact_exception">Error opening contact app</string>
     <string name="permission_needed_title">Permission Needed</string>
     <string name="ok_button">OK</string>
+
+    <!-- Simplified Contact Call Screen -->
+    <string name="settings_simplified_contact_screen">Simplified Screen for Contacts</string>
+    <string name="settings_simplified_contact_screen_desc">Show a big green Answer button and a small Silence button only for contacts:</string>
+    <string name="silence">Silence</string>
 </resources>

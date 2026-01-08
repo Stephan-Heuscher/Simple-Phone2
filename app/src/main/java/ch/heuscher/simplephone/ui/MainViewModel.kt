@@ -36,6 +36,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // Permission state tracked in VM to avoid loading data before permitted
     private val _hasPermissions = MutableStateFlow(false)
 
+    private val _pendingDialerNumber = MutableStateFlow<String?>(null)
+    val pendingDialerNumber: StateFlow<String?> = _pendingDialerNumber.asStateFlow()
+
+    fun setPendingDialerNumber(number: String?) {
+        _pendingDialerNumber.value = number
+    }
+
+    fun consumePendingDialerNumber() {
+        _pendingDialerNumber.value = null
+    }
+
     private val contentObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
         override fun onChange(selfChange: Boolean) {
             loadData()

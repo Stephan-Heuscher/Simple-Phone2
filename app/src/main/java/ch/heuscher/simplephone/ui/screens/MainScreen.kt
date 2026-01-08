@@ -124,7 +124,7 @@ fun MainScreen(
             }.map { call ->
                 Contact(
                     id = call.id,
-                    name = call.contactId, // Show number as name for unknown contacts
+                    name = ch.heuscher.simplephone.ui.utils.formatPhoneNumber(call.contactId), // Show number as name for unknown contacts
                     number = call.contactId,
                     isFavorite = false
                 )
@@ -370,7 +370,7 @@ fun MainScreen(
                         }
                     } ?: Contact(
                             id = callEntry.id,
-                            name = callEntry.contactId, // Show number as name
+                            name = ch.heuscher.simplephone.ui.utils.formatPhoneNumber(callEntry.contactId), // Show number as name
                             number = callEntry.contactId
                         )
                     ContactRow(

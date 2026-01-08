@@ -23,6 +23,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,9 +49,18 @@ import ch.heuscher.simplephone.R
 @Composable
 fun DialerScreen(
     onCallClick: (String) -> Unit,
-    useHapticFeedback: Boolean = false
+    useHapticFeedback: Boolean = false,
+    initialNumber: String? = null,
+    onInitialNumberConsumed: () -> Unit = {}
 ) {
     var phoneNumber by remember { mutableStateOf("") }
+    
+    LaunchedEffect(initialNumber) {
+        if (!initialNumber.isNullOrEmpty()) {
+             phoneNumber = initialNumber
+             onInitialNumberConsumed()
+        }
+    }
     val context = LocalContext.current
 
     Column(

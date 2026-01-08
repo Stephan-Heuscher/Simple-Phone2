@@ -26,6 +26,7 @@ class SettingsRepository(context: Context) {
         private const val KEY_ANSWER_SPEAKER_TABLE = "answer_speaker_table"
         private const val KEY_DISPLAY_MODE = "display_mode"
         private const val KEY_LAST_BLOCKED_NUMBER = "last_blocked_number"
+        private const val KEY_SIMPLIFIED_CONTACT_CALL_SCREEN = "simplified_contact_call_screen"
         
         // Zoom factors per screen size
         private const val KEY_ZOOM_COMPACT = "zoom_compact"
@@ -89,6 +90,10 @@ class SettingsRepository(context: Context) {
     var displayMode: Int
         get() = prefs.getInt(KEY_DISPLAY_MODE, DISPLAY_MODE_STANDARD)
         set(value) = prefs.edit().putInt(KEY_DISPLAY_MODE, value).apply()
+
+    var simplifiedContactCallScreen: Boolean
+        get() = prefs.getBoolean(KEY_SIMPLIFIED_CONTACT_CALL_SCREEN, false)
+        set(value) = prefs.edit().putBoolean(KEY_SIMPLIFIED_CONTACT_CALL_SCREEN, value).apply()
 
     // Derived properties for backward compatibility / ease of use
     val useHugeText: Boolean
