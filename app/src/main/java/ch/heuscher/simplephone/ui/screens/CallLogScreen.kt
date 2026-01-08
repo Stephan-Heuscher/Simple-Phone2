@@ -166,30 +166,18 @@ fun CallLogItem(
             .padding(if (useHugeText) 12.dp else 8.dp), // Reduced padding for compact layout
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Icon with background for better visibility
-        // Size of the container - slightly adjusted for compactness
-        val iconContainerSize = if (useHugeText) 64.dp else 48.dp
-        // Size of the actual icon inside - much larger ratio
-        val iconSize = if (useHugeText) 56.dp else 40.dp
+        // Icon - same height as contact picture (64dp / 80dp)
+        val iconSize = if (useHugeText) 80.dp else 64.dp
         
-        Box(
-            modifier = Modifier
-                .size(iconContainerSize)
-                .background(
-                    color = typeColor.copy(alpha = 0.1f), // Additional subtle colored background for icon
-                    shape = androidx.compose.foundation.shape.CircleShape
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = typeColor,
-                modifier = Modifier.size(iconSize)
-            )
-        }
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = typeColor,
+            modifier = Modifier.size(iconSize)
+        )
         
-        Spacer(modifier = Modifier.width(if (useHugeText) 20.dp else 16.dp))
+        // Reduced spacing (half of previous 16dp/20dp)
+        Spacer(modifier = Modifier.width(if (useHugeText) 10.dp else 8.dp))
         
         // Avatar with favorite star for known contacts - same size as MainScreen
         val avatarSize = if (useHugeText) 80.dp else 64.dp
