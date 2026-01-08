@@ -90,7 +90,8 @@ platform :android do
     end
     upload_to_play_store(
       track: 'internal',
-      package_name: 'ch.heuscher.simplephone'
+      package_name: 'ch.heuscher.simplephone',
+      aab: File.join(root_dir, "app/build/outputs/bundle/release/app-release.aab")
       # json_key_data is picked up from SUPPLY_JSON_KEY_DATA environment variable
     )
 
