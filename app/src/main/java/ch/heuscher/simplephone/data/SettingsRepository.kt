@@ -33,7 +33,7 @@ class SettingsRepository(context: Context) {
         private const val KEY_ZOOM_MEDIUM = "zoom_medium"
         private const val KEY_ZOOM_EXPANDED = "zoom_expanded"
         
-        private const val DEFAULT_MISSED_CALLS_HOURS = 24
+        private const val DEFAULT_MISSED_CALLS_HOURS = 4
         
         // Dark Mode Options
         const val DARK_MODE_SYSTEM = 0

@@ -260,6 +260,33 @@ fun SettingsScreen(
             HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 24.dp))
         }
 
+        item {
+            Button(
+                onClick = {
+                    vibrate()
+                    onZoomChange(1.0f)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            ) {
+                 // Use a fixed text size for the reset button so it doesn't get huge when zoomed
+                val fixedTypography = MaterialTheme.typography.titleMedium.copy(
+                    fontSize = androidx.compose.ui.unit.TextUnit(16f, androidx.compose.ui.unit.TextUnitType.Sp)
+                )
+                
+                Text(
+                    text = stringResource(R.string.reset_zoom),
+                    style = fixedTypography,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
         // --- Default Dialer Section ---
         if (!isDefaultDialer) {
             item {

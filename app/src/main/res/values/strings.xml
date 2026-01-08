@@ -161,6 +161,7 @@
     <string name="zoom_value_format">%d%%</string>
     <string name="cd_decrease_zoom">Decrease zoom</string>
     <string name="cd_increase_zoom">Increase zoom</string>
+    <string name="reset_zoom">Reset Zoom</string>
 
     <!-- About & Legal -->
     <string name="about_legal">About &amp; Legal</string>

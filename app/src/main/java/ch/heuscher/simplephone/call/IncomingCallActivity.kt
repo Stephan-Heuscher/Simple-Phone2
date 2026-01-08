@@ -101,8 +101,7 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) 
             == PackageManager.PERMISSION_GRANTED) {
             val contactRepository = ContactRepository(this)
-            val contacts = contactRepository.getContacts()
-            contact = contacts.find { normalizeNumber(it.number) == normalizeNumber(callerNumber ?: "") }
+            contact = contactRepository.getContactByNumber(callerNumber)
             if (contact != null && callerName == null) {
                 callerName = contact?.name
             }
