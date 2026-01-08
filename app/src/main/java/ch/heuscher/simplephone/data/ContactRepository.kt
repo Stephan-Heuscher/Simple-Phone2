@@ -90,8 +90,7 @@ class ContactRepository(private val context: Context) {
         if (number.isNullOrEmpty()) return null
         
         val contentResolver: ContentResolver = context.contentResolver
-        // Normalize the search number just in case, though direct lookup is safer often
-        // Actually, we should query and filter.
+        val candidates = mutableListOf<Contact>()
         
         try {
             val cursor: Cursor? = contentResolver.query(
@@ -109,34 +108,38 @@ class ContactRepository(private val context: Context) {
             )
             
             cursor?.use {
-                if (it.moveToFirst()) {
-                    val idIndex = it.getColumnIndex(ContactsContract.PhoneLookup._ID)
-                    val nameIndex = it.getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME)
-                    val numberIndex = it.getColumnIndex(ContactsContract.PhoneLookup.NUMBER)
-                    val photoUriIndex = it.getColumnIndex(ContactsContract.PhoneLookup.PHOTO_URI)
-                    val starredIndex = it.getColumnIndex(ContactsContract.PhoneLookup.STARRED)
-                    
+                val idIndex = it.getColumnIndex(ContactsContract.PhoneLookup._ID)
+                val nameIndex = it.getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME)
+                val numberIndex = it.getColumnIndex(ContactsContract.PhoneLookup.NUMBER)
+                val photoUriIndex = it.getColumnIndex(ContactsContract.PhoneLookup.PHOTO_URI)
+                val starredIndex = it.getColumnIndex(ContactsContract.PhoneLookup.STARRED)
+                
+                while (it.moveToNext()) {
                     val id = it.getString(idIndex)
                     val name = it.getString(nameIndex)
                     val foundNumber = it.getString(numberIndex)
                     val photoUri = it.getString(photoUriIndex)
                     val isStarred = it.getInt(starredIndex) == 1
                     
-                    return Contact(
+                    candidates.add(Contact(
                         id = id,
                         name = name ?: "Unknown",
                         number = foundNumber,
                         isFavorite = isStarred,
                         imageUri = photoUri,
                         allNumbers = listOf(foundNumber)
-                        // isPrimary and isSuperPrimary not available in PhoneLookup easily, but less relevant for single lookup
-                    )
+                    ))
                 }
             }
         } catch (e: Exception) {
             android.util.Log.e("ContactRepository", "Error looking up contact by number", e)
         }
-        return null
+        
+        // Prioritize: 1. Favorites, 2. Has Picture, 3. Rest
+        return candidates.sortedWith(
+            compareByDescending<Contact> { it.isFavorite }
+                .thenByDescending { it.imageUri != null }
+        ).firstOrNull()
     }
 
     fun getCallLogs(): List<ch.heuscher.simplephone.model.CallLogEntry> {

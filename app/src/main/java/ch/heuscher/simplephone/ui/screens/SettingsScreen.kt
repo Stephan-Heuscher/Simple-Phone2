@@ -78,6 +78,7 @@ import androidx.compose.ui.zIndex
 import ch.heuscher.simplephone.model.Contact
 import ch.heuscher.simplephone.ui.components.ContactAvatar
 import ch.heuscher.simplephone.ui.components.pressClickEffect
+import ch.heuscher.simplephone.ui.theme.AlertRed
 import ch.heuscher.simplephone.ui.theme.GreenCall
 import ch.heuscher.simplephone.ui.theme.HighContrastBlue
 
@@ -237,12 +238,20 @@ fun SettingsScreen(
                     modifier = Modifier.weight(1f)
                 )
 
-                Text(
-                    text = stringResource(R.string.zoom_value_format, (currentZoomFactor * 100).toInt()),
-                    style = MaterialTheme.typography.displayMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
+                // Allow horizontal scroll for the percentage text when it gets too big
+                Box(
+                    modifier = Modifier
+                        .weight(2f)
+                        .horizontalScroll(rememberScrollState()),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.zoom_value_format, (currentZoomFactor * 100).toInt()),
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                }
 
                 BigIconButton(
                     icon = Icons.Filled.Add,
@@ -261,6 +270,18 @@ fun SettingsScreen(
         }
 
         item {
+            // Highlight the button when zoom is not at default (100%)
+            val isZoomNonDefault = currentZoomFactor != 1.0f
+            
+            // Get current density to reset it for the button text
+            val currentDensity = LocalDensity.current
+            val baseDensity = remember(currentDensity, currentZoomFactor) {
+                androidx.compose.ui.unit.Density(
+                    density = currentDensity.density / currentZoomFactor,
+                    fontScale = currentDensity.fontScale / currentZoomFactor
+                )
+            }
+            
             Button(
                 onClick = {
                     vibrate()
@@ -270,20 +291,18 @@ fun SettingsScreen(
                     .fillMaxWidth()
                     .padding(bottom = 24.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    containerColor = if (isZoomNonDefault) AlertRed else MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = if (isZoomNonDefault) Color.White else MaterialTheme.colorScheme.onSecondaryContainer
                 )
             ) {
-                 // Use a fixed text size for the reset button so it doesn't get huge when zoomed
-                val fixedTypography = MaterialTheme.typography.titleMedium.copy(
-                    fontSize = androidx.compose.ui.unit.TextUnit(16f, androidx.compose.ui.unit.TextUnitType.Sp)
-                )
-                
-                Text(
-                    text = stringResource(R.string.reset_zoom),
-                    style = fixedTypography,
-                    fontWeight = FontWeight.Bold
-                )
+                // Use CompositionLocalProvider to reset density so text stays constant size
+                androidx.compose.runtime.CompositionLocalProvider(LocalDensity provides baseDensity) {
+                    Text(
+                        text = stringResource(R.string.reset_zoom),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
 

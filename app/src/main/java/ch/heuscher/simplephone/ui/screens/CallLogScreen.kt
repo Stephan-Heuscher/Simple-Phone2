@@ -32,6 +32,7 @@ import ch.heuscher.simplephone.model.Contact
 import ch.heuscher.simplephone.ui.components.ContactAvatar
 import ch.heuscher.simplephone.ui.components.VerticalScrollbar
 import ch.heuscher.simplephone.ui.components.HorizontalScrollbar
+import ch.heuscher.simplephone.ui.theme.AvatarOrange
 import ch.heuscher.simplephone.ui.theme.GreenCall
 import ch.heuscher.simplephone.ui.theme.RedHangup
 import ch.heuscher.simplephone.ui.utils.vibrate
@@ -150,7 +151,7 @@ fun CallLogItem(
 
     val (icon, typeColor) = when (log.type) {
         CallType.MISSED -> Icons.AutoMirrored.Filled.CallMissed to RedHangup
-        CallType.INCOMING -> Icons.AutoMirrored.Filled.CallReceived to Color.Blue
+        CallType.INCOMING -> Icons.AutoMirrored.Filled.CallReceived to AvatarOrange
         CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to GreenCall
     }
     

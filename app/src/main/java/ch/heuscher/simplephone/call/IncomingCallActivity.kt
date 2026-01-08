@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.CallEnd
 import androidx.compose.material.icons.filled.Dialpad
 import androidx.compose.material.icons.filled.PhoneInTalk
 import androidx.compose.material.icons.filled.SpeakerPhone
+import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -433,32 +434,66 @@ fun CallScreen(
                     }
                 }
             } else {
-                // Standard UI: Reject and Answer buttons
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                // Standard UI: Reject and Answer buttons + Silence button
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Reject button
-                    CallActionButton(
-                        icon = Icons.Filled.CallEnd,
-                        label = stringResource(R.string.reject),
-                        backgroundColor = RedHangup,
-                        onClick = {
-                            vibrate(context)
-                            onReject()
-                        }
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        // Reject button
+                        CallActionButton(
+                            icon = Icons.Filled.CallEnd,
+                            label = stringResource(R.string.reject),
+                            backgroundColor = RedHangup,
+                            onClick = {
+                                vibrate(context)
+                                onReject()
+                            }
+                        )
+                        
+                        // Answer button
+                        CallActionButton(
+                            icon = Icons.Filled.Call,
+                            label = stringResource(R.string.answer),
+                            backgroundColor = GreenCall,
+                            onClick = {
+                                vibrate(context)
+                                onAnswer()
+                            }
+                        )
+                    }
                     
-                    // Answer button
-                    CallActionButton(
-                        icon = Icons.Filled.Call,
-                        label = stringResource(R.string.answer),
-                        backgroundColor = GreenCall,
+                    Spacer(modifier = Modifier.height(20.dp))
+                    
+                    // Silence button with icon
+                    Button(
                         onClick = {
                             vibrate(context)
-                            onAnswer()
-                        }
-                    )
+                            onSilence()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = HighContrastBlue,
+                            contentColor = Color.White
+                        ),
+                        modifier = Modifier
+                            .height(64.dp)
+                            .fillMaxWidth(0.6f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.VolumeOff,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.silence),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         } else {
