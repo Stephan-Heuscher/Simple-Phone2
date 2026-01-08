@@ -157,20 +157,20 @@ fun CallLogItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(typeColor.copy(alpha = 0.1f)) // Background for the whole entry
+            .background(typeColor.copy(alpha = 0.25f)) // More prominent background
             .pointerInput(Unit) {
                 detectTapGestures(
                     onDoubleTap = { onAddContact() }
                 )
             }
-            .padding(if (useHugeText) 20.dp else 16.dp),
+            .padding(if (useHugeText) 12.dp else 8.dp), // Reduced padding for compact layout
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Icon with background for better visibility
-        // Size of the container
-        val iconContainerSize = if (useHugeText) 56.dp else 48.dp
-        // Size of the actual icon inside - larger now
-        val iconSize = if (useHugeText) 40.dp else 32.dp
+        // Size of the container - slightly adjusted for compactness
+        val iconContainerSize = if (useHugeText) 64.dp else 48.dp
+        // Size of the actual icon inside - much larger ratio
+        val iconSize = if (useHugeText) 56.dp else 40.dp
         
         Box(
             modifier = Modifier
