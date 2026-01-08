@@ -147,10 +147,17 @@ fun CallLogItem(
     useHugeText: Boolean
 ) {
     val context = LocalContext.current
+
+    val (icon, typeColor) = when (log.type) {
+        CallType.MISSED -> Icons.Default.CallMissed to RedHangup
+        CallType.INCOMING -> Icons.Default.CallReceived to Color.Blue
+        CallType.OUTGOING -> Icons.Default.CallMade to GreenCall
+    }
     
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .background(typeColor.copy(alpha = 0.1f)) // Background for the whole entry
             .pointerInput(Unit) {
                 detectTapGestures(
                     onDoubleTap = { onAddContact() }
@@ -161,21 +168,15 @@ fun CallLogItem(
     ) {
         // Icon with background for better visibility
         // Size of the container
-        val iconContainerSize = if (useHugeText) 48.dp else 40.dp
-        // Size of the actual icon inside
-        val iconSize = if (useHugeText) 32.dp else 24.dp
-        
-        val (icon, typeColor) = when (log.type) {
-            CallType.MISSED -> Icons.Default.CallMissed to RedHangup
-            CallType.INCOMING -> Icons.Default.CallReceived to Color.Blue
-            CallType.OUTGOING -> Icons.Default.CallMade to GreenCall
-        }
+        val iconContainerSize = if (useHugeText) 56.dp else 48.dp
+        // Size of the actual icon inside - larger now
+        val iconSize = if (useHugeText) 40.dp else 32.dp
         
         Box(
             modifier = Modifier
                 .size(iconContainerSize)
                 .background(
-                    color = typeColor.copy(alpha = 0.15f), // Subtle colored background
+                    color = typeColor.copy(alpha = 0.1f), // Additional subtle colored background for icon
                     shape = androidx.compose.foundation.shape.CircleShape
                 ),
             contentAlignment = Alignment.Center
@@ -183,7 +184,7 @@ fun CallLogItem(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = typeColor, // Keep the colored icon but on a subtle background
+                tint = typeColor,
                 modifier = Modifier.size(iconSize)
             )
         }
