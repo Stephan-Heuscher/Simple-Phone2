@@ -107,7 +107,7 @@ fun MainScreen(
             // Get contacts matching search
             val matchingContacts = allContacts.filter { contact ->
                 contact.name.contains(searchQuery, ignoreCase = true) ||
-                contact.number.contains(searchQuery)
+                contact.allNumbers.any { it.contains(searchQuery) }
             }
             
             // Get missed calls matching search (that are not already in contacts)
@@ -116,8 +116,10 @@ fun MainScreen(
                 val numberMatches = call.contactId.contains(searchQuery)
                 
                 // Check if this number is already in our contacts list (to avoid duplicates)
-                val isKnownContact = allContacts.any { 
-                    it.number.replace(Regex("[^0-9]"), "") == call.contactId.replace(Regex("[^0-9]"), "") 
+                val isKnownContact = allContacts.any { contact ->
+                    contact.allNumbers.any { number ->
+                        number.replace(Regex("[^0-9]"), "") == call.contactId.replace(Regex("[^0-9]"), "")
+                    }
                 }
                 
                 numberMatches && !isKnownContact
@@ -360,13 +362,15 @@ fun MainScreen(
                     // Normalize numbers for comparison (remove spaces, dashes, etc.)
                     val normalizedCallNumber = callEntry.contactId.replace(Regex("[^0-9+]"), "")
                     
-                    val contact = allContacts.find { 
-                        val normalizedContactNumber = it.number.replace(Regex("[^0-9+]"), "")
-                        // Check if one ends with the other (to handle country codes roughly)
-                        if (normalizedCallNumber.length > 6 && normalizedContactNumber.length > 6) {
-                            normalizedCallNumber.endsWith(normalizedContactNumber) || normalizedContactNumber.endsWith(normalizedCallNumber)
-                        } else {
-                            normalizedCallNumber == normalizedContactNumber
+                    val contact = allContacts.find { contact ->
+                        contact.allNumbers.any { number ->
+                            val normalizedContactNumber = number.replace(Regex("[^0-9+]"), "")
+                            // Check if one ends with the other (to handle country codes roughly)
+                            if (normalizedCallNumber.length > 6 && normalizedContactNumber.length > 6) {
+                                normalizedCallNumber.endsWith(normalizedContactNumber) || normalizedContactNumber.endsWith(normalizedCallNumber)
+                            } else {
+                                normalizedCallNumber == normalizedContactNumber
+                            }
                         }
                     } ?: Contact(
                             id = callEntry.id,

@@ -95,8 +95,10 @@ fun CallLogScreen(
                 items(callLogs) { log ->
                     // Find contact
                     // Find contact
-                    val foundContact = contacts.find { 
-                        PhoneNumberUtils.compare(context, it.number, log.contactId)
+                    val foundContact = contacts.find { contact ->
+                        contact.allNumbers.any { number ->
+                            PhoneNumberUtils.compare(context, number, log.contactId)
+                        } 
                     }
                     
                     // Check if this is a known contact or unknown number

@@ -4,7 +4,7 @@
 
     <uses-feature
         android:name="android.hardware.telephony"
-        android:required="false" />
+        android:required="true" />
 
     <!-- Phone permissions -->
     <uses-permission android:name="android.permission.CALL_PHONE" />

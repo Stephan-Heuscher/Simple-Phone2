@@ -275,17 +275,9 @@ class CallService : InCallService() {
              }
              
              val contactRepository = ContactRepository(this)
-             val contacts = contactRepository.getContacts()
-             val isKnown = contacts.any { 
-                 val normalizedContact = it.number.replace(Regex("[^0-9+]"), "")
-                 if (number.length > 6 && normalizedContact.length > 6) {
-                    number.endsWith(normalizedContact) || normalizedContact.endsWith(number)
-                 } else {
-                    number == normalizedContact
-                 }
-             }
+             val contact = contactRepository.getContactByNumber(number)
              
-             if (!isKnown) {
+             if (contact == null) {
                  Log.d(TAG, "Blocking call from unknown number: $callerNumber")
                  return false // Will be rejected
              }
@@ -441,16 +433,8 @@ class CallService : InCallService() {
                      isBlocked = true
                  } else {
                      val contactRepository = ContactRepository(this)
-                     val contacts = contactRepository.getContacts()
-                     val isKnown = contacts.any { 
-                        val normalizedContact = it.number.replace(Regex("[^0-9+]"), "")
-                         if (number.length > 6 && normalizedContact.length > 6) {
-                            number.endsWith(normalizedContact) || normalizedContact.endsWith(number)
-                         } else {
-                            number == normalizedContact
-                         }
-                     }
-                     if (!isKnown) isBlocked = true
+                     val contact = contactRepository.getContactByNumber(number)
+                     if (contact == null) isBlocked = true
                  }
              }
              
@@ -580,16 +564,7 @@ class CallService : InCallService() {
         
         // Try to get contact photo
         val contactRepository = ContactRepository(context)
-        val contacts = contactRepository.getContacts()
-        val normalizedNumber = number.replace(Regex("[^0-9+]"), "")
-        val contact = contacts.find { 
-            val normalizedContactNumber = it.number.replace(Regex("[^0-9+]"), "")
-            if (normalizedNumber.length > 6 && normalizedContactNumber.length > 6) {
-                normalizedNumber.endsWith(normalizedContactNumber) || normalizedContactNumber.endsWith(normalizedNumber)
-            } else {
-                normalizedNumber == normalizedContactNumber
-            }
-        }
+        val contact = contactRepository.getContactByNumber(number)
         
         // Load contact photo bitmap
         var contactBitmap: Bitmap? = null

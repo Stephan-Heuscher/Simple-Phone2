@@ -11,7 +11,8 @@ data class Contact(
     val imageUri: String? = null, // Contact photo URI if available
     val sortOrder: Int = 0, // For custom favorites ordering
     val isPrimary: Boolean = false, // IS_PRIMARY flag from contacts
-    val isSuperPrimary: Boolean = false // IS_SUPER_PRIMARY flag from contacts (default number)
+    val isSuperPrimary: Boolean = false, // IS_SUPER_PRIMARY flag from contacts (default number)
+    val allNumbers: List<String> = listOf(number) // All phone numbers associated with this contact
 )
 
 data class CallLogEntry(

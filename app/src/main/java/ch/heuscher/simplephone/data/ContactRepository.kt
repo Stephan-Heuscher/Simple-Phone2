@@ -73,9 +73,14 @@ class ContactRepository(private val context: Context) {
         // Remove duplicates: for contacts with multiple numbers, prefer super_primary > primary > first
         val groupedById = contacts.groupBy { it.id }
         val deduplicatedContacts = groupedById.map { (_, contactList) ->
-            contactList.find { it.isSuperPrimary }
+            val primaryContact = contactList.find { it.isSuperPrimary }
                 ?: contactList.find { it.isPrimary }
                 ?: contactList.first()
+            
+            // Collect all unique numbers for this contact
+            val allNumbers = contactList.map { it.number }.distinct()
+            
+            primaryContact.copy(allNumbers = allNumbers)
         }
         
         return deduplicatedContacts
@@ -122,7 +127,8 @@ class ContactRepository(private val context: Context) {
                         name = name ?: "Unknown",
                         number = foundNumber,
                         isFavorite = isStarred,
-                        imageUri = photoUri
+                        imageUri = photoUri,
+                        allNumbers = listOf(foundNumber)
                         // isPrimary and isSuperPrimary not available in PhoneLookup easily, but less relevant for single lookup
                     )
                 }
