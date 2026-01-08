@@ -159,20 +159,34 @@ fun CallLogItem(
             .padding(if (useHugeText) 20.dp else 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Icon based on type - larger when useHugeText
-        val iconSize = if (useHugeText) 36.dp else 24.dp
-        val (icon, tint) = when (log.type) {
+        // Icon with background for better visibility
+        // Size of the container
+        val iconContainerSize = if (useHugeText) 48.dp else 40.dp
+        // Size of the actual icon inside
+        val iconSize = if (useHugeText) 32.dp else 24.dp
+        
+        val (icon, typeColor) = when (log.type) {
             CallType.MISSED -> Icons.Default.CallMissed to RedHangup
             CallType.INCOMING -> Icons.Default.CallReceived to Color.Blue
             CallType.OUTGOING -> Icons.Default.CallMade to GreenCall
         }
         
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = tint,
-            modifier = Modifier.size(iconSize)
-        )
+        Box(
+            modifier = Modifier
+                .size(iconContainerSize)
+                .background(
+                    color = typeColor.copy(alpha = 0.15f), // Subtle colored background
+                    shape = androidx.compose.foundation.shape.CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = typeColor, // Keep the colored icon but on a subtle background
+                modifier = Modifier.size(iconSize)
+            )
+        }
         
         Spacer(modifier = Modifier.width(if (useHugeText) 20.dp else 16.dp))
         
