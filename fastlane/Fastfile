@@ -76,7 +76,11 @@ platform :android do
       puts "-----------------------------------------------------------------------"
     end
 
-    gradle(task: "bundle", build_type: "Release")
+    # Use direct shell command to avoid Fastlane gradle action crash with JVM provisioning output
+    root_dir = File.expand_path("..", File.dirname(__FILE__))
+    gradlew_path = File.join(root_dir, "gradlew")
+    sh "chmod +x #{gradlew_path}" # Ensure executable just in case
+    sh "#{gradlew_path} bundleRelease"
     upload_to_play_store(
       track: 'internal',
       package_name: 'ch.heuscher.simplephone'
