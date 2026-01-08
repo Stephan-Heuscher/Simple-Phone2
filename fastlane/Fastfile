@@ -80,7 +80,11 @@ platform :android do
     root_dir = File.expand_path("..", File.dirname(__FILE__))
     gradlew_path = File.join(root_dir, "gradlew")
     sh "chmod +x #{gradlew_path}" # Ensure executable just in case
-    sh "#{gradlew_path} bundleRelease"
+    cmd = "#{gradlew_path} bundleRelease --stacktrace --no-configuration-cache"
+    puts "Executing raw command: #{cmd}"
+    unless system(cmd)
+      raise "Gradle build failed! Exit status: #{$?.exitstatus}"
+    end
     upload_to_play_store(
       track: 'internal',
       package_name: 'ch.heuscher.simplephone'
