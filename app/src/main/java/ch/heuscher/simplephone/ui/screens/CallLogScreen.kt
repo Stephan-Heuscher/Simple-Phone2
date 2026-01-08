@@ -176,8 +176,8 @@ fun CallLogItem(
             modifier = Modifier.size(iconSize)
         )
         
-        // Reduced spacing (half of previous 16dp/20dp)
-        Spacer(modifier = Modifier.width(if (useHugeText) 10.dp else 8.dp))
+        // Further reduced spacing (half of previous 8dp/10dp)
+        Spacer(modifier = Modifier.width(if (useHugeText) 5.dp else 4.dp))
         
         // Avatar with favorite star for known contacts - same size as MainScreen
         val avatarSize = if (useHugeText) 80.dp else 64.dp
