@@ -124,7 +124,7 @@
 
     <!-- MainActivity & Dialogs -->
     <string name="calling_announcement">Rufe %s an</string>
-    <string name="toast_already_default">Bereits Standard-Dialer oder nicht verfügbar</string>
+
     <string name="toast_default_dialer_set">App ist jetzt Standard-Dialer!</string>
     <string name="toast_default_dialer_declined">Anfrage abgelehnt.</string>
     <string name="demo_mode_enabled">Demo-Modus aktiviert</string>

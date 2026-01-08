@@ -10,10 +10,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CallMade
-import androidx.compose.material.icons.filled.CallMissed
-import androidx.compose.material.icons.filled.CallReceived
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.CallMade
+import androidx.compose.material.icons.automirrored.filled.CallMissed
+import androidx.compose.material.icons.automirrored.filled.CallReceived
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -76,7 +76,7 @@ fun CallLogScreen(
                         onBackClick() 
                     }) {
                         Icon(
-                            Icons.Default.ArrowBack, 
+                            Icons.AutoMirrored.Filled.ArrowBack, 
                             contentDescription = stringResource(R.string.back),
                             modifier = Modifier.size(if (useHugeText) 32.dp else 24.dp)
                         )
@@ -149,9 +149,9 @@ fun CallLogItem(
     val context = LocalContext.current
 
     val (icon, typeColor) = when (log.type) {
-        CallType.MISSED -> Icons.Default.CallMissed to RedHangup
-        CallType.INCOMING -> Icons.Default.CallReceived to Color.Blue
-        CallType.OUTGOING -> Icons.Default.CallMade to GreenCall
+        CallType.MISSED -> Icons.AutoMirrored.Filled.CallMissed to RedHangup
+        CallType.INCOMING -> Icons.AutoMirrored.Filled.CallReceived to Color.Blue
+        CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to GreenCall
     }
     
     Row(
