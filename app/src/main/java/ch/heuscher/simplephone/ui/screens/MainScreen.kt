@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.PhoneMissed
 import androidx.compose.material.icons.filled.Dialpad
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -72,6 +73,7 @@ import ch.heuscher.simplephone.ui.components.VerticalScrollbar
 import ch.heuscher.simplephone.ui.components.HorizontalScrollbar
 import ch.heuscher.simplephone.ui.theme.GreenCall
 import ch.heuscher.simplephone.ui.theme.LightGreenBackground
+import ch.heuscher.simplephone.ui.theme.LightBlueBackground
 import ch.heuscher.simplephone.ui.utils.vibrate
 
 @Composable
@@ -315,9 +317,9 @@ fun MainScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(LightGreenBackground) // Apply background to header row
+                        // Normal background used
                         .clickable { onCallLogClick() }
-                        .padding(horizontal = 16.dp, vertical = 16.dp), // Increased padding for better look with bg
+                        .padding(horizontal = 16.dp, vertical = 16.dp), // Increased padding left for spacing
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -369,17 +371,16 @@ fun MainScreen(
                             name = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(callEntry.contactId), // Show number as name
                             number = callEntry.contactId
                         )
-                    // Wrap ContactRow in background
-                    Box(modifier = Modifier.background(LightGreenBackground)) {
-                        ContactRow(
+                    // Wrap MissedCallRow in background (Removed for normal look)
+                    Box(modifier = Modifier) {
+                        MissedCallRow(
                             contact = contact,
+                            timestamp = callEntry.timestamp,
                             onCallClick = { 
                                 if (useHapticFeedback) vibrate(context)
                                 onCallClick(contact.number) 
                             },
-                            onOpenContact = { onOpenContact(contact.id) },
-                            showFavoriteStar = false,
-                            useHugeText = useHugeText
+                            onOpenContact = { onOpenContact(contact.id) }
                         )
                     }
                     HorizontalDivider()
@@ -787,4 +788,125 @@ fun GridContactItem(
             overflow = TextOverflow.Ellipsis
         )
     }
+}
+
+/**
+ * A dedicated row for missed calls to improve readability for users with eye problems.
+ * Features:
+ * - Distinct red missed call icon
+ * - Larger bold text for the name
+ * - Relative timestamp (e.g. "10 min ago")
+ * - Large green call button
+ */
+@Composable
+fun MissedCallRow(
+    contact: Contact,
+    timestamp: java.time.LocalDateTime,
+    onCallClick: () -> Unit,
+    onOpenContact: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val timeString = remember(timestamp) {
+        getRelativeTimeDisplay(context, timestamp)
+    }
+    
+    val cdMissedCall = stringResource(R.string.missed_calls) + " " + contact.name + ", " + timeString
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onDoubleTap = { onOpenContact() },
+                    onTap = { /* Row click logic if any */ }
+                )
+            }
+            .semantics {
+                contentDescription = cdMissedCall
+            }
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        // Content Row: Texts (Left)
+        // We allow this row to extend up to where the button's center would be.
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(end = 32.dp) // Extend to center of button area
+                .align(Alignment.CenterStart)
+        ) {
+            // Missed Call Icon (Gray and clear)
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(Color.White), // White background on gray row
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.PhoneMissed,
+                    contentDescription = null,
+                    tint = Color.Gray, // Gray tint to reduce pressure
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                // Name - Larger and Bolder with Horizontal Scroll
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    val scrollState = androidx.compose.foundation.rememberScrollState()
+                    Column {
+                        Text(
+                            text = contact.name,
+                            style = MaterialTheme.typography.headlineMedium, // Significantly larger
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(scrollState)
+                        )
+                        HorizontalScrollbar(
+                            scrollState = scrollState,
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+                    }
+                }
+                
+                // Time - Relative
+                Text(
+                    text = timeString,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+
+        // Call Button (Right) - Placed on top
+        GreenCallIcon(
+            onClick = onCallClick,
+            contentDescription = stringResource(R.string.cd_call_contact, contact.name),
+            size = 64, // Slightly larger for better accessibility
+            modifier = Modifier.align(Alignment.CenterEnd)
+        )
+    }
+}
+
+// Helper to format relative time
+fun getRelativeTimeDisplay(context: android.content.Context, timestamp: java.time.LocalDateTime): String {
+    val now = java.time.LocalDateTime.now()
+    val time = timestamp.atZone(java.time.ZoneId.systemDefault()).toEpochSecond() * 1000
+    val nowMillis = now.atZone(java.time.ZoneId.systemDefault()).toEpochSecond() * 1000
+    
+    return android.text.format.DateUtils.getRelativeTimeSpanString(
+        time,
+        nowMillis,
+        android.text.format.DateUtils.MINUTE_IN_MILLIS,
+        android.text.format.DateUtils.FORMAT_ABBREV_RELATIVE
+    ).toString()
 }

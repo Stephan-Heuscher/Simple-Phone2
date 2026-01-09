@@ -34,3 +34,5 @@ val AvatarOrange = Color(0xFFE65100)
 // Audio output button colors
 val SpeakerActive = Color(0xFF4CAF50)
 val SpeakerInactive = Color(0xFF757575)
+val LightGrayBackground = Color(0xFFEEEEEE) // Grey 200 for neutral/low-pressure backgrounds
+val LightBlueBackground = Color(0xFFE1F5FE) // Light Blue 50 for calm status
