@@ -174,7 +174,7 @@
     <string name="how_to_use">Anleitung / Tutorial</string>
 
     <!-- Simplified Contact Call Screen -->
-    <string name="settings_simplified_contact_screen">Vereinfachter Bildschirm für Kontakte</string>
-    <string name="settings_simplified_contact_screen_desc">Große grüne Annehmen-Taste und kleine Stummschalten-Taste nur für Kontakte anzeigen:</string>
+    <string name="settings_simplified_contact_screen">Einfacher Anrufbildschirm</string>
+    <string name="settings_simplified_contact_screen_desc">Große Annehmen-Taste für bekannte Kontakte:</string>
     <string name="silence">Stumm</string>
 </resources>

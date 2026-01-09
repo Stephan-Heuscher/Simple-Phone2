@@ -422,6 +422,10 @@ class MainActivity : ComponentActivity() {
         if (requestCode == REQUEST_CODE_SET_DEFAULT_DIALER) {
             if (resultCode == android.app.Activity.RESULT_OK) {
                 android.widget.Toast.makeText(this, getString(R.string.toast_default_dialer_set), android.widget.Toast.LENGTH_SHORT).show()
+                // Force permission check update which triggers data reload
+                val viewModel = ViewModelProvider(this)[MainViewModel::class.java]
+                val hasContactsPerm = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
+                viewModel.updatePermissionsState(hasContactsPerm)
             } else {
                 android.widget.Toast.makeText(this, getString(R.string.toast_default_dialer_declined), android.widget.Toast.LENGTH_SHORT).show()
             }

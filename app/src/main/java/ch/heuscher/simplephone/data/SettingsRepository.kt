@@ -92,7 +92,7 @@ class SettingsRepository(context: Context) {
         set(value) = prefs.edit().putInt(KEY_DISPLAY_MODE, value).apply()
 
     var simplifiedContactCallScreen: Boolean
-        get() = prefs.getBoolean(KEY_SIMPLIFIED_CONTACT_CALL_SCREEN, false)
+        get() = prefs.getBoolean(KEY_SIMPLIFIED_CONTACT_CALL_SCREEN, true)
         set(value) = prefs.edit().putBoolean(KEY_SIMPLIFIED_CONTACT_CALL_SCREEN, value).apply()
 
     // Derived properties for backward compatibility / ease of use
