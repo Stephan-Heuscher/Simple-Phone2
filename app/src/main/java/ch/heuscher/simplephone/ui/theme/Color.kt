@@ -27,6 +27,8 @@ val AvatarBlue = Color(0xFF1565C0) // Avatar background
 val AvatarTeal = Color(0xFF00838F)
 val AvatarPurple = Color(0xFF6A1B9A)
 val AvatarGreen = Color(0xFF2E7D32)
+val RequestGreen = Color(0xFFE8F5E9) // Very light green for requested background
+val LightGreenBackground = Color(0xFFDCEDC8) // Standard Light Green 100
 val AvatarOrange = Color(0xFFE65100)
 
 // Audio output button colors

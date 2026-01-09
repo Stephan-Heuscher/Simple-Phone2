@@ -71,6 +71,7 @@ import ch.heuscher.simplephone.ui.components.ContactAvatar
 import ch.heuscher.simplephone.ui.components.VerticalScrollbar
 import ch.heuscher.simplephone.ui.components.HorizontalScrollbar
 import ch.heuscher.simplephone.ui.theme.GreenCall
+import ch.heuscher.simplephone.ui.theme.LightGreenBackground
 import ch.heuscher.simplephone.ui.utils.vibrate
 
 @Composable
@@ -314,9 +315,9 @@ fun MainScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 24.dp, bottom = 8.dp)
+                        .background(LightGreenBackground) // Apply background to header row
                         .clickable { onCallLogClick() }
-                        .padding(horizontal = 16.dp), // Add padding here for touch target, but text has padding? No, SectionHeader has padding.
+                        .padding(horizontal = 16.dp, vertical = 16.dp), // Increased padding for better look with bg
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -341,7 +342,7 @@ fun MainScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(GreenCall.copy(alpha = 0.3f))
+                            .background(LightGreenBackground) // Use consistent light green
                             .padding(24.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -377,16 +378,19 @@ fun MainScreen(
                             name = ch.heuscher.simplephone.ui.utils.formatPhoneNumber(callEntry.contactId), // Show number as name
                             number = callEntry.contactId
                         )
-                    ContactRow(
-                        contact = contact,
-                        onCallClick = { 
-                            if (useHapticFeedback) vibrate(context)
-                            onCallClick(contact.number) 
-                        },
-                        onOpenContact = { onOpenContact(contact.id) },
-                        showFavoriteStar = false,
-                        useHugeText = useHugeText
-                    )
+                    // Wrap ContactRow in background
+                    Box(modifier = Modifier.background(LightGreenBackground)) {
+                        ContactRow(
+                            contact = contact,
+                            onCallClick = { 
+                                if (useHapticFeedback) vibrate(context)
+                                onCallClick(contact.number) 
+                            },
+                            onOpenContact = { onOpenContact(contact.id) },
+                            showFavoriteStar = false,
+                            useHugeText = useHugeText
+                        )
+                    }
                     HorizontalDivider()
                 }
             }
