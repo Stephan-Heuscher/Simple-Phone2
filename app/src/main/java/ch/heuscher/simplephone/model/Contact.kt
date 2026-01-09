@@ -23,6 +23,7 @@ data class Contact(
          */
         val PRIORITY_COMPARATOR = compareByDescending<Contact> { it.isFavorite }
             .thenByDescending { it.imageUri != null }
+            .thenBy { it.sortOrder }
     }
 }
 

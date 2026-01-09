@@ -6,6 +6,7 @@ import android.content.Context
 import android.database.Cursor
 import android.provider.ContactsContract
 import ch.heuscher.simplephone.model.Contact
+import ch.heuscher.simplephone.data.SettingsRepository
 
 class ContactRepository(private val context: Context) {
 
@@ -135,11 +136,17 @@ class ContactRepository(private val context: Context) {
             android.util.Log.e("ContactRepository", "Error looking up contact by number", e)
         }
         
-        // Prioritize: 1. Favorites, 2. Has Picture, 3. Rest
-        return candidates.sortedWith(
-            compareByDescending<Contact> { it.isFavorite }
-                .thenByDescending { it.imageUri != null }
-        ).firstOrNull()
+        // Populate sort order from settings
+        val settingsRepository = SettingsRepository(context)
+        val savedOrder = settingsRepository.getFavoritesOrder()
+        
+        val candidatesWithOrder = candidates.map { contact ->
+            val savedIndex = savedOrder.indexOf(contact.id)
+            if (savedIndex >= 0) contact.copy(sortOrder = savedIndex) else contact.copy(sortOrder = Int.MAX_VALUE)
+        }
+
+        // Prioritize: 1. Favorites, 2. Has Picture, 3. Sort Order (Index in Favorites)
+        return candidatesWithOrder.sortedWith(Contact.PRIORITY_COMPARATOR).firstOrNull()
     }
 
     fun getCallLogs(): List<ch.heuscher.simplephone.model.CallLogEntry> {
