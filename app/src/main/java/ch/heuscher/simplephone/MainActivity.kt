@@ -582,7 +582,7 @@ fun SimplePhoneApp(
     // Function to handle call initiation (with optional confirmation)
     val handleCall: (String) -> Unit = { phoneNumber ->
         val contact = contacts.find { it.number == phoneNumber }
-            ?: Contact(id = "unknown", name = ch.heuscher.simplephone.ui.utils.formatPhoneNumber(phoneNumber), number = phoneNumber)
+            ?: Contact(id = "unknown", name = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(phoneNumber), number = phoneNumber)
         
         if (useHapticFeedback) {
             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)

@@ -118,7 +118,7 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
             SimplePhoneTheme(darkThemeOption = 2) { // Force Dark Mode for calls
                 CallScreen(
                     callerNumber = callerNumber,
-                    callerName = callerName ?: ch.heuscher.simplephone.ui.utils.formatPhoneNumber(callerNumber ?: ""),
+                    callerName = callerName ?: ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(callerNumber ?: ""),
                     contact = contact,
                     isIncoming = isIncoming && callState == Call.STATE_RINGING,
                     callState = callState,
@@ -322,7 +322,7 @@ fun CallScreen(
             if (!isKnownContact && callerNumber != null) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = ch.heuscher.simplephone.ui.utils.formatPhoneNumber(callerNumber),
+                    text = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(callerNumber),
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                     maxLines = 1,

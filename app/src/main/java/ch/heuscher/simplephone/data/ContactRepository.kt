@@ -209,7 +209,7 @@ class ContactRepository(private val context: Context) {
         val filteredMissedCalls = recentMissedCalls.filter { missedCall ->
             val hasSubsequentConversation = allCalls.any { otherCall ->
                 // Check if it's the same number
-                val sameNumber = normalizeNumber(otherCall.contactId) == normalizeNumber(missedCall.contactId)
+                val sameNumber = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.areNumbersSame(otherCall.contactId, missedCall.contactId, context)
                 // Check if it's after the missed call
                 val isAfter = otherCall.timestamp.isAfter(missedCall.timestamp)
                 // Check if it's a conversation (Incoming or Outgoing) and > 20 seconds
@@ -225,11 +225,7 @@ class ContactRepository(private val context: Context) {
         // 3. Deduplicate by number (keep the most recent one)
         return filteredMissedCalls
             .sortedByDescending { it.timestamp }
-            .distinctBy { normalizeNumber(it.contactId) }
-    }
-
-    private fun normalizeNumber(number: String): String {
-        return number.replace(Regex("[^0-9]"), "")
+            .distinctBy { ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.normalize(it.contactId) }
     }
 }
 

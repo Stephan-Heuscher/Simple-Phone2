@@ -79,7 +79,7 @@ fun DialerScreen(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = PhoneNumberUtils.formatNumber(phoneNumber, Locale.getDefault().country) ?: phoneNumber,
+                text = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(phoneNumber),
                 style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold),
                 textAlign = TextAlign.Center,
                 maxLines = 1,

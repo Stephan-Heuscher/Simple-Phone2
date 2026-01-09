@@ -557,9 +557,9 @@ class CallService : InCallService() {
         val handle = call.details.handle
         val number = handle?.schemeSpecificPart ?: "Unknown"
         val name = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            call.details.contactDisplayName ?: ch.heuscher.simplephone.ui.utils.formatPhoneNumber(number)
+            call.details.contactDisplayName ?: ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(number)
         } else {
-            ch.heuscher.simplephone.ui.utils.formatPhoneNumber(number)
+            ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(number)
         }
         
         // Try to get contact photo
@@ -658,7 +658,7 @@ class CallService : InCallService() {
         val notification = androidx.core.app.NotificationCompat.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.sym_call_outgoing)
             .setContentTitle("Ongoing Call")
-            .setContentText(callerName ?: ch.heuscher.simplephone.ui.utils.formatPhoneNumber(callerNumber ?: "Unknown"))
+            .setContentText(callerName ?: ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(callerNumber ?: "Unknown"))
             .setPriority(androidx.core.app.NotificationCompat.PRIORITY_LOW)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
@@ -696,7 +696,7 @@ class CallService : InCallService() {
         val notification = androidx.core.app.NotificationCompat.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.stat_notify_missed_call)
             .setContentTitle(context.getString(ch.heuscher.simplephone.R.string.notification_blocked_call_title))
-            .setContentText(context.getString(ch.heuscher.simplephone.R.string.notification_blocked_call_content, ch.heuscher.simplephone.ui.utils.formatPhoneNumber(number)))
+            .setContentText(context.getString(ch.heuscher.simplephone.R.string.notification_blocked_call_content, ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(number)))
             .setPriority(androidx.core.app.NotificationCompat.PRIORITY_LOW)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)

@@ -127,7 +127,7 @@ fun MainScreen(
             }.map { call ->
                 Contact(
                     id = call.id,
-                    name = ch.heuscher.simplephone.ui.utils.formatPhoneNumber(call.contactId), // Show number as name for unknown contacts
+                    name = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(call.contactId), // Show number as name for unknown contacts
                     number = call.contactId,
                     isFavorite = false
                 )
@@ -360,22 +360,13 @@ fun MainScreen(
             } else {
                 items(missedCalls, key = { "missed_${it.id}" }) { callEntry ->
                     // Try to find contact by number
-                    // Normalize numbers for comparison (remove spaces, dashes, etc.)
-                    val normalizedCallNumber = callEntry.contactId.replace(Regex("[^0-9+]"), "")
-                    
-                    val contact = allContacts.find { contact ->
+                    val contact = allContacts.filter { contact ->
                         contact.allNumbers.any { number ->
-                            val normalizedContactNumber = number.replace(Regex("[^0-9+]"), "")
-                            // Check if one ends with the other (to handle country codes roughly)
-                            if (normalizedCallNumber.length > 6 && normalizedContactNumber.length > 6) {
-                                normalizedCallNumber.endsWith(normalizedContactNumber) || normalizedContactNumber.endsWith(normalizedCallNumber)
-                            } else {
-                                normalizedCallNumber == normalizedContactNumber
-                            }
+                             ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.areNumbersSame(number, callEntry.contactId, context)
                         }
-                    } ?: Contact(
+                    }.sortedWith(Contact.PRIORITY_COMPARATOR).firstOrNull() ?: Contact(
                             id = callEntry.id,
-                            name = ch.heuscher.simplephone.ui.utils.formatPhoneNumber(callEntry.contactId), // Show number as name
+                            name = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(callEntry.contactId), // Show number as name
                             number = callEntry.contactId
                         )
                     // Wrap ContactRow in background

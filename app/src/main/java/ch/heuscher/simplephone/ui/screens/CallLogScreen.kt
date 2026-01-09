@@ -98,17 +98,17 @@ fun CallLogScreen(
                 items(callLogs) { log ->
                     // Find contact
                     // Find contact
-                    val foundContact = contacts.find { contact ->
+                    val foundContact = contacts.filter { contact ->
                         contact.allNumbers.any { number ->
-                            PhoneNumberUtils.compare(context, number, log.contactId)
+                            ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.areNumbersSame(number, log.contactId, context)
                         } 
-                    }
+                    }.sortedWith(Contact.PRIORITY_COMPARATOR).firstOrNull()
                     
                     // Check if this is a known contact or unknown number
                     val isKnownContact = foundContact != null
                     val contact = foundContact ?: Contact(
                         id = log.id,
-                        name = ch.heuscher.simplephone.ui.utils.formatPhoneNumber(log.contactId), // Number as name for unknown
+                        name = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(log.contactId), // Number as name for unknown
                         number = log.contactId
                     )
 
@@ -216,7 +216,7 @@ fun CallLogItem(
             } else {
                 // For known contacts, optionally show number (smaller text)
                 Text(
-                    text = ch.heuscher.simplephone.ui.utils.formatPhoneNumber(contact.number),
+                    text = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(contact.number),
                     style = if (useHugeText) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
