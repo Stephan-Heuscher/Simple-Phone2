@@ -319,7 +319,7 @@ fun MainScreen(
                         .fillMaxWidth()
                         // Normal background used
                         .clickable { onCallLogClick() }
-                        .padding(horizontal = 16.dp, vertical = 16.dp), // Increased padding left for spacing
+                        .padding(horizontal = 8.dp, vertical = 16.dp), // Height kept, width reduced
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -560,7 +560,7 @@ fun ContactRow(
             .semantics {
                 contentDescription = cdContactAction
             }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 8.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -685,7 +685,7 @@ fun SectionHeader(title: String) {
         overflow = TextOverflow.Ellipsis,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, top = 24.dp, bottom = 8.dp)
+            .padding(start = 8.dp, top = 24.dp, bottom = 8.dp)
     )
 }
 
@@ -825,7 +825,7 @@ fun MissedCallRow(
             .semantics {
                 contentDescription = cdMissedCall
             }
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = 8.dp, vertical = 12.dp)
     ) {
         // Content Row: Texts (Left)
         // We allow this row to extend up to where the button's center would be.
