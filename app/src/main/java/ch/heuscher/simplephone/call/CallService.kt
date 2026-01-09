@@ -12,6 +12,7 @@ import android.graphics.PorterDuffXfermode
 import android.graphics.Rect
 import android.graphics.RectF
 import android.media.AudioAttributes
+import android.media.AudioManager
 import android.media.Ringtone
 import android.media.RingtoneManager
 import android.net.Uri
@@ -288,15 +289,18 @@ class CallService : InCallService() {
         // Check DND status
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val interruptionFilter = notificationManager.currentInterruptionFilter
+            Log.d(TAG, "DND Check: Filter=$interruptionFilter")
             
             // If DND is off (INTERRUPTION_FILTER_ALL), always ring
             if (interruptionFilter == NotificationManager.INTERRUPTION_FILTER_ALL) {
+                Log.d(TAG, "DND Check: Allowed (Filter ALL)")
                 return true
             }
             
             // If DND is on but allows alarms only or none, don't ring
             if (interruptionFilter == NotificationManager.INTERRUPTION_FILTER_ALARMS ||
                 interruptionFilter == NotificationManager.INTERRUPTION_FILTER_NONE) {
+                Log.d(TAG, "DND Check: Blocked (Filter ALARMS/NONE)")
                 return false
             }
             
@@ -319,7 +323,12 @@ class CallService : InCallService() {
                     
                     // Clean up old entries
                     val cutoff = now - REPEAT_CALLER_WINDOW_MS
-                    recentCallers.entries.removeIf { it.value < cutoff }
+                    val iterator = recentCallers.iterator()
+                    while (iterator.hasNext()) {
+                        if (iterator.next().value < cutoff) {
+                            iterator.remove()
+                        }
+                    }
                 }
                 
                 // DND is on and this is not a repeat caller - respect DND
@@ -327,19 +336,62 @@ class CallService : InCallService() {
                 // We'll check if calls are allowed in priority mode
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     val policy = notificationManager.notificationPolicy
+                    Log.d(TAG, "DND Check: Policy Categories=${policy.priorityCategories}, Senders=${policy.priorityCallSenders}")
+                    
                     if (policy.priorityCategories and NotificationManager.Policy.PRIORITY_CATEGORY_CALLS != 0) {
-                        // Calls are allowed in priority mode
-                        return true
+                        // Calls are allowed, but we must check WHICH calls are allowed
+                        when (policy.priorityCallSenders) {
+                            NotificationManager.Policy.PRIORITY_SENDERS_ANY -> {
+                                Log.d(TAG, "DND Check: Allowed (Priority ANY)")
+                                return true
+                            }
+                            NotificationManager.Policy.PRIORITY_SENDERS_CONTACTS -> {
+                                // Check if number is in contacts
+                                val number = callerNumber?.replace(Regex("[^0-9+]"), "")
+                                if (number.isNullOrEmpty()) {
+                                    Log.d(TAG, "DND Check: Blocked (Priority CONTACTS, but no number)")
+                                    return false
+                                }
+                                
+                                val contactRepository = ContactRepository(this)
+                                val contact = contactRepository.getContactByNumber(number)
+                                Log.d(TAG, "DND Check: Contact found=${contact != null}")
+                                return contact != null
+                            }
+                            NotificationManager.Policy.PRIORITY_SENDERS_STARRED -> {
+                                // Check if number is starred
+                                val number = callerNumber?.replace(Regex("[^0-9+]"), "")
+                                if (number.isNullOrEmpty()) {
+                                    Log.d(TAG, "DND Check: Blocked (Priority STARRED, but no number)")
+                                    return false
+                                }
+                                
+                                val contactRepository = ContactRepository(this)
+                                val contact = contactRepository.getContactByNumber(number)
+                                Log.d(TAG, "DND Check: Contact favorite=${contact?.isFavorite}")
+                                return contact?.isFavorite == true
+                            }
+                            // Callers could be PRIORITY_SENDERS_NONE (0), although if CATEGORY_CALLS is set, 
+                            // it usually implies at least something. If generic logic fails, default to false.
+                            else -> {
+                                Log.d(TAG, "DND Check: Blocked (Priority fallback)")
+                                return false 
+                            }
+                        }
                     }
+                    
                     if (policy.priorityCategories and NotificationManager.Policy.PRIORITY_CATEGORY_REPEAT_CALLERS != 0) {
-                        // Repeat callers are allowed but this isn't one
+                        // Repeat callers are allowed but this isn't one (already checked repeat logic above)
+                        Log.d(TAG, "DND Check: Blocked (Priority REPEAT_CALLERS set, but not a repeat caller)")
                         return false
                     }
                 }
+                Log.d(TAG, "DND Check: Blocked (Priority DEFAULT)")
                 return false
             }
         }
         
+        Log.d(TAG, "DND Check: Allowed (Default/Pre-M)")
         return true
     }
 
@@ -354,6 +406,13 @@ class CallService : InCallService() {
         if (ringtone == null) {
             val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
             ringtone = RingtoneManager.getRingtone(applicationContext, uri)
+            // Ensure ringtone uses correct audio attributes to respect system volume/DND
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                ringtone?.audioAttributes = AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build()
+            }
         }
         if (ringtone?.isPlaying == false) {
             ringtone?.play()
@@ -366,6 +425,13 @@ class CallService : InCallService() {
     private fun startVibrating() {
         if (isVibrating) return
         
+        // Double check AudioManager just in case we shouldn't vibrate
+        val audioManager = getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager
+        if (audioManager.ringerMode == android.media.AudioManager.RINGER_MODE_SILENT) {
+             Log.d(TAG, "Not vibrating due to RingerMode SILENT")
+             return
+        }
+
         vibrator?.let { vib ->
             if (vib.hasVibrator()) {
                 isVibrating = true

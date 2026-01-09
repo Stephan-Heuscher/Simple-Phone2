@@ -118,11 +118,11 @@ fun CallLogScreen(
                         isKnownContact = isKnownContact,
                         onCallClick = { 
                             if (useHapticFeedback) vibrate(context)
-                            onCallClick(contact.number)
+                            onCallClick(log.contactId)
                         },
                         onAddContact = { 
                             if (!isKnownContact) {
-                                onAddContact(contact.number)
+                                onAddContact(log.contactId)
                             }
                         },
                         useHugeText = useHugeText
@@ -223,8 +223,9 @@ fun CallLogItem(
                 // Don't show number again if name IS the number
             } else {
                 // For known contacts, optionally show number (smaller text)
+                // Show the specific number used in this call, formatted
                 Text(
-                    text = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(contact.number),
+                    text = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(log.contactId),
                     style = if (useHugeText) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
