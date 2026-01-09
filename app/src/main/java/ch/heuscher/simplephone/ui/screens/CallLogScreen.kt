@@ -30,9 +30,10 @@ import ch.heuscher.simplephone.model.CallLogEntry
 import ch.heuscher.simplephone.model.CallType
 import ch.heuscher.simplephone.model.Contact
 import ch.heuscher.simplephone.ui.components.ContactAvatar
-import ch.heuscher.simplephone.ui.components.VerticalScrollbar
+
 import ch.heuscher.simplephone.ui.components.HorizontalScrollbar
 import ch.heuscher.simplephone.ui.theme.AvatarOrange
+import ch.heuscher.simplephone.ui.theme.BlueCall
 import ch.heuscher.simplephone.ui.theme.GreenCall
 import ch.heuscher.simplephone.ui.theme.RedHangup
 import ch.heuscher.simplephone.ui.utils.vibrate
@@ -84,7 +85,8 @@ fun CallLogScreen(
                     }
                 }
             )
-        }
+        },
+        contentWindowInsets = WindowInsets(0.dp)
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             val listState = rememberLazyListState()
@@ -128,12 +130,6 @@ fun CallLogScreen(
                     HorizontalDivider()
                 }
             }
-            
-            // Persistent vertical scrollbar
-            VerticalScrollbar(
-                modifier = Modifier.align(Alignment.CenterEnd),
-                listState = listState
-            )
         }
     }
 }
@@ -151,7 +147,7 @@ fun CallLogItem(
 
     val (icon, typeColor) = when (log.type) {
         CallType.MISSED -> Icons.AutoMirrored.Filled.CallMissed to RedHangup
-        CallType.INCOMING -> Icons.AutoMirrored.Filled.CallReceived to AvatarOrange
+        CallType.INCOMING -> Icons.AutoMirrored.Filled.CallReceived to BlueCall
         CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to GreenCall
     }
     

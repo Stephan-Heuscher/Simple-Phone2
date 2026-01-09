@@ -18,6 +18,7 @@ val HighContrastYellow = Color(0xFFFFE600) // Bright Yellow for attention
 val AlertRed = Color(0xFFB00020)
 
 val GreenCall = Color(0xFF00C853)
+val BlueCall = Color(0xFF1976D2)
 val RedHangup = Color(0xFFD50000)
 
 // Additional accessible colors
