@@ -151,7 +151,9 @@ fun CallLogItem(
         CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to GreenCall
     }
     
-    Row(
+    val buttonPadding = if (useHugeText) 36.dp else 28.dp
+
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(typeColor.copy(alpha = 0.25f)) // More prominent background
@@ -160,9 +162,15 @@ fun CallLogItem(
                     onDoubleTap = { onAddContact() }
                 )
             }
-            .padding(if (useHugeText) 12.dp else 8.dp), // Reduced padding for compact layout
-        verticalAlignment = Alignment.CenterVertically
+            .padding(if (useHugeText) 12.dp else 8.dp) // Reduced padding for compact layout
     ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(end = buttonPadding)
+                .align(Alignment.CenterStart),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
         // Icon - same height as contact picture (64dp / 80dp)
         val iconSize = if (useHugeText) 80.dp else 64.dp
         
@@ -272,11 +280,14 @@ fun CallLogItem(
             }
         }
 
+        }
+
         // Green call button - same as MainScreen
         GreenCallIcon(
             onClick = onCallClick,
             contentDescription = stringResource(R.string.cd_call_contact, contact.name),
-            size = if (useHugeText) 72 else 56
+            size = if (useHugeText) 72 else 56,
+            modifier = Modifier.align(Alignment.CenterEnd)
         )
     }
 }
