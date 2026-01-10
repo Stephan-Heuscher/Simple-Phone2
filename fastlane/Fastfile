@@ -178,6 +178,7 @@ platform :android do
         track_promote_to: 'production',
         skip_upload_aab: true,
         skip_upload_apk: true,
+        version_code: build_number,
         package_name: 'ch.heuscher.simplephone'
       )
       deployed_track = 'production'
