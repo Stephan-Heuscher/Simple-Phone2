@@ -30,7 +30,7 @@ jobs:
           bundler-cache: true
 
       - name: Execute Fastlane
-        run: bundle exec fastlane deploy_internal
+        run: bundle exec fastlane deploy_smart
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
