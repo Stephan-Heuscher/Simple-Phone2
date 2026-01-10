@@ -83,6 +83,7 @@ class CallService : InCallService() {
             val call = currentCall ?: return
             call.answer(android.telecom.VideoProfile.STATE_AUDIO_ONLY)
             
+            val supportedRouteMask = currentAudioState?.supportedRouteMask ?: 0
             val route = if (supportedRouteMask and CallAudioState.ROUTE_BLUETOOTH != 0) {
                  CallAudioState.ROUTE_BLUETOOTH
             } else if (supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0) {
