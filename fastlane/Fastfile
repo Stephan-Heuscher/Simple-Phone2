@@ -172,11 +172,13 @@ platform :android do
     # For now, we try to deploy to production. If it fails (some reviews block edits), we just catch it.
     begin
       puts "🚀 Attempting promotion to PRODUCTION track..."
-      # We use the same AAB
+      # Promote the just-uploaded Internal release to Production
       upload_to_play_store(
-        track: 'production',
-        package_name: 'ch.heuscher.simplephone',
-        aab: aab_path
+        track: 'internal',
+        track_promote_to: 'production',
+        skip_upload_aab: true,
+        skip_upload_apk: true,
+        package_name: 'ch.heuscher.simplephone'
       )
       deployed_track = 'production'
       puts "✅ Successfully promoted to PRODUCTION!"
