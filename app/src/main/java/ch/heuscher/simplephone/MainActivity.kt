@@ -380,13 +380,15 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun makePhoneCall(phoneNumber: String) {
+        val normalizedNumber = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.normalize(phoneNumber)
+        
         val intent = Intent(Intent.ACTION_CALL).apply {
-            data = Uri.parse("tel:$phoneNumber")
+            data = Uri.fromParts("tel", normalizedNumber, null)
         }
 
         // Cancel missed call notification if exists
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
-        val notificationId = phoneNumber.replace(Regex("[^0-9]"), "").hashCode()
+        val notificationId = normalizedNumber.hashCode() // Use normalized for consistency
         notificationManager.cancel(notificationId)
         
         
@@ -581,8 +583,10 @@ fun SimplePhoneApp(
 
     // Function to handle call initiation (with optional confirmation)
     val handleCall: (String) -> Unit = { phoneNumber ->
-        val contact = contacts.find { it.number == phoneNumber }
-            ?: Contact(id = "unknown", name = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(phoneNumber), number = phoneNumber)
+        // Use helper to find contact robustly
+        val contact = contacts.find { 
+             ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.areNumbersSame(it.number, phoneNumber, context)
+        } ?: Contact(id = "unknown", name = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(phoneNumber), number = phoneNumber)
         
         if (useHapticFeedback) {
             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
