@@ -156,40 +156,35 @@ platform :android do
     end
 
     aab_path = File.join(root_dir, "app/build/outputs/bundle/release/app-release.aab")
-    deployed_track = nil
+    # 3. Always Deploy to INTERNAL first (Safe, doesn't reset Prod reviews)
+    puts "🚀 Deploying to INTERNAL track..."
+    upload_to_play_store(
+      track: 'internal',
+      package_name: 'ch.heuscher.simplephone',
+      aab: aab_path
+    )
+    deployed_track = 'internal'
+    puts "✅ Successfully deployed to INTERNAL!"
 
-    # 3. Try Production first
+    # 4. Optional: Upgrade to PRODUCTION
+    # Note: We can't 100% reliably check "Pending Review" status via API.
+    # To be safe, we only proceed if the user wants this automation.
+    # For now, we try to deploy to production. If it fails (some reviews block edits), we just catch it.
     begin
-      puts "🚀 Attempting deployment to PRODUCTION track..."
+      puts "🚀 Attempting promotion to PRODUCTION track..."
+      # We use the same AAB
       upload_to_play_store(
         track: 'production',
         package_name: 'ch.heuscher.simplephone',
         aab: aab_path
       )
       deployed_track = 'production'
-      puts "✅ Successfully deployed to PRODUCTION!"
+      puts "✅ Successfully promoted to PRODUCTION!"
     rescue => e
-      error_msg = e.message.to_s.downcase
-      # Check for review-related errors
-      if error_msg.include?("in_progress") || 
-         error_msg.include?("pending") || 
-         error_msg.include?("review") ||
-         error_msg.include?("changes cannot be sent for review") ||
-         error_msg.include?("apkreviewerror")
-        puts "⏳ Production deployment blocked (likely pending review): #{e.message}"
-        puts "📦 Falling back to INTERNAL track..."
-        
-        upload_to_play_store(
-          track: 'internal',
-          package_name: 'ch.heuscher.simplephone',
-          aab: aab_path
-        )
-        deployed_track = 'internal'
-        puts "✅ Successfully deployed to INTERNAL track as fallback."
-      else
-        # Re-raise unexpected errors
-        raise e
-      end
+      puts "⚠️  Production deployment skipped/failed: #{e.message}"
+      puts "ℹ️  The INTERNAL release (v#{build_number}) is still available and valid."
+      puts "    If a review was pending, we successfully avoided breaking the Internal build,"
+      puts "    but the attempt to write to Production might have been rejected by API."
     end
 
     # 4. Auto-Increment Version
