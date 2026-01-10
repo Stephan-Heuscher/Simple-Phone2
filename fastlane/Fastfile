@@ -116,6 +116,123 @@ platform :android do
     push_to_git_remote
   end
 
+  desc "Smart Deploy: Try Production, fallback to Internal if review pending"
+  lane :deploy_smart do
+    # 1. Ensure Version Code matches version.properties
+    props = load_version_properties(file_path: "app/version.properties")
+    build_number = props['VERSION_CODE']
+    api_key = ENV['GOOGLE_API_KEY']
+    
+    # 2. Fetch raw commits
+    raw_commits = changelog_from_git_commits(
+      commits_count: 15, 
+      merge_commit_filtering: "exclude_merges",
+      pretty: "- %s" 
+    )
+
+    # Generate changelogs for both locales
+    ['en-US', 'de-DE'].each do |locale|
+      final_notes = nil
+
+      if api_key
+        language = locale == 'de-DE' ? "German" : "English"
+        prompt = "Summarize these git commits into a friendly, professional release notes list (bullet points) for a mobile app. " \
+                 "Target Audience: Seniors. Language: #{language}. " \
+                 "Rules: Exclude technical chores/docs/CI. Focus on user-facing features/fixes. " \
+                 "CRITICAL: Output must be under 480 characters. No markdown bolding, just plain text bullets."
+        
+        final_notes = ask_gemini(api_key, prompt, raw_commits)
+      end
+
+      unless final_notes && !final_notes.empty?
+        header = locale == 'de-DE' ? "Neuigkeiten:" : "What's New:"
+        filtered = raw_commits.split("\n").select do |line|
+           !line.match?(/^(- (chore|docs|test|refactor|style|ci)(\(.*\))?:)/i)
+        end.take(10).join("\n")
+        final_notes = "#{header}\n#{filtered}"
+        final_notes = final_notes[0..485] + "..." if final_notes.length > 490
+      end
+      
+      fastfile_dir = File.dirname(__FILE__)
+      new_changelog_path = File.expand_path("metadata/android/#{locale}/changelogs/#{build_number}.txt", fastfile_dir)
+      
+      FileUtils.mkdir_p(File.dirname(new_changelog_path))
+      File.write(new_changelog_path, final_notes)
+      
+      puts "--- Generated Release Notes for #{locale} (Version #{build_number}) ---"
+      puts final_notes
+      puts "-----------------------------------------------------------------------"
+    end
+
+    # Build the AAB
+    root_dir = File.expand_path("..", File.dirname(__FILE__))
+    gradlew_path = File.join(root_dir, "gradlew")
+    sh "chmod +x #{gradlew_path}"
+    Dir.chdir(root_dir) do
+      cmd = "./gradlew bundleRelease --stacktrace --no-configuration-cache"
+      puts "Executing raw command: #{cmd}"
+      unless system(cmd)
+        raise "Gradle build failed! Exit status: #{$?.exitstatus}"
+      end
+    end
+
+    aab_path = File.join(root_dir, "app/build/outputs/bundle/release/app-release.aab")
+    deployed_track = nil
+
+    # 3. Try Production first
+    begin
+      puts "🚀 Attempting deployment to PRODUCTION track..."
+      upload_to_play_store(
+        track: 'production',
+        package_name: 'ch.heuscher.simplephone',
+        aab: aab_path
+      )
+      deployed_track = 'production'
+      puts "✅ Successfully deployed to PRODUCTION!"
+    rescue => e
+      error_msg = e.message.to_s.downcase
+      # Check for review-related errors
+      if error_msg.include?("in_progress") || 
+         error_msg.include?("pending") || 
+         error_msg.include?("review") ||
+         error_msg.include?("changes cannot be sent for review") ||
+         error_msg.include?("apkreviewerror")
+        puts "⏳ Production deployment blocked (likely pending review): #{e.message}"
+        puts "📦 Falling back to INTERNAL track..."
+        
+        upload_to_play_store(
+          track: 'internal',
+          package_name: 'ch.heuscher.simplephone',
+          aab: aab_path
+        )
+        deployed_track = 'internal'
+        puts "✅ Successfully deployed to INTERNAL track as fallback."
+      else
+        # Re-raise unexpected errors
+        raise e
+      end
+    end
+
+    # 4. Auto-Increment Version
+    new_version_name = increment_version_properties(
+      file_path: "app/version.properties"
+    )
+    
+    # 5. Commit the Version Bump
+    ENV['GIT_AUTHOR_NAME'] = 'Fastlane Deploy'
+    ENV['GIT_AUTHOR_EMAIL'] = 'deploy@fastlane.tools'
+    ENV['GIT_COMMITTER_NAME'] = 'Fastlane Deploy'
+    ENV['GIT_COMMITTER_EMAIL'] = 'deploy@fastlane.tools'
+
+    git_commit(
+      path: ["app/version.properties"],
+      message: "chore: bump version to #{new_version_name} [deployed to #{deployed_track}]"
+    )
+    push_to_git_remote
+    
+    puts "🎉 Deployment complete! Track: #{deployed_track.upcase}, Version: #{new_version_name}"
+  end
+
   desc "Sync Metadata Only (Repo -> Play Store)"
   lane :sync_metadata do
     upload_to_play_store(
