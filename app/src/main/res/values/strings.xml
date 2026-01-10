@@ -169,6 +169,7 @@
     <string name="terms_of_service">Terms of Service</string>
     <string name="send_feedback">Send Feedback</string>
     <string name="feedback_subject">Simple Phone Feedback</string>
+    <string name="feedback_body">\n\n\n---\nDevice Information (this helps us a lot!)\nSince Simple Phone does not collect any data, your feedback is our only way to learn about issues and improvements. Feel free to delete this if you prefer.\n\nApp Version: %1$s (%2$d)\nAndroid Version: %3$s (API %4$d)\nDevice: %5$s %6$s\nLanguage: %7$s\n---</string>
     <string name="how_to_use">How to Use / Tutorial</string>
     <string name="toast_open_contact_error">Cannot open contact details</string>
     <string name="toast_open_contact_exception">Error opening contact app</string>

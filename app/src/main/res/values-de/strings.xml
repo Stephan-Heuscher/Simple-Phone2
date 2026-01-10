@@ -171,6 +171,7 @@
     <string name="terms_of_service">Nutzungsbedingungen</string>
     <string name="send_feedback">Feedback senden</string>
     <string name="feedback_subject">Simple Phone Feedback</string>
+    <string name="feedback_body">\n\n\n---\nGeräteinformationen (das hilft uns sehr!)\nDa Simple Phone keine Daten sammelt, ist Ihr Feedback unsere einzige Möglichkeit, von Problemen und Verbesserungsmöglichkeiten zu erfahren. Sie können diese Informationen gerne löschen.\n\nApp-Version: %1$s (%2$d)\nAndroid-Version: %3$s (API %4$d)\nGerät: %5$s %6$s\nSprache: %7$s\n---</string>
     <string name="how_to_use">Anleitung / Tutorial</string>
 
     <!-- Simplified Contact Call Screen -->

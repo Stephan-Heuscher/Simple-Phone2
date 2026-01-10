@@ -821,10 +821,41 @@ fun SettingsScreen(
                     text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.send_feedback),
                     onClick = {
                         vibrate()
+                        // Collect device and app information
+                        val packageInfo = try {
+                            context.packageManager.getPackageInfo(context.packageName, 0)
+                        } catch (e: Exception) {
+                            null
+                        }
+                        val versionName = packageInfo?.versionName ?: "Unknown"
+                        val versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                            packageInfo?.longVersionCode?.toInt() ?: 0
+                        } else {
+                            @Suppress("DEPRECATION")
+                            packageInfo?.versionCode ?: 0
+                        }
+                        val androidVersion = Build.VERSION.RELEASE
+                        val apiLevel = Build.VERSION.SDK_INT
+                        val manufacturer = Build.MANUFACTURER
+                        val model = Build.MODEL
+                        val language = java.util.Locale.getDefault().displayLanguage
+                        
+                        val emailBody = context.getString(
+                            ch.heuscher.simplephone.R.string.feedback_body,
+                            versionName,
+                            versionCode,
+                            androidVersion,
+                            apiLevel,
+                            manufacturer,
+                            model,
+                            language
+                        )
+                        
                         val intent = Intent(Intent.ACTION_SENDTO).apply {
                             data = Uri.parse("mailto:") // Only email apps
                             putExtra(Intent.EXTRA_EMAIL, arrayOf("stv.heuscher@gmail.com"))
                             putExtra(Intent.EXTRA_SUBJECT, context.getString(ch.heuscher.simplephone.R.string.feedback_subject))
+                            putExtra(Intent.EXTRA_TEXT, emailBody)
                         }
                         try {
                             context.startActivity(intent)
