@@ -182,6 +182,7 @@ platform :android do
         skip_upload_apk: true,
         version_code: build_number,
         changes_not_sent_for_review: true,
+        rescue_changes_not_sent_for_review: false,
         package_name: 'ch.heuscher.simplephone'
       )
       deployed_track = 'production'
