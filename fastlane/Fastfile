@@ -15,28 +15,7 @@ platform :android do
       pretty: "- %s" 
     )
 
-    # Helper to ask Gemini
-    def ask_gemini(api_key, system_prompt, user_text)
-      require 'net/http'
-      require 'json'
-      require 'uri'
 
-      uri = URI("https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=#{api_key}")
-      request = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
-      
-      request.body = {
-        contents: [{
-          parts: [{ text: "#{system_prompt}\n\nCommits to process:\n#{user_text}" }]
-        }]
-      }.to_json
-
-      response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| http.request(request) }
-      json = JSON.parse(response.body)
-      return json.dig('candidates', 0, 'content', 'parts', 0, 'text')&.strip
-    rescue => e
-      puts "Gemini API failed: #{e.message}"
-      return nil
-    end
 
     ['en-US', 'de-DE'].each do |locale|
       final_notes = nil
@@ -242,6 +221,29 @@ platform :android do
       skip_upload_images: false,
       skip_upload_screenshots: false
     )
+  end
+
+  # Helper to ask Gemini
+  def ask_gemini(api_key, system_prompt, user_text)
+    require 'net/http'
+    require 'json'
+    require 'uri'
+
+    uri = URI("https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=#{api_key}")
+    request = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
+    
+    request.body = {
+      contents: [{
+        parts: [{ text: "#{system_prompt}\n\nCommits to process:\n#{user_text}" }]
+      }]
+    }.to_json
+
+    response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| http.request(request) }
+    json = JSON.parse(response.body)
+    return json.dig('candidates', 0, 'content', 'parts', 0, 'text')&.strip
+  rescue => e
+    puts "Gemini API failed: #{e.message}"
+    return nil
   end
 
   # Helper to load properties
