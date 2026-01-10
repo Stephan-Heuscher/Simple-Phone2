@@ -83,23 +83,10 @@ class CallService : InCallService() {
             val call = currentCall ?: return
             call.answer(android.telecom.VideoProfile.STATE_AUDIO_ONLY)
             
-            // Robust Audio Routing: Default to Handset (Earpiece), unless Bluetooth is connected.
-            // This satisfies the requirement to "decide when to start... with a default to handset".
-            // Robust Audio Routing
-            val context = instance ?: return
-            val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(context)
-            val useSpeakerIfFlat = settingsRepository.answerOnSpeakerIfFlat
-            
-            val isPhoneFlat = instance?.isPhoneFlat == true
-            
-            val supportedRouteMask = currentAudioState?.supportedRouteMask ?: 0
             val route = if (supportedRouteMask and CallAudioState.ROUTE_BLUETOOTH != 0) {
                  CallAudioState.ROUTE_BLUETOOTH
             } else if (supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0) {
                  CallAudioState.ROUTE_WIRED_HEADSET
-            } else if (useSpeakerIfFlat && isPhoneFlat && (supportedRouteMask and CallAudioState.ROUTE_SPEAKER != 0)) {
-                 Log.d(TAG, "Answering on Speaker (Phone is flat)")
-                 CallAudioState.ROUTE_SPEAKER
             } else {
                  CallAudioState.ROUTE_EARPIECE
             }
@@ -179,42 +166,7 @@ class CallService : InCallService() {
         }
     }
     
-    private var sensorManager: android.hardware.SensorManager? = null
-    private var accelerometer: android.hardware.Sensor? = null
-    private var isPhoneFlat = false
-    
-    private val sensorEventListener = object : android.hardware.SensorEventListener {
-        override fun onSensorChanged(event: android.hardware.SensorEvent?) {
-            event?.let {
-                if (it.sensor.type == android.hardware.Sensor.TYPE_ACCELEROMETER) {
-                    val x = it.values[0]
-                    val y = it.values[1]
-                    val z = it.values[2]
-                    
-                    // Simple logic: if Z is close to 9.8 (gravity) and X, Y are close to 0
-                    // Gravity is ~9.81 m/s^2.
-                    val gravity = 9.81f
-                    val threshold = 2.0f // Allow some tilt
-                    
-                    val zDiff = kotlin.math.abs(z) - gravity
-                    val isZAligned = kotlin.math.abs(zDiff) < threshold
-                    val isXFlat = kotlin.math.abs(x) < threshold
-                    val isYFlat = kotlin.math.abs(y) < threshold
-                    
-                    // If Z is negative (-9.8), it is face down. We probably only want face up? 
-                    // "Flat on table" usually implies face up for use.
-                    // But if they want speaker, maybe they don't care. Usually face up.
-                    // Let's assume face up (Z > 0) for now.
-                    
-                    isPhoneFlat = isZAligned && isXFlat && isYFlat && z > 0
-                }
-            }
-        }
-        
-        override fun onAccuracyChanged(sensor: android.hardware.Sensor?, accuracy: Int) {
-            // No-op
-        }
-    }
+
 
     override fun onCreate() {
         super.onCreate()
@@ -237,26 +189,14 @@ class CallService : InCallService() {
             )
         }
         
-        // Initialize Sensors
-        sensorManager = getSystemService(Context.SENSOR_SERVICE) as android.hardware.SensorManager
-        accelerometer = sensorManager?.getDefaultSensor(android.hardware.Sensor.TYPE_ACCELEROMETER)
+
     }
 
     override fun onDestroy() {
         super.onDestroy()
         instance = null
         stopRinging()
-        stopSensor()
-    }
-    
-    private fun startSensor() {
-        if (accelerometer != null) {
-            sensorManager?.registerListener(sensorEventListener, accelerometer, android.hardware.SensorManager.SENSOR_DELAY_UI)
-        }
-    }
-    
-    private fun stopSensor() {
-        sensorManager?.unregisterListener(sensorEventListener)
+
     }
 
     /**
@@ -525,7 +465,7 @@ class CallService : InCallService() {
         updateWakeLock(call.state)
         
         // Start monitoring sensor for phone orientation
-        startSensor()
+
         
         notifyCallStateChanged()
         
@@ -553,7 +493,7 @@ class CallService : InCallService() {
             wakeLock?.release()
         }
         
-        stopSensor()
+
         
         // Show our own missed call notification since we are the default dialer.
         // The system won't show one when we handle calls.

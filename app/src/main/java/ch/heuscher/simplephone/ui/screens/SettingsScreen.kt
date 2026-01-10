@@ -93,8 +93,7 @@ fun SettingsScreen(
     blockUnknownCallers: Boolean = false,
     onBlockUnknownCallersChange: (Boolean) -> Unit = {},
     lastBlockedNumber: String? = null,
-    answerOnSpeakerIfFlat: Boolean = false,
-    onAnswerOnSpeakerIfFlatChange: (Boolean) -> Unit = {},
+
     confirmBeforeCall: Boolean = false,
     onConfirmBeforeCallChange: (Boolean) -> Unit = {},
     useHapticFeedback: Boolean = true,
@@ -615,35 +614,7 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(24.dp))
         }
 
-        // --- Answer on Speaker if Flat ---
-        item {
-            Text(
-                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.answer_speaker_table),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.answer_speaker_table_desc),
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(top = 8.dp)
-            )
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(top = 16.dp, bottom = 32.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                BigToggleButton(
-                    isEnabled = answerOnSpeakerIfFlat,
-                    onToggle = { vibrate(); onAnswerOnSpeakerIfFlatChange(!answerOnSpeakerIfFlat) },
-                    label = if (answerOnSpeakerIfFlat) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
-                )
-            }
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(24.dp))
-        }
 
         // --- Simplified Contact Call Screen ---
         item {

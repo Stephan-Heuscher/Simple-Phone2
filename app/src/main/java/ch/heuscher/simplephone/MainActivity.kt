@@ -488,7 +488,7 @@ fun SimplePhoneApp(
     var amountOfCallsToKeep by remember { mutableStateOf(50) } // Example if needed, but here:
     var blockUnknownCallers by remember { mutableStateOf(settingsRepository.blockUnknownCallers) }
 
-    var answerOnSpeakerIfFlat by remember { mutableStateOf(settingsRepository.answerOnSpeakerIfFlat) }
+
 
     var simplifiedContactCallScreen by remember { mutableStateOf(settingsRepository.simplifiedContactCallScreen) }
 
@@ -745,12 +745,7 @@ fun SimplePhoneApp(
                             blockUnknownCallers = it
                             settingsRepository.blockUnknownCallers = it
                         },
-                        lastBlockedNumber = settingsRepository.lastBlockedNumber,
-                        answerOnSpeakerIfFlat = answerOnSpeakerIfFlat,
-                        onAnswerOnSpeakerIfFlatChange = {
-                             answerOnSpeakerIfFlat = it
-                             settingsRepository.answerOnSpeakerIfFlat = it
-                        },
+
                         confirmBeforeCall = confirmBeforeCall,
                         onConfirmBeforeCallChange = {
                             confirmBeforeCall = it

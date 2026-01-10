@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Simple Phone</string>
-    <string name="widget_description">Quick access to your favorite contacts. Tap photo or green button to call directly.</string>
+    <string name="widget_description">Quickly call your favorites. Tap a photo or green button to call.</string>
     
     <!-- Main Screen -->
     <string name="missed_calls">Missed Calls</string>
@@ -13,7 +13,7 @@
     <string name="contacts_found">%d contacts found</string>
     <string name="search_placeholder">Search...</string>
     <string name="default_app_warning">⚠️ Not set as default phone app</string>
-    <string name="default_app_enable">Tap here to enable call handling &amp; notifications</string>
+    <string name="default_app_enable">Tap to set up calls</string>
     <string name="all_calls">All Calls</string>
     <string name="back">Back</string>
 
@@ -32,7 +32,7 @@
     <string name="display_mode_grid">Grid View</string>
     <string name="settings_huge_text">Huge Text</string>
     <string name="settings_huge_picture">Huge Picture</string>
-    <string name="settings_huge_picture_desc">Half screen with big multi-line name</string>
+    <string name="settings_huge_picture_desc">Large picture with clear text</string>
     <string name="settings_grid_view">Grid View</string>
     <string name="settings_grid_view_desc">Just contact images (2 per line)</string>
     <string name="default_phone_app">Default Phone App</string>
@@ -58,7 +58,7 @@
     <string name="favorites_order_desc">Long press and drag photos to reorder</string>
     <string name="call_behavior">Call Behavior</string>
     <string name="block_unknown">Block Unknown Numbers</string>
-    <string name="block_unknown_desc">Automatically block calls from numbers not in your contacts:</string>
+    <string name="block_unknown_desc">Block calls from numbers not in your phone book.</string>
     <string name="on">ON</string>
     <string name="off">OFF</string>
     
@@ -75,13 +75,12 @@
     <string name="bluetooth">Bluetooth</string>
     <string name="earpiece">Earpiece</string>
     <string name="advanced_settings">Advanced Options</string>
-    <string name="answer_speaker_table">Answer on Speaker if flat</string>
-    <string name="answer_speaker_table_desc">Use loudspeaker when answering while phone is lying flat on a table:</string>
+
     <string name="calls">Calls</string>
 
     <!-- Onboarding -->
     <string name="onboarding_welcome_title">Welcome to Simple Phone</string>
-    <string name="onboarding_welcome_desc">An easy-to-use phone app designed for accessibility with large buttons and clear visuals.</string>
+    <string name="onboarding_welcome_desc">Simple Phone is easy to use. It has large buttons and clear text.</string>
     <string name="onboarding_favorites_title">Quick Access to Favorites</string>
     <string name="onboarding_favorites_desc">Your starred contacts appear at the top for one-tap calling. Tap the photo or the green button to call.</string>
     <string name="onboarding_search_title">Easy Contact Search</string>
@@ -93,7 +92,7 @@
     <string name="onboarding_settings_title">Customizable Settings</string>
     <string name="onboarding_settings_desc">Adjust text size, enable dark mode, call confirmation, vibration, and voice announcements in Settings.</string>
     <string name="onboarding_default_title">Permissions &amp; Default</string>
-    <string name="onboarding_default_desc">Simple Phone needs access to contacts and call logs. You will also be asked to set it as your default phone app.</string>
+    <string name="onboarding_default_desc">Simple Phone needs access to calls. You will be asked to set it as your default phone app.</string>
     <string name="skip">Skip</string>
     <string name="next">Next</string>
     <string name="get_started">Get Started</string>
@@ -155,9 +154,9 @@
     <!-- Zoom Factor -->
     <string name="settings_zoom_factor">UI Scale / Zoom</string>
     <string name="zoom_factor_current_screen">Current Screen (%s)</string>
-    <string name="zoom_screen_compact">Phone / Folded</string>
-    <string name="zoom_screen_medium">Unfolded / Large Phone</string>
-    <string name="zoom_screen_expanded">Tablet / Desktop</string>
+    <string name="zoom_screen_compact">Normal Phone</string>
+    <string name="zoom_screen_medium">Large Phone / Unfolded</string>
+    <string name="zoom_screen_expanded">Tablets</string>
     <string name="zoom_value_format">%d%%</string>
     <string name="cd_decrease_zoom">Decrease zoom</string>
     <string name="cd_increase_zoom">Increase zoom</string>

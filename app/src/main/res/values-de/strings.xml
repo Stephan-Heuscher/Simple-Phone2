@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Simple Phone</string>
-    <string name="widget_description">Schneller Zugriff auf Favoriten. Foto oder grüne Taste tippen zum Anrufen.</string>
+    <string name="widget_description">Schnellzugriff auf Favoriten. Zum Anrufen auf das Foto oder die grüne Taste tippen.</string>
     
     <!-- Main Screen -->
     <string name="missed_calls">Verpasst</string>
@@ -13,7 +13,7 @@
     <string name="contacts_found">%d Kontakte gefunden</string>
     <string name="search_placeholder">Suchen...</string>
     <string name="default_app_warning">⚠️ Nicht als Standard-Telefon-App gesetzt</string>
-    <string name="default_app_enable">Hier tippen um Anrufe &amp; Benachrichtigungen zu aktivieren</string>
+    <string name="default_app_enable">Tippen, um Telefonie einzurichten</string>
     <string name="all_calls">Alle Anrufe</string>
     <string name="back">Zurück</string>
 
@@ -46,7 +46,7 @@
     <string name="favorites_order">Favoriten-Reihenfolge</string>
     <string name="favorites_order_desc">Pfeile nutzen zum Sortieren:</string>
     <string name="block_unknown">Unbekannte blockieren</string>
-    <string name="block_unknown_desc">Anrufe von Nummern nicht in Kontakten blockieren:</string>
+    <string name="block_unknown_desc">Anrufe von Nummern blockieren, die nicht im Telefonbuch stehen.</string>
     <string name="on">AN</string>
     <string name="off">AUS</string>
     
@@ -63,8 +63,7 @@
     <string name="bluetooth">Bluetooth</string>
     <string name="earpiece">Hörer</string>
     <string name="advanced_settings">Erweiterte Optionen</string>
-    <string name="answer_speaker_table">Lautsprecher wenn flach</string>
-    <string name="answer_speaker_table_desc">Lautsprecher nutzen, wenn das Telefon flach auf dem Tisch liegt:</string>
+
     <string name="calls">Anrufe</string>
 
     <string name="settings_appearance">Anzeigemodus</string>
@@ -75,14 +74,14 @@
     <string name="display_mode_grid">Rasteransicht</string>
     <string name="settings_huge_text">Riesiger Text</string>
     <string name="settings_huge_picture">Riesiges Bild</string>
-    <string name="settings_huge_picture_desc">Halber Bildschirm mit riesigem, mehrzeiligem Namen</string>
+    <string name="settings_huge_picture_desc">Großes Bild mit deutlicher Schrift</string>
     <string name="settings_grid_view">Rasteransicht</string>
     <string name="settings_grid_view_desc">Nur Kontaktbilder (2 pro Zeile)</string>
     <string name="call_behavior">Anrufverhalten</string>
 
     <!-- Onboarding -->
     <string name="onboarding_welcome_title">Willkommen beim Einfachen Telefon</string>
-    <string name="onboarding_welcome_desc">Eine einfach zu bedienende Telefon-App, entwickelt für Barrierefreiheit mit großen Tasten und klarer Optik.</string>
+    <string name="onboarding_welcome_desc">Einfaches Telefonieren für alle. Mit großen Tasten und klarer Schrift.</string>
     <string name="onboarding_favorites_title">Schneller Zugriff auf Favoriten</string>
     <string name="onboarding_favorites_desc">Ihre markierten Kontakte erscheinen ganz oben für Anrufe mit einem Tipp. Tippen Sie auf das Foto oder die grüne Taste zum Anrufen.</string>
     <string name="onboarding_search_title">Einfache Kontaktsuche</string>
@@ -94,7 +93,7 @@
     <string name="onboarding_settings_title">Anpassbare Einstellungen</string>
     <string name="onboarding_settings_desc">Passen Sie Textgröße, Dunkelmodus, Anrufbestätigung, Vibration und Sprachansagen in den Einstellungen an.</string>
     <string name="onboarding_default_title">Als Standard-Telefon-App setzen</string>
-    <string name="onboarding_default_desc">Für das beste Erlebnis, setzen Sie das Einfache Telefon als Ihre Standard-App. Sie werden dazu aufgefordert.</string>
+    <string name="onboarding_default_desc">Soll Simple Phone Ihre Telefon-App sein? Sie werden gefragt, dies zu bestätigen.</string>
     <string name="skip">Überspringen</string>
     <string name="next">Weiter</string>
     <string name="get_started">Loslegen</string>
@@ -157,9 +156,9 @@
     <!-- Zoom Factor -->
     <string name="settings_zoom_factor">UI Skalierung / Zoom</string>
     <string name="zoom_factor_current_screen">Aktueller Bildschirm (%s)</string>
-    <string name="zoom_screen_compact">Smartphone / Gefaltet</string>
-    <string name="zoom_screen_medium">Entfaltet / Großes Smartphone</string>
-    <string name="zoom_screen_expanded">Tablet / Desktop</string>
+    <string name="zoom_screen_compact">Normales Telefon</string>
+    <string name="zoom_screen_medium">Großes Telefon / Entfaltet</string>
+    <string name="zoom_screen_expanded">Tablets</string>
     <string name="zoom_value_format">%d%%</string>
     <string name="cd_decrease_zoom">Zoom verringern</string>
     <string name="cd_increase_zoom">Zoom vergrößern</string>
