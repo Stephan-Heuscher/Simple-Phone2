@@ -50,6 +50,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 fun CallLogScreen(
     onCallClick: (String) -> Unit,
     onBackClick: () -> Unit,
+    onOpenContact: (String) -> Unit = {},
     onAddContact: (String) -> Unit = {},
     callLogRepository: CallLogRepository,
     contacts: List<Contact>,
@@ -120,6 +121,11 @@ fun CallLogScreen(
                             if (useHapticFeedback) vibrate(context)
                             onCallClick(log.contactId)
                         },
+                        onOpenContact = {
+                            if (isKnownContact) {
+                                onOpenContact(log.contactId)
+                            }
+                        },
                         onAddContact = { 
                             if (!isKnownContact) {
                                 onAddContact(log.contactId)
@@ -140,6 +146,7 @@ fun CallLogItem(
     contact: Contact,
     isKnownContact: Boolean,
     onCallClick: () -> Unit,
+    onOpenContact: () -> Unit = {},
     onAddContact: () -> Unit = {},
     useHugeText: Boolean
 ) {
@@ -159,7 +166,13 @@ fun CallLogItem(
             .background(typeColor.copy(alpha = 0.25f)) // More prominent background
             .pointerInput(Unit) {
                 detectTapGestures(
-                    onDoubleTap = { onAddContact() }
+                    onDoubleTap = { 
+                        if (isKnownContact) {
+                            onOpenContact()
+                        } else {
+                            onAddContact() 
+                        }
+                    }
                 )
             }
             .padding(if (useHugeText) 12.dp else 8.dp) // Reduced padding for compact layout

@@ -715,6 +715,7 @@ fun SimplePhoneApp(
                     ch.heuscher.simplephone.ui.screens.CallLogScreen(
                         onCallClick = handleCall,
                         onBackClick = { navController.popBackStack() },
+                        onOpenContact = onOpenContact,
                         onAddContact = onAddContact,
                         callLogRepository = ch.heuscher.simplephone.data.CallLogRepository(context),
                         contacts = contacts,
