@@ -115,6 +115,14 @@ class CallService : InCallService() {
             // Speaker is handled through audio routing
         }
         
+        fun requestBluetoothAudio(device: android.bluetooth.BluetoothDevice) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                instance?.connectBluetoothDevice(device)
+            } else {
+                setAudioRoute(CallAudioState.ROUTE_BLUETOOTH)
+            }
+        }
+        
         /**
          * Silence the ringer - called when volume down is pressed during an incoming call
          */
@@ -127,6 +135,14 @@ class CallService : InCallService() {
             android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                 currentCall?.stopDtmfTone()
             }, 200)
+        }
+        
+
+    }
+
+    fun connectBluetoothDevice(device: android.bluetooth.BluetoothDevice) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            requestBluetoothAudio(device)
         }
     }
     

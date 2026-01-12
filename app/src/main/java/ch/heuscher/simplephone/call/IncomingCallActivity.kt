@@ -16,6 +16,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bluetooth
@@ -142,6 +143,9 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
                     onAudioRouteSelected = { route ->
                         CallService.setAudioRoute(route)
                     },
+                    onBluetoothDeviceSelected = { device ->
+                        CallService.requestBluetoothAudio(device)
+                    },
                     onDtmfClick = { digit ->
                         CallService.sendDtmf(digit)
                     }
@@ -220,7 +224,9 @@ fun CallScreen(
     onReject: () -> Unit,
     onSilence: () -> Unit = {},
     onHangup: () -> Unit,
+
     onAudioRouteSelected: (Int) -> Unit,
+    onBluetoothDeviceSelected: (android.bluetooth.BluetoothDevice) -> Unit,
     onDtmfClick: (Char) -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -331,14 +337,27 @@ fun CallScreen(
             }
         }
         
-        // Audio Controls - simplified, only show when active
-        if (audioState != null && callState == Call.STATE_ACTIVE) {
+        // Audio Controls - visible during dialing, ringing, active/holding
+        val showAudioControls = audioState != null && (
+            callState == Call.STATE_ACTIVE || 
+            callState == Call.STATE_DIALING || 
+            callState == Call.STATE_RINGING || 
+            callState == Call.STATE_CONNECTING ||
+            callState == Call.STATE_HOLDING
+        )
+        
+        if (showAudioControls && audioState != null) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                    .padding(bottom = 16.dp)
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.Center, // Centered if few items, but scrollable if many
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                // Add some padding at the start so items aren't stuck to the edge if scrolled
+                Spacer(modifier = Modifier.width(16.dp))
+                
                 val route = audioState.route
                 val supportedRouteMask = audioState.supportedRouteMask
                 
@@ -352,12 +371,44 @@ fun CallScreen(
                         onClick = { 
                             vibrate(context)
                             onAudioRouteSelected(CallAudioState.ROUTE_SPEAKER) 
-                        }
+                        },
+                        modifier = Modifier.padding(end = 16.dp)
                     )
                 }
                 
-                // Bluetooth
-                if (supportedRouteMask and CallAudioState.ROUTE_BLUETOOTH != 0) {
+                // Bluetooth Devices
+                var showedBluetooth = false
+                
+                // API 28+ supports listing devices
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                    val devices = audioState.supportedBluetoothDevices
+                    if (!devices.isNullOrEmpty()) {
+                        showedBluetooth = true
+                        devices.forEach { device ->
+                            // Check if this specific device is active
+                            // Note: activeBluetoothDevice is available on API 28+
+                            val isSelected = audioState.activeBluetoothDevice?.address == device.address
+                            
+                            // Use device name or address or fallback
+                            @Suppress("MissingPermission") // Logic usually requires permissions but inside CallService context it works, visual check needed
+                            val label = device.name ?: device.address ?: "Bluetooth"
+                            
+                            AudioRouteButton(
+                                icon = Icons.Filled.Bluetooth,
+                                label = label,
+                                isSelected = isSelected,
+                                onClick = {
+                                    vibrate(context)
+                                    onBluetoothDeviceSelected(device)
+                                },
+                                modifier = Modifier.padding(end = 16.dp)
+                            )
+                        }
+                    }
+                }
+                
+                // Fallback for pre-API 28 OR if no devices list available but ROUTE_BLUETOOTH is supported
+                if (!showedBluetooth && (supportedRouteMask and CallAudioState.ROUTE_BLUETOOTH != 0)) {
                     val isSelected = route == CallAudioState.ROUTE_BLUETOOTH
                     AudioRouteButton(
                         icon = Icons.Filled.Bluetooth,
@@ -366,7 +417,8 @@ fun CallScreen(
                         onClick = { 
                             vibrate(context)
                             onAudioRouteSelected(CallAudioState.ROUTE_BLUETOOTH) 
-                        }
+                        },
+                        modifier = Modifier.padding(end = 16.dp)
                     )
                 }
                 
@@ -374,16 +426,21 @@ fun CallScreen(
                 if (supportedRouteMask and CallAudioState.ROUTE_EARPIECE != 0 || supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0) {
                     val isSelected = route == CallAudioState.ROUTE_EARPIECE || route == CallAudioState.ROUTE_WIRED_HEADSET
                     val targetRoute = if (supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0) CallAudioState.ROUTE_WIRED_HEADSET else CallAudioState.ROUTE_EARPIECE
+                    val label = if (supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0) "Headset" else stringResource(R.string.earpiece)
+                    
                     AudioRouteButton(
                         icon = Icons.Filled.PhoneInTalk,
-                        label = stringResource(R.string.earpiece),
+                        label = label,
                         isSelected = isSelected,
                         onClick = { 
                             vibrate(context)
                             onAudioRouteSelected(targetRoute) 
-                        }
+                        },
+                        modifier = Modifier.padding(end = 16.dp)
                     )
                 }
+                
+                Spacer(modifier = Modifier.width(8.dp)) // End padding
             }
         }
 
