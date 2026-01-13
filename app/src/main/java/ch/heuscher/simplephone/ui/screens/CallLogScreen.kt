@@ -109,7 +109,7 @@ fun CallLogScreen(
                     val isKnownContact = foundContact != null
                     val contact = foundContact ?: Contact(
                         id = log.id,
-                        name = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(log.contactId), // Number as name for unknown
+                        name = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(log.contactId, context), // Number as name for unknown
                         number = log.contactId
                     )
 
@@ -238,7 +238,7 @@ fun CallLogItem(
                 // For known contacts, optionally show number (smaller text)
                 // Show the specific number used in this call, formatted
                 Text(
-                    text = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(log.contactId),
+                    text = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(log.contactId, context),
                     style = if (useHugeText) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,

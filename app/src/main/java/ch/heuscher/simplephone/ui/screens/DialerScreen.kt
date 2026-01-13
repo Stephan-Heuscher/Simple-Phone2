@@ -96,7 +96,7 @@ fun DialerScreen(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(phoneNumber),
+                    text = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(phoneNumber, context),
                     style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold),
                     textAlign = TextAlign.Center,
                     maxLines = 1,

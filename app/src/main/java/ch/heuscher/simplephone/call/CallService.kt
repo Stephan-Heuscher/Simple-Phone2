@@ -492,7 +492,7 @@ class CallService : InCallService() {
         
         // Launch the incoming call activity
         val intent = Intent(this, IncomingCallActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
             putExtra("caller_number", callerNumber)
             putExtra("caller_name", callerName)
             putExtra("is_incoming", call.state == Call.STATE_RINGING)

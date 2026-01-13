@@ -14,10 +14,31 @@ object PhoneNumberHelper {
     /**
      * Formats a phone number for display.
      * Uses AsYouTypeFormatter for better partial number support.
+     * Tries to detect country from SIM/Network if context is provided.
      */
-    fun format(number: String?): String {
+    fun format(number: String?, context: android.content.Context? = null): String {
         if (number.isNullOrBlank()) return ""
-        val countryCode = Locale.getDefault().country
+        
+        var countryCode = Locale.getDefault().country
+        
+        if (context != null) {
+             val tm = context.getSystemService(android.content.Context.TELEPHONY_SERVICE) as? android.telephony.TelephonyManager
+             if (tm != null) {
+                 val simCountry = tm.simCountryIso
+                 if (!simCountry.isNullOrBlank()) {
+                     countryCode = simCountry
+                 } else {
+                     val networkCountry = tm.networkCountryIso
+                     if (!networkCountry.isNullOrBlank()) {
+                         countryCode = networkCountry
+                     }
+                 }
+             }
+        }
+        
+        // Fallback or safety check
+        countryCode = countryCode.ifBlank { "CH" }.uppercase()
+        
         val phoneUtil = PhoneNumberUtil.getInstance()
         val formatter = phoneUtil.getAsYouTypeFormatter(countryCode)
         

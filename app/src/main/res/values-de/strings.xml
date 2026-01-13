@@ -177,4 +177,5 @@
     <string name="settings_simplified_contact_screen">Einfacher Anrufbildschirm</string>
     <string name="settings_simplified_contact_screen_desc">Große Annehmen-Taste für bekannte Kontakte:</string>
     <string name="silence">Stumm</string>
+    <string name="paste">Einfügen</string>
 </resources>
