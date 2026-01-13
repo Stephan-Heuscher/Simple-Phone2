@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -62,6 +64,20 @@ fun DialerScreen(
         }
     }
     val context = LocalContext.current
+    val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
+    var clipboardContent by remember { mutableStateOf<String?>(null) }
+    
+    // Check clipboard when phone number is empty
+    LaunchedEffect(phoneNumber) {
+        if (phoneNumber.isEmpty()) {
+            val valid = clipboardManager.getText()?.text
+            if (!valid.isNullOrBlank() && valid.any { it.isDigit() }) {
+                clipboardContent = valid
+            } else {
+                clipboardContent = null
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -78,13 +94,38 @@ fun DialerScreen(
                 .padding(bottom = 16.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(phoneNumber),
-                style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold),
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(phoneNumber),
+                    style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold),
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                
+                // Show Paste button if phone number is empty and we have a candidate
+                if (phoneNumber.isEmpty() && clipboardContent != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    androidx.compose.material3.AssistChip(
+                        onClick = { 
+                            if (useHapticFeedback) vibrate(context)
+                            // Sanitize and set
+                            val sanitized = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.normalize(clipboardContent ?: "")
+                            if (sanitized.isNotEmpty()) {
+                                phoneNumber = sanitized
+                            }
+                        },
+                        label = { Text(stringResource(R.string.paste)) },
+                        leadingIcon = { 
+                            Icon(
+                                imageVector = Icons.Filled.ContentPaste, 
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    )
+                }
+            }
         }
 
         // Keypad

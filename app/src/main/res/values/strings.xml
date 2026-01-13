@@ -179,4 +179,5 @@
     <string name="settings_simplified_contact_screen">Simple Call Screen</string>
     <string name="settings_simplified_contact_screen_desc">Show large answer button for known contacts:</string>
     <string name="silence">Silence</string>
+    <string name="paste">Paste</string>
 </resources>

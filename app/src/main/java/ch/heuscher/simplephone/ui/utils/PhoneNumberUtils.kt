@@ -3,6 +3,9 @@ package ch.heuscher.simplephone.ui.utils
 import android.telephony.PhoneNumberUtils
 import java.util.Locale
 
+import com.google.i18n.phonenumbers.PhoneNumberUtil
+import com.google.i18n.phonenumbers.AsYouTypeFormatter
+
 /**
  * centralized logic for phone number operations to ensure consistency across the app.
  */
@@ -10,12 +13,19 @@ object PhoneNumberHelper {
 
     /**
      * Formats a phone number for display.
-     * Uses the default locale country code.
+     * Uses AsYouTypeFormatter for better partial number support.
      */
     fun format(number: String?): String {
         if (number.isNullOrBlank()) return ""
         val countryCode = Locale.getDefault().country
-        return PhoneNumberUtils.formatNumber(number, countryCode) ?: number
+        val phoneUtil = PhoneNumberUtil.getInstance()
+        val formatter = phoneUtil.getAsYouTypeFormatter(countryCode)
+        
+        var formatted = ""
+        for (char in number) {
+            formatted = formatter.inputDigit(char)
+        }
+        return formatted
     }
 
     /**

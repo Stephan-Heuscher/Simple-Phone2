@@ -96,6 +96,9 @@ dependencies {
     // UCrop for image cropping
     implementation("com.github.yalantis:ucrop:2.2.8")
 
+    // LibPhone number for better formatting
+    implementation("com.googlecode.libphonenumber:libphonenumber:8.13.32")
+
     testImplementation("junit:junit:4.13.2")
     testImplementation("io.mockk:mockk:1.13.8")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
