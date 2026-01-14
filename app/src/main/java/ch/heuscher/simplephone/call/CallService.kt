@@ -444,33 +444,37 @@ class CallService : InCallService() {
         
         // Check blocking immediately
         updateCallInfo(call)
-        if (!shouldRingForCall(callerNumber)) {
-             // If shouldRing returns false, it might be DND or our Blocking.
-             // We should check if it's our blocking specifically to reject.
-             // Re-checking blocking logic to be precise
-             val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(this)
-             var isBlocked = false
-             if (settingsRepository.blockUnknownCallers) {
-                 val number = callerNumber?.replace(Regex("[^0-9+]"), "")
-                 if (number.isNullOrEmpty()) {
-                     isBlocked = true
-                 } else {
-                     val contactRepository = ContactRepository(this)
-                     val contact = contactRepository.getContactByNumber(number)
-                     if (contact == null) isBlocked = true
+        
+        // Only check for blocking on INCOMING calls
+        if (call.state == Call.STATE_RINGING) {
+            if (!shouldRingForCall(callerNumber)) {
+                 // If shouldRing returns false, it might be DND or our Blocking.
+                 // We should check if it's our blocking specifically to reject.
+                 // Re-checking blocking logic to be precise
+                 val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(this)
+                 var isBlocked = false
+                 if (settingsRepository.blockUnknownCallers) {
+                     val number = callerNumber?.replace(Regex("[^0-9+]"), "")
+                     if (number.isNullOrEmpty()) {
+                         isBlocked = true
+                     } else {
+                         val contactRepository = ContactRepository(this)
+                         val contact = contactRepository.getContactByNumber(number)
+                         if (contact == null) isBlocked = true
+                     }
                  }
-             }
-             
-             if (isBlocked) {
-                 Log.i(TAG, "Rejecting blocked call from $callerNumber")
-                 val blockedNumber = callerNumber ?: "Unknown"
-                 settingsRepository.lastBlockedNumber = blockedNumber
-                 showBlockedCallNotification(blockedNumber)
                  
-                 call.reject(false, null)
-                 // It will be logged by system or we can let it be logged as rejected
-                 return
-             }
+                 if (isBlocked) {
+                     Log.i(TAG, "Rejecting blocked call from $callerNumber")
+                     val blockedNumber = callerNumber ?: "Unknown"
+                     settingsRepository.lastBlockedNumber = blockedNumber
+                     showBlockedCallNotification(blockedNumber)
+                     
+                     call.reject(false, null)
+                     // It will be logged by system or we can let it be logged as rejected
+                     return
+                 }
+            }
         }
 
         currentCall = call
