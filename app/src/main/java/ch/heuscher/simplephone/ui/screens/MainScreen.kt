@@ -345,6 +345,7 @@ fun MainScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(LightGreenBackground) // Use consistent light green
+                            .clickable { onCallLogClick() }
                             .padding(24.dp),
                         contentAlignment = Alignment.Center
                     ) {
