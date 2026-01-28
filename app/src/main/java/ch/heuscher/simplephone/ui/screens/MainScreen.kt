@@ -139,6 +139,23 @@ fun MainScreen(
         }
     }
 
+    // Optimization: Pre-calculate contact resolution for missed calls
+    // This avoids O(N*M) lookups inside the LazyColumn composition (scrolling)
+    val missedCallsWithContacts = remember(missedCalls, allContacts) {
+        missedCalls.map { callEntry ->
+             val contact = allContacts.filter { contact ->
+                contact.allNumbers.any { number ->
+                     ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.areNumbersSame(number, callEntry.contactId, context)
+                }
+            }.sortedWith(Contact.PRIORITY_COMPARATOR).firstOrNull() ?: Contact(
+                    id = callEntry.id,
+                    name = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(callEntry.contactId, context),
+                    number = callEntry.contactId
+                )
+            callEntry to contact
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize().imePadding()) {
         val listState = androidx.compose.foundation.lazy.rememberLazyListState()
         
@@ -361,17 +378,7 @@ fun MainScreen(
                     HorizontalDivider(thickness = 2.dp)
                 }
             } else {
-                items(missedCalls, key = { "missed_${it.id}" }) { callEntry ->
-                    // Try to find contact by number
-                    val contact = allContacts.filter { contact ->
-                        contact.allNumbers.any { number ->
-                             ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.areNumbersSame(number, callEntry.contactId, context)
-                        }
-                    }.sortedWith(Contact.PRIORITY_COMPARATOR).firstOrNull() ?: Contact(
-                            id = callEntry.id,
-                            name = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(callEntry.contactId, context), // Show number as name
-                            number = callEntry.contactId
-                        )
+                items(missedCallsWithContacts, key = { "missed_${it.first.id}" }) { (callEntry, contact) ->
                     // Wrap MissedCallRow in background (Removed for normal look)
                     Box(modifier = Modifier) {
                         MissedCallRow(
@@ -381,6 +388,10 @@ fun MainScreen(
                                 if (useHapticFeedback) vibrate(context)
                                 onCallClick(contact.number) 
                             },
+                             // Single tap on row (text area) opens Call Log, double-tap is handled in MissedCallRow via onOpenContact
+                             // Wait, previously I only updated "No missed calls".
+                             // The user approved plan says: "With Missed Calls: ... Verify that tapping the row (text area) DOES NOT open the Call Log (preserves existing behavior)."
+                             // So I DO NOT pass onRowClick here.
                             onOpenContact = { onOpenContact(contact.id) }
                         )
                     }

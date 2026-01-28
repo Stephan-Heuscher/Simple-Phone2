@@ -85,26 +85,32 @@ fun CallLogScreen(
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             val listState = rememberLazyListState()
             
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                state = listState
-            ) {
-                items(callLogs) { log ->
-                    // Find contact
-                    // Find contact
+            // Optimization: Pre-calculate contact resolution
+            // This avoids O(N*M) lookups inside the LazyColumn composition (scrolling)
+            val callLogsWithContacts = remember(callLogs, contacts) {
+                callLogs.map { log ->
                     val foundContact = contacts.filter { contact ->
                         contact.allNumbers.any { number ->
                             ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.areNumbersSame(number, log.contactId, context)
                         } 
                     }.sortedWith(Contact.PRIORITY_COMPARATOR).firstOrNull()
                     
-                    // Check if this is a known contact or unknown number
                     val isKnownContact = foundContact != null
                     val contact = foundContact ?: Contact(
                         id = log.id,
-                        name = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(log.contactId, context), // Number as name for unknown
+                        name = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(log.contactId, context),
                         number = log.contactId
                     )
+                    
+                    Triple(log, contact, isKnownContact)
+                }
+            }
+            
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                state = listState
+            ) {
+                items(callLogsWithContacts, key = { it.first.id }) { (log, contact, isKnownContact) ->
 
                     CallLogItem(
                         log = log,
