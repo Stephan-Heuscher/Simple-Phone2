@@ -2,7 +2,7 @@ package ch.heuscher.simplephone.ui.screens
 
 import android.text.format.DateUtils
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -38,9 +38,7 @@ import ch.heuscher.simplephone.ui.theme.GreenCall
 import ch.heuscher.simplephone.ui.theme.RedHangup
 import ch.heuscher.simplephone.ui.utils.vibrate
 import java.util.Locale
-import android.telephony.PhoneNumberUtils
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
@@ -118,7 +116,7 @@ fun CallLogScreen(
                         },
                         onOpenContact = {
                             if (isKnownContact) {
-                                onOpenContact(log.contactId)
+                                onOpenContact(contact.id)
                             }
                         },
                         onAddContact = { 
