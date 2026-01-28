@@ -25,7 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ch.heuscher.simplephone.R
-import ch.heuscher.simplephone.data.CallLogRepository
+
 import ch.heuscher.simplephone.model.CallLogEntry
 import ch.heuscher.simplephone.model.CallType
 import ch.heuscher.simplephone.model.Contact
@@ -52,17 +52,12 @@ fun CallLogScreen(
     onBackClick: () -> Unit,
     onOpenContact: (String) -> Unit = {},
     onAddContact: (String) -> Unit = {},
-    callLogRepository: CallLogRepository,
+    callLogs: List<CallLogEntry>,
     contacts: List<Contact>,
     useHugeText: Boolean = false,
     useHapticFeedback: Boolean = true
 ) {
     val context = LocalContext.current
-    var callLogs by remember { mutableStateOf<List<CallLogEntry>>(emptyList()) }
-    
-    LaunchedEffect(Unit) {
-        callLogs = callLogRepository.getAllCallLogs()
-    }
     
     Scaffold(
         topBar = {

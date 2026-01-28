@@ -535,6 +535,7 @@ fun SimplePhoneApp(
     
     val contacts by viewModel.contacts.collectAsState()
     val missedCalls by viewModel.missedCalls.collectAsState()
+    val recents by viewModel.recents.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     
     // Logic moved to ViewModel
@@ -717,7 +718,7 @@ fun SimplePhoneApp(
                         onBackClick = { navController.popBackStack() },
                         onOpenContact = onOpenContact,
                         onAddContact = onAddContact,
-                        callLogRepository = ch.heuscher.simplephone.data.CallLogRepository(context),
+                        callLogs = recents,
                         contacts = contacts,
                         useHugeText = useHugeText,
                         useHapticFeedback = useHapticFeedback

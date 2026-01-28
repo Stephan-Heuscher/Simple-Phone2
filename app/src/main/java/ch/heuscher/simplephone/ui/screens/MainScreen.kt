@@ -129,7 +129,7 @@ fun MainScreen(
             }.map { call ->
                 Contact(
                     id = call.id,
-                    name = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(call.contactId), // Show number as name for unknown contacts
+                    name = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(call.contactId, context), // Show number as name for unknown contacts
                     number = call.contactId,
                     isFavorite = false
                 )
@@ -368,7 +368,7 @@ fun MainScreen(
                         }
                     }.sortedWith(Contact.PRIORITY_COMPARATOR).firstOrNull() ?: Contact(
                             id = callEntry.id,
-                            name = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(callEntry.contactId), // Show number as name
+                            name = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(callEntry.contactId, context), // Show number as name
                             number = callEntry.contactId
                         )
                     // Wrap MissedCallRow in background (Removed for normal look)

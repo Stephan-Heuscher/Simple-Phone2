@@ -32,6 +32,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _recents = MutableStateFlow<List<CallLogEntry>>(emptyList())
+    val recents: StateFlow<List<CallLogEntry>> = _recents.asStateFlow()
     
     // Permission state tracked in VM to avoid loading data before permitted
     private val _hasPermissions = MutableStateFlow(false)
@@ -136,6 +139,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 emptyList()
             }
             _missedCalls.value = loadedMissedCalls
+
+            // Load All Recents (Call Log)
+            val loadedRecents = withContext(Dispatchers.IO) {
+                 if (settingsRepository.isDemoMode) {
+                     ch.heuscher.simplephone.data.MockData.getRecents()
+                 } else if (_hasPermissions.value) {
+                     contactRepository.getCallLogs()
+                 } else {
+                     emptyList()
+                 }
+            }
+            _recents.value = loadedRecents
             
             _isLoading.value = false
         }

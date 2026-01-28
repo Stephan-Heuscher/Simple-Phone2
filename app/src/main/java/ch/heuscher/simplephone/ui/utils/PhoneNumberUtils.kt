@@ -40,13 +40,21 @@ object PhoneNumberHelper {
         countryCode = countryCode.ifBlank { "CH" }.uppercase()
         
         val phoneUtil = PhoneNumberUtil.getInstance()
-        val formatter = phoneUtil.getAsYouTypeFormatter(countryCode)
         
-        var formatted = ""
-        for (char in number) {
-            formatted = formatter.inputDigit(char)
+        return try {
+            val parsedNumber = phoneUtil.parse(number, countryCode)
+            phoneUtil.format(parsedNumber, com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat.NATIONAL)
+        } catch (e: Exception) {
+            // Fallback: Use AsYouTypeFormatter
+            val formatter = phoneUtil.getAsYouTypeFormatter(countryCode)
+            var formatted = ""
+            for (char in number) {
+                if (char.isDigit() || char == '+') {
+                    formatted = formatter.inputDigit(char)
+                }
+            }
+            if (formatted.isBlank()) number else formatted
         }
-        return formatted
     }
 
     /**
