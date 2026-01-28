@@ -88,12 +88,32 @@ fun CallLogScreen(
             // Optimization: Pre-calculate contact resolution
             // This avoids O(N*M) lookups inside the LazyColumn composition (scrolling)
             val callLogsWithContacts = remember(callLogs, contacts) {
+                // Build maps for O(1) lookup
+                val normalizedMap = HashMap<String, Contact>()
+                val suffixMap = HashMap<String, Contact>()
+                
+                contacts.forEach { contact ->
+                    contact.allNumbers.forEach { number ->
+                        val normalized = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.normalize(number)
+                        if (normalized.isNotEmpty()) {
+                            normalizedMap[normalized] = contact
+                            if (normalized.length >= 7) {
+                                suffixMap[normalized.takeLast(7)] = contact
+                            }
+                        }
+                    }
+                }
+
                 callLogs.map { log ->
-                    val foundContact = contacts.filter { contact ->
-                        contact.allNumbers.any { number ->
-                            ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.areNumbersSame(number, log.contactId, context)
-                        } 
-                    }.sortedWith(Contact.PRIORITY_COMPARATOR).firstOrNull()
+                    val normalizedLogNumber = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.normalize(log.contactId)
+                    
+                    // 1. Try exact normalized match
+                    var foundContact = normalizedMap[normalizedLogNumber]
+                    
+                    // 2. If not found, try suffix match (last 7 digits)
+                    if (foundContact == null && normalizedLogNumber.length >= 7) {
+                        foundContact = suffixMap[normalizedLogNumber.takeLast(7)]
+                    }
                     
                     val isKnownContact = foundContact != null
                     val contact = foundContact ?: Contact(

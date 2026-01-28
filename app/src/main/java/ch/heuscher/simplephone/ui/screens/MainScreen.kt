@@ -142,12 +142,34 @@ fun MainScreen(
     // Optimization: Pre-calculate contact resolution for missed calls
     // This avoids O(N*M) lookups inside the LazyColumn composition (scrolling)
     val missedCallsWithContacts = remember(missedCalls, allContacts) {
-        missedCalls.map { callEntry ->
-             val contact = allContacts.filter { contact ->
-                contact.allNumbers.any { number ->
-                     ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.areNumbersSame(number, callEntry.contactId, context)
+        // Build maps for O(1) lookup
+        val normalizedMap = HashMap<String, Contact>()
+        val suffixMap = HashMap<String, Contact>()
+        
+        allContacts.forEach { contact ->
+            contact.allNumbers.forEach { number ->
+                val normalized = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.normalize(number)
+                if (normalized.isNotEmpty()) {
+                    normalizedMap[normalized] = contact
+                    if (normalized.length >= 7) {
+                        suffixMap[normalized.takeLast(7)] = contact
+                    }
                 }
-            }.sortedWith(Contact.PRIORITY_COMPARATOR).firstOrNull() ?: Contact(
+            }
+        }
+
+        missedCalls.map { callEntry ->
+             val normalizedLogNumber = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.normalize(callEntry.contactId)
+             
+             // 1. Try exact normalized match
+             var foundContact = normalizedMap[normalizedLogNumber]
+             
+             // 2. If not found, try suffix match (last 7 digits)
+             if (foundContact == null && normalizedLogNumber.length >= 7) {
+                 foundContact = suffixMap[normalizedLogNumber.takeLast(7)]
+             }
+
+             val contact = foundContact ?: Contact(
                     id = callEntry.id,
                     name = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(callEntry.contactId, context),
                     number = callEntry.contactId
