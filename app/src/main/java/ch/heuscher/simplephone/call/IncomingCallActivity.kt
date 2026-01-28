@@ -159,6 +159,18 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
     }
     
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        // Check setting for silence on touch/keys
+        val settingsRepository = SettingsRepository(this)
+        if (settingsRepository.silenceCallOnTouch && isIncoming && callState == Call.STATE_RINGING) {
+             // Silence on ANY key press (except power which is handled by system, but VOLUME handled here)
+             CallService.silenceRinger()
+             // We don't return true (consume) for all keys to avoid breaking system behavior,
+             // except for volume which is standard behavior to consume.
+             if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+                 return true
+             }
+        }
+        
         if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
             if (isIncoming && callState == Call.STATE_RINGING) {
                 // Silence the ringer using CallService
@@ -167,6 +179,16 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
             }
         }
         return super.onKeyDown(keyCode, event)
+    }
+
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent?): Boolean {
+        if (ev?.action == android.view.MotionEvent.ACTION_DOWN) {
+            val settingsRepository = SettingsRepository(this)
+            if (settingsRepository.silenceCallOnTouch && isIncoming && callState == Call.STATE_RINGING) {
+                CallService.silenceRinger()
+            }
+        }
+        return super.dispatchTouchEvent(ev)
     }
 
     override fun onDestroy() {

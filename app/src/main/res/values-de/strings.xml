@@ -178,4 +178,8 @@
     <string name="settings_simplified_contact_screen_desc">Große Annehmen-Taste für bekannte Kontakte:</string>
     <string name="silence">Stumm</string>
     <string name="paste">Einfügen</string>
+
+    <!-- Silence on Touch -->
+    <string name="silence_on_touch">Stummschalten bei Berührung</string>
+    <string name="silence_on_touch_desc">Klingelton durch Berühren des Bildschirms oder einer Taste stummschalten</string>
 </resources>

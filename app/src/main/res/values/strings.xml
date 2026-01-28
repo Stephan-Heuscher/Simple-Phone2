@@ -180,4 +180,9 @@
     <string name="settings_simplified_contact_screen_desc">Show large answer button for known contacts:</string>
     <string name="silence">Silence</string>
     <string name="paste">Paste</string>
+
+    <!-- Silence on Touch -->
+    <string name="silence_on_touch">Silence on Touch</string>
+    <string name="silence_on_touch_desc">Silence ringtone by touching the screen or any button</string>
+
 </resources>

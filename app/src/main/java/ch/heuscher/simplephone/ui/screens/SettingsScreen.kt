@@ -111,7 +111,9 @@ fun SettingsScreen(
     currentWidthSizeClass: androidx.compose.material3.windowsizeclass.WindowWidthSizeClass = androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Compact,
     onShowOnboarding: () -> Unit = {},
     simplifiedContactCallScreen: Boolean = false,
-    onSimplifiedContactCallScreenChange: (Boolean) -> Unit = {}
+    onSimplifiedContactCallScreenChange: (Boolean) -> Unit = {},
+    silenceCallOnTouch: Boolean = false,
+    onSilenceCallOnTouchChange: (Boolean) -> Unit = {}
 ) {
     // Remember favorites order for reordering
     val mutableFavorites = remember { mutableStateListOf<Contact>() }
@@ -640,6 +642,36 @@ fun SettingsScreen(
                     isEnabled = simplifiedContactCallScreen,
                     onToggle = { vibrate(); onSimplifiedContactCallScreenChange(!simplifiedContactCallScreen) },
                     label = if (simplifiedContactCallScreen) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
+                )
+            }
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // --- Silence on Touch Section ---
+        item {
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.silence_on_touch),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.silence_on_touch_desc),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                BigToggleButton(
+                    isEnabled = silenceCallOnTouch,
+                    onToggle = { vibrate(); onSilenceCallOnTouchChange(!silenceCallOnTouch) },
+                    label = if (silenceCallOnTouch) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
                 )
             }
             HorizontalDivider()

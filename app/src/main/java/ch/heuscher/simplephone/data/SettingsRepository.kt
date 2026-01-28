@@ -45,6 +45,8 @@ class SettingsRepository(context: Context) {
         const val DISPLAY_MODE_LARGE_TEXT = 1
         const val DISPLAY_MODE_BIG_PHOTOS = 2
         const val DISPLAY_MODE_GRID = 3
+
+        private const val KEY_SILENCE_CALL_ON_TOUCH = "silence_call_on_touch"
     }
     
     var missedCallsHours: Int
@@ -92,6 +94,10 @@ class SettingsRepository(context: Context) {
     var simplifiedContactCallScreen: Boolean
         get() = prefs.getBoolean(KEY_SIMPLIFIED_CONTACT_CALL_SCREEN, true)
         set(value) = prefs.edit().putBoolean(KEY_SIMPLIFIED_CONTACT_CALL_SCREEN, value).apply()
+
+    var silenceCallOnTouch: Boolean
+        get() = prefs.getBoolean(KEY_SILENCE_CALL_ON_TOUCH, false)
+        set(value) = prefs.edit().putBoolean(KEY_SILENCE_CALL_ON_TOUCH, value).apply()
 
     // Derived properties for backward compatibility / ease of use
     val useHugeText: Boolean
