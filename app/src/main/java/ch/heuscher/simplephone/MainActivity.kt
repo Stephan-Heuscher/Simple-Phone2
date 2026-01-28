@@ -538,6 +538,7 @@ fun SimplePhoneApp(
     val missedCalls by viewModel.missedCalls.collectAsState()
     val recents by viewModel.recents.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val contactResolutionMaps by viewModel.contactResolutionMaps.collectAsState()
     
     // Logic moved to ViewModel
     // function loadData() removed
@@ -702,7 +703,8 @@ fun SimplePhoneApp(
                         contacts = contacts,
                         isDefaultDialer = isDefaultDialer,
                         onSetDefaultDialer = onSetDefaultDialer,
-                        useHapticFeedback = useHapticFeedback
+                        useHapticFeedback = useHapticFeedback,
+                        contactResolutionMaps = contactResolutionMaps
                     )
                 }
                 composable(Screen.Dialer.route) {
@@ -722,7 +724,8 @@ fun SimplePhoneApp(
                         callLogs = recents,
                         contacts = contacts,
                         useHugeText = useHugeText,
-                        useHapticFeedback = useHapticFeedback
+                        useHapticFeedback = useHapticFeedback,
+                        contactResolutionMaps = contactResolutionMaps
                     )
                 }
                 composable(Screen.Settings.route) {

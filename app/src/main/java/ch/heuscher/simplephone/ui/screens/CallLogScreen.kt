@@ -53,7 +53,8 @@ fun CallLogScreen(
     callLogs: List<CallLogEntry>,
     contacts: List<Contact>,
     useHugeText: Boolean = false,
-    useHapticFeedback: Boolean = true
+    useHapticFeedback: Boolean = true,
+    contactResolutionMaps: ch.heuscher.simplephone.ui.MainViewModel.ContactResolutionMaps? = null
 ) {
     val context = LocalContext.current
     
@@ -87,42 +88,32 @@ fun CallLogScreen(
             
             // Optimization: Pre-calculate contact resolution
             // This avoids O(N*M) lookups inside the LazyColumn composition (scrolling)
-            val callLogsWithContacts = remember(callLogs, contacts) {
-                // Build maps for O(1) lookup
-                val normalizedMap = HashMap<String, Contact>()
-                val suffixMap = HashMap<String, Contact>()
+            // Optimization: Pre-calculate contact resolution
+            // This avoids O(N*M) lookups inside the LazyColumn composition (scrolling)
+            val callLogsWithContacts = remember(callLogs, contactResolutionMaps) {
+                val maps = contactResolutionMaps
                 
-                contacts.forEach { contact ->
-                    contact.allNumbers.forEach { number ->
-                        val normalized = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.normalize(number)
-                        if (normalized.isNotEmpty()) {
-                            normalizedMap[normalized] = contact
-                            if (normalized.length >= 7) {
-                                suffixMap[normalized.takeLast(7)] = contact
-                            }
+                callLogs.map { log ->
+                    var contact: Contact? = null
+                    
+                    if (maps != null) {
+                        val normalizedLogNumber = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.normalize(log.contactId)
+                        // 1. Try exact normalized match
+                        contact = maps.normalized[normalizedLogNumber]
+                        // 2. If not found, try suffix match (last 7 digits)
+                        if (contact == null && normalizedLogNumber.length >= 7) {
+                            contact = maps.suffixes[normalizedLogNumber.takeLast(7)]
                         }
                     }
-                }
-
-                callLogs.map { log ->
-                    val normalizedLogNumber = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.normalize(log.contactId)
                     
-                    // 1. Try exact normalized match
-                    var foundContact = normalizedMap[normalizedLogNumber]
-                    
-                    // 2. If not found, try suffix match (last 7 digits)
-                    if (foundContact == null && normalizedLogNumber.length >= 7) {
-                        foundContact = suffixMap[normalizedLogNumber.takeLast(7)]
-                    }
-                    
-                    val isKnownContact = foundContact != null
-                    val contact = foundContact ?: Contact(
+                    val isKnownContact = contact != null
+                    val resolvedContact = contact ?: Contact(
                         id = log.id,
                         name = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(log.contactId, context),
                         number = log.contactId
                     )
                     
-                    Triple(log, contact, isKnownContact)
+                    Triple(log, resolvedContact, isKnownContact)
                 }
             }
             

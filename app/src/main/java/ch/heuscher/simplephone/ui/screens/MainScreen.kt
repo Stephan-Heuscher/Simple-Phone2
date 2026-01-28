@@ -92,7 +92,8 @@ fun MainScreen(
     contacts: List<Contact> = MockData.contacts,
     isDefaultDialer: Boolean = true,
     onSetDefaultDialer: () -> Unit = {},
-    useHapticFeedback: Boolean = false
+    useHapticFeedback: Boolean = false,
+    contactResolutionMaps: ch.heuscher.simplephone.ui.MainViewModel.ContactResolutionMaps? = null
 ) {
     val favorites = remember(contacts) { contacts.filter { it.isFavorite }.sortedBy { it.sortOrder } }
     val allContacts = remember(contacts) { contacts.sortedBy { it.name } }
@@ -141,40 +142,32 @@ fun MainScreen(
 
     // Optimization: Pre-calculate contact resolution for missed calls
     // This avoids O(N*M) lookups inside the LazyColumn composition (scrolling)
-    val missedCallsWithContacts = remember(missedCalls, allContacts) {
-        // Build maps for O(1) lookup
-        val normalizedMap = HashMap<String, Contact>()
-        val suffixMap = HashMap<String, Contact>()
+    val missedCallsWithContacts = remember(missedCalls, contactResolutionMaps) {
+        val maps = contactResolutionMaps
         
-        allContacts.forEach { contact ->
-            contact.allNumbers.forEach { number ->
-                val normalized = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.normalize(number)
-                if (normalized.isNotEmpty()) {
-                    normalizedMap[normalized] = contact
-                    if (normalized.length >= 7) {
-                        suffixMap[normalized.takeLast(7)] = contact
-                    }
-                }
-            }
-        }
-
         missedCalls.map { callEntry ->
-             val normalizedLogNumber = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.normalize(callEntry.contactId)
+             var contact: Contact? = null
              
-             // 1. Try exact normalized match
-             var foundContact = normalizedMap[normalizedLogNumber]
-             
-             // 2. If not found, try suffix match (last 7 digits)
-             if (foundContact == null && normalizedLogNumber.length >= 7) {
-                 foundContact = suffixMap[normalizedLogNumber.takeLast(7)]
+             if (maps != null) {
+                 val normalizedLogNumber = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.normalize(callEntry.contactId)
+                 // 1. Try exact normalized match
+                 contact = maps.normalized[normalizedLogNumber]
+                 // 2. If not found, try suffix match (last 7 digits)
+                 if (contact == null && normalizedLogNumber.length >= 7) {
+                     contact = maps.suffixes[normalizedLogNumber.takeLast(7)]
+                 }
              }
 
-             val contact = foundContact ?: Contact(
+             // Fallback if no map provided or not found (though map should handle known ones)
+             // If maps is null, we could potentially fallback to old slow logic, but for now assuming it's provided or we just show unknown
+             // For consistency with VM logic, we trust the map. If not in map -> Unknown.
+             
+             val resolvedContact = contact ?: Contact(
                     id = callEntry.id,
                     name = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(callEntry.contactId, context),
                     number = callEntry.contactId
                 )
-            callEntry to contact
+            callEntry to resolvedContact
         }
     }
 
