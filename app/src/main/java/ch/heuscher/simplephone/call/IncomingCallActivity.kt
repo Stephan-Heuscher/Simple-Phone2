@@ -25,8 +25,8 @@ import androidx.compose.material.icons.filled.CallEnd
 import androidx.compose.material.icons.filled.Dialpad
 import androidx.compose.material.icons.filled.PhoneInTalk
 import androidx.compose.material.icons.filled.SpeakerPhone
-import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -420,7 +420,7 @@ fun CallScreen(
             callState == Call.STATE_HOLDING
         )
         
-        if (showAudioControls && audioState != null) {
+        if (showAudioControls) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -614,7 +614,7 @@ fun CallScreen(
                             .fillMaxWidth(0.6f)
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.VolumeOff,
+                            imageVector = Icons.AutoMirrored.Filled.VolumeOff,
                             contentDescription = null,
                             modifier = Modifier.size(24.dp)
                         )
