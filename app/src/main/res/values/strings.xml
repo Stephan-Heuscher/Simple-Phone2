@@ -182,7 +182,12 @@
     <string name="paste">Paste</string>
 
     <!-- Silence on Touch -->
-    <string name="silence_on_touch">Silence on Touch</string>
-    <string name="silence_on_touch_desc">Silence ringtone by touching the screen or any button</string>
+    <string name="settings_silence_on_touch_title">Silence on touch</string>
+    <string name="settings_silence_on_touch_desc">Silence incoming calls by touching screen or pressing volume buttons</string>
 
+    <string name="settings_aggressive_speaker_title">Smart Speaker Switch</string>
+    <string name="settings_aggressive_speaker_desc">Suggest speaker when phone is away from ear during a call</string>
+    
+    <string name="speaker_suggestion_title">Switch to Speaker?</string>
+    <string name="speaker_suggestion_desc">Will automatically switch back to earpiece when you put the phone to your ear.</string>
 </resources>

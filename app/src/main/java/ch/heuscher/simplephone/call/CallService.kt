@@ -36,6 +36,11 @@ class CallService : InCallService() {
     private var vibrator: Vibrator? = null
     private var isVibrating = false
     private var wakeLock: android.os.PowerManager.WakeLock? = null
+    
+    // Proximity Sensor for Aggressive Speaker Switch
+    private var sensorManager: android.hardware.SensorManager? = null
+    private var proximitySensor: android.hardware.Sensor? = null
+    private var isProximitySensorRegistered = false
 
     companion object {
         // Track recent callers for repeat caller exception (number -> timestamp)
@@ -46,19 +51,20 @@ class CallService : InCallService() {
         
         // Singleton to track current call state
         var currentCall: Call? = null
-            private set
         
         var callState: Int = Call.STATE_DISCONNECTED
-            private set
             
         var callerNumber: String? = null
-            private set
             
         var callerName: String? = null
-            private set
 
         var currentAudioState: CallAudioState? = null
-            private set
+            
+        var shouldSuggestSpeaker: Boolean = false
+            
+        var userDeclinedSpeakerSuggestion: Boolean = false
+            
+        // Listeners for call state changes
             
         // Listeners for call state changes
         private val callStateListeners = mutableListOf<CallStateListener>()
@@ -73,10 +79,21 @@ class CallService : InCallService() {
             callStateListeners.remove(listener)
         }
         
-        private fun notifyCallStateChanged(disconnectCause: android.telecom.DisconnectCause? = null) {
+        fun notifyCallStateChanged(disconnectCause: android.telecom.DisconnectCause? = null) {
             callStateListeners.forEach { 
                 it.onCallStateChanged(callState, callerNumber, callerName, currentAudioState, disconnectCause) 
+                it.onShouldSuggestSpeakerChanged(shouldSuggestSpeaker)
             }
+        }
+        
+        fun dismissSpeakerSuggestion() {
+            shouldSuggestSpeaker = false
+            userDeclinedSpeakerSuggestion = true
+            notifyCallStateChanged()
+        }
+        
+        fun getShouldSuggestSpeakerState(): Boolean {
+             return shouldSuggestSpeaker
         }
         
         fun answerCall() {
@@ -138,48 +155,115 @@ class CallService : InCallService() {
         }
         
 
+        }
+        
+
+    
+    private val sensorEventListener = object : android.hardware.SensorEventListener {
+        override fun onSensorChanged(event: android.hardware.SensorEvent?) {
+            event ?: return
+            
+            if (event.sensor.type == android.hardware.Sensor.TYPE_PROXIMITY) {
+                val distance = event.values[0]
+                val maxRange = event.sensor.maximumRange
+                // Some sensors report 0 for near, and maxRange for far. 
+                // Others might have thresholds. Usually < 5cm is near.
+                // Safest check: if distance < maxRange and distance < 5cm => NEAR
+                
+                val isNear = distance < maxRange && distance < 5.0f // 5cm threshold
+                
+                // Get Aggressive Setting
+                val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(this@CallService)
+                if (!settingsRepository.aggressiveSpeakerSwitch) return
+                
+                val currentRoute = CallService.currentAudioState?.route ?: return
+                
+                if (isNear) {
+                    // Phone is AT EAR (or covered)
+                    Log.d(CallService.TAG, "Proximity: NEAR")
+                    
+                    // If we are on SPEAKER, switch to EARPIECE automatically
+                    if (currentRoute == CallAudioState.ROUTE_SPEAKER) {
+                        Log.d(CallService.TAG, "Proximity: Auto-switching to EARPIECE")
+                        setAudioRoute(CallAudioState.ROUTE_EARPIECE)
+                    }
+                    
+                    // Always dismiss suggestion if near
+                    if (CallService.shouldSuggestSpeaker) {
+                         CallService.shouldSuggestSpeaker = false
+                         // Reset decline state if user brings phone to ear? 
+                         // Optional: CallService.userDeclinedSpeakerSuggestion = false 
+                         CallService.notifyCallStateChanged()
+                    }
+                    
+                } else {
+                    // Phone is AWAY from ear
+                    Log.d(CallService.TAG, "Proximity: FAR")
+                    
+                    // If we are on EARPIECE, suggest switching to SPEAKER
+                    // Only invoke if call is ACTIVE
+                    // If we are on EARPIECE, suggest switching to SPEAKER
+                    // Invoke if call is ACTIVE, DIALING, or CONNECTING
+                    val isActiveOrDialing = CallService.callState == Call.STATE_ACTIVE || 
+                                          CallService.callState == Call.STATE_DIALING || 
+                                          CallService.callState == Call.STATE_CONNECTING
+                                          
+                    if (isActiveOrDialing && currentRoute == CallAudioState.ROUTE_EARPIECE) {
+                         if (!CallService.shouldSuggestSpeaker && !CallService.userDeclinedSpeakerSuggestion) {
+                             CallService.shouldSuggestSpeaker = true
+                             CallService.notifyCallStateChanged()
+                         }
+                    }
+                }
+            }
+        }
+
+        override fun onAccuracyChanged(sensor: android.hardware.Sensor?, accuracy: Int) {
+            // No-op
+        }
     }
 
     fun connectBluetoothDevice(device: android.bluetooth.BluetoothDevice) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            requestBluetoothAudio(device)
+            super.requestBluetoothAudio(device)
         }
     }
     
     private val callCallback = object : Call.Callback() {
         override fun onStateChanged(call: Call, state: Int) {
-            Log.d(TAG, "Call state changed: $state")
-            callState = state
+            Log.d(CallService.TAG, "Call state changed: $state")
+            CallService.callState = state
             updateCallInfo(call)
             
             // Acquire/Release wake lock based on state
-            instance?.updateWakeLock(state)
+            updateWakeLock(state)
             
             if (state == Call.STATE_DISCONNECTED) {
-                instance?.cancelOngoingCallNotification()
-                notifyCallStateChanged(call.details.disconnectCause)
+                cancelOngoingCallNotification()
+                CallService.notifyCallStateChanged(call.details.disconnectCause)
             } else {
                 if (state == Call.STATE_ACTIVE || state == Call.STATE_DIALING) {
-                    instance?.showOngoingCallNotification(call)
+                    showOngoingCallNotification(call)
                 }
-                notifyCallStateChanged()
+                CallService.notifyCallStateChanged()
             }
+
             
             if (state != Call.STATE_RINGING) {
                 stopRinging()
             }
             
             if (state == Call.STATE_DISCONNECTED) {
-                currentCall = null
-                callerNumber = null
-                callerName = null
+                CallService.currentCall = null
+                CallService.callerNumber = null
+                CallService.callerName = null
                 stopRinging()
             }
         }
         
         override fun onDetailsChanged(call: Call, details: Call.Details) {
             updateCallInfo(call)
-            notifyCallStateChanged()
+            CallService.notifyCallStateChanged()
         }
     }
     
@@ -207,13 +291,22 @@ class CallService : InCallService() {
         }
         
 
+
+        
+        // Initialize Sensor Manager
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as android.hardware.SensorManager
+        proximitySensor = sensorManager?.getDefaultSensor(android.hardware.Sensor.TYPE_PROXIMITY)
+        if (proximitySensor == null) {
+            Log.w(TAG, "No proximity sensor found!")
+        }
+
     }
 
     override fun onDestroy() {
         super.onDestroy()
         instance = null
         stopRinging()
-
+        stopProximitySensor()
     }
 
     /**
@@ -429,10 +522,10 @@ class CallService : InCallService() {
     private fun updateCallInfo(call: Call) {
         val details = call.details
         val handle = details?.handle
-        callerNumber = handle?.schemeSpecificPart
+        CallService.callerNumber = handle?.schemeSpecificPart
         
         // Try to get caller name from gateway info or caller display name
-        callerName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        CallService.callerName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             details?.contactDisplayName
         } else {
             null
@@ -447,14 +540,14 @@ class CallService : InCallService() {
         
         // Only check for blocking on INCOMING calls
         if (call.state == Call.STATE_RINGING) {
-            if (!shouldRingForCall(callerNumber)) {
+            if (!shouldRingForCall(CallService.callerNumber)) {
                  // If shouldRing returns false, it might be DND or our Blocking.
                  // We should check if it's our blocking specifically to reject.
                  // Re-checking blocking logic to be precise
                  val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(this)
                  var isBlocked = false
                  if (settingsRepository.blockUnknownCallers) {
-                     val number = callerNumber?.replace(Regex("[^0-9+]"), "")
+                     val number = CallService.callerNumber?.replace(Regex("[^0-9+]"), "")
                      if (number.isNullOrEmpty()) {
                          isBlocked = true
                      } else {
@@ -465,8 +558,8 @@ class CallService : InCallService() {
                  }
                  
                  if (isBlocked) {
-                     Log.i(TAG, "Rejecting blocked call from $callerNumber")
-                     val blockedNumber = callerNumber ?: "Unknown"
+                     Log.i(TAG, "Rejecting blocked call from ${CallService.callerNumber}")
+                     val blockedNumber = CallService.callerNumber ?: "Unknown"
                      settingsRepository.lastBlockedNumber = blockedNumber
                      showBlockedCallNotification(blockedNumber)
                      
@@ -477,28 +570,28 @@ class CallService : InCallService() {
             }
         }
 
-        currentCall = call
+        CallService.currentCall = call
         call.registerCallback(callCallback)
-        callState = call.state
+        CallService.callState = call.state
         updateCallInfo(call)
         
         // Acquire wake lock for any new call
         updateWakeLock(call.state)
         
-        // Start monitoring sensor for phone orientation
-
+        // Start monitoring sensor for phone orientation / proximity
+        startProximitySensor()
         
-        notifyCallStateChanged()
+        CallService.notifyCallStateChanged()
         
         if (call.state == Call.STATE_RINGING) {
-            startRinging(callerNumber)
+            startRinging(CallService.callerNumber)
         }
         
         // Launch the incoming call activity
         val intent = Intent(this, IncomingCallActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-            putExtra("caller_number", callerNumber)
-            putExtra("caller_name", callerName)
+            putExtra("caller_number", CallService.callerNumber)
+            putExtra("caller_name", CallService.callerName)
             putExtra("is_incoming", call.state == Call.STATE_RINGING)
         }
         startActivity(intent)
@@ -515,6 +608,16 @@ class CallService : InCallService() {
         }
         
 
+        
+        // Release wake lock
+        if (wakeLock?.isHeld == true) {
+            wakeLock?.release()
+        }
+        
+        stopProximitySensor()
+        stopProximitySensor()
+        shouldSuggestSpeaker = false
+        userDeclinedSpeakerSuggestion = false
         
         // Show our own missed call notification since we are the default dialer.
         // The system won't show one when we handle calls.
@@ -767,11 +870,30 @@ class CallService : InCallService() {
     
     override fun onCallAudioStateChanged(audioState: CallAudioState?) {
         Log.d(TAG, "Audio state changed: ${audioState?.route}")
-        currentAudioState = audioState
-        notifyCallStateChanged()
+        CallService.currentAudioState = audioState
+        CallService.notifyCallStateChanged()
     }
-}
+    private fun startProximitySensor() {
+        if (!isProximitySensorRegistered && proximitySensor != null) {
+            sensorManager?.registerListener(sensorEventListener, proximitySensor, android.hardware.SensorManager.SENSOR_DELAY_NORMAL)
+            isProximitySensorRegistered = true
+            Log.d(TAG, "Proximity sensor registered")
+        }
+    }
+    
+    private fun stopProximitySensor() {
+        if (isProximitySensorRegistered) {
+            sensorManager?.unregisterListener(sensorEventListener)
+            isProximitySensorRegistered = false
+            Log.d(TAG, "Proximity sensor unregistered")
+        }
+    }
+
+    }
+
+
 
 interface CallStateListener {
     fun onCallStateChanged(state: Int, number: String?, name: String?, audioState: CallAudioState?, disconnectCause: android.telecom.DisconnectCause? = null)
+    fun onShouldSuggestSpeakerChanged(shouldSuggest: Boolean) {}
 }

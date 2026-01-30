@@ -27,6 +27,7 @@ class SettingsRepository(context: Context) {
         private const val KEY_DISPLAY_MODE = "display_mode"
         private const val KEY_LAST_BLOCKED_NUMBER = "last_blocked_number"
         private const val KEY_SIMPLIFIED_CONTACT_CALL_SCREEN = "simplified_contact_call_screen"
+        private const val KEY_AGGRESSIVE_SPEAKER_SWITCH = "aggressive_speaker_switch"
         
         // Zoom factors per screen size
         private const val KEY_ZOOM_COMPACT = "zoom_compact"
@@ -98,6 +99,10 @@ class SettingsRepository(context: Context) {
     var silenceCallOnTouch: Boolean
         get() = prefs.getBoolean(KEY_SILENCE_CALL_ON_TOUCH, false)
         set(value) = prefs.edit().putBoolean(KEY_SILENCE_CALL_ON_TOUCH, value).apply()
+
+    var aggressiveSpeakerSwitch: Boolean
+        get() = prefs.getBoolean(KEY_AGGRESSIVE_SPEAKER_SWITCH, false)
+        set(value) = prefs.edit().putBoolean(KEY_AGGRESSIVE_SPEAKER_SWITCH, value).apply()
 
     // Derived properties for backward compatibility / ease of use
     val useHugeText: Boolean

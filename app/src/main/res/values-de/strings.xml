@@ -180,6 +180,13 @@
     <string name="paste">Einfügen</string>
 
     <!-- Silence on Touch -->
-    <string name="silence_on_touch">Stummschalten bei Berührung</string>
-    <string name="silence_on_touch_desc">Klingelton durch Berühren des Bildschirms oder einer Taste stummschalten</string>
+    <!-- Silence on Touch -->
+    <string name="settings_silence_on_touch_title">Stummschalten bei Berührung</string>
+    <string name="settings_silence_on_touch_desc">Klingelton durch Berühren des Bildschirms oder einer Taste stummschalten</string>
+
+    <string name="settings_aggressive_speaker_title">Intelligenter Lautsprecher</string>
+    <string name="settings_aggressive_speaker_desc">Lautsprecher vorschlagen, wenn Telefon vom Ohr entfernt wird</string>
+    
+    <string name="speaker_suggestion_title">Auf Lautsprecher?</string>
+    <string name="speaker_suggestion_desc">Wechselt automatisch zum Hörer, wenn das Telefon am Ohr ist.</string>
 </resources>

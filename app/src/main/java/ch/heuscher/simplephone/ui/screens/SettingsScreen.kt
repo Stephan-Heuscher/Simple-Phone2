@@ -113,7 +113,9 @@ fun SettingsScreen(
     simplifiedContactCallScreen: Boolean = false,
     onSimplifiedContactCallScreenChange: (Boolean) -> Unit = {},
     silenceCallOnTouch: Boolean = false,
-    onSilenceCallOnTouchChange: (Boolean) -> Unit = {}
+    onSilenceCallOnTouchChange: (Boolean) -> Unit = {},
+    aggressiveSpeakerSwitch: Boolean = false,
+    onAggressiveSpeakerSwitchChange: (Boolean) -> Unit = {}
 ) {
     // Remember favorites order for reordering
     val mutableFavorites = remember { mutableStateListOf<Contact>() }
@@ -651,12 +653,12 @@ fun SettingsScreen(
         // --- Silence on Touch Section ---
         item {
             Text(
-                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.silence_on_touch),
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_silence_on_touch_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.silence_on_touch_desc),
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_silence_on_touch_desc),
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(top = 8.dp)
             )
@@ -672,6 +674,36 @@ fun SettingsScreen(
                     isEnabled = silenceCallOnTouch,
                     onToggle = { vibrate(); onSilenceCallOnTouchChange(!silenceCallOnTouch) },
                     label = if (silenceCallOnTouch) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
+                )
+            }
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // --- Aggressive Speaker Switch Section ---
+        item {
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_aggressive_speaker_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_aggressive_speaker_desc),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                BigToggleButton(
+                    isEnabled = aggressiveSpeakerSwitch,
+                    onToggle = { vibrate(); onAggressiveSpeakerSwitchChange(!aggressiveSpeakerSwitch) },
+                    label = if (aggressiveSpeakerSwitch) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
                 )
             }
             HorizontalDivider()

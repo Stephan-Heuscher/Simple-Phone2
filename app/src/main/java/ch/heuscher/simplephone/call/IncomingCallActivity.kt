@@ -63,9 +63,7 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
     private var callState by mutableStateOf(Call.STATE_RINGING)
     private var contact by mutableStateOf<Contact?>(null)
     private var audioState by mutableStateOf<CallAudioState?>(null)
-    
-    private var wakeLock: PowerManager.WakeLock? = null // Removed, but kept variable to avoid compilation error if used elsewhere, actually I should remove it.
-    // Wait, I am replacing the whole class body parts.
+    private var shouldSuggestSpeaker by mutableStateOf(false)
     
     private var textToSpeech: android.speech.tts.TextToSpeech? = null
 
@@ -116,6 +114,19 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
         val useSimplifiedScreen = settingsRepository.simplifiedContactCallScreen
         
         setContent {
+            // Observe dialog state
+            if (shouldSuggestSpeaker) {
+                 SpeakerSuggestionDialog(
+                     onConfirm = {
+                         CallService.setAudioRoute(CallAudioState.ROUTE_SPEAKER)
+                         shouldSuggestSpeaker = false // Local dismiss, service will update too eventually
+                     },
+                     onDismiss = {
+                         CallService.dismissSpeakerSuggestion()
+                     }
+                 )
+            }
+            
             SimplePhoneTheme(darkThemeOption = 2) { // Force Dark Mode for calls
                 CallScreen(
                     callerNumber = callerNumber,
@@ -207,6 +218,7 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
         // WakeLock is now managed by CallService
 
         if (state == Call.STATE_DISCONNECTED) {
+            shouldSuggestSpeaker = false // clear dialog
             if (disconnectCause != null && disconnectCause.code != android.telecom.DisconnectCause.LOCAL && disconnectCause.code != android.telecom.DisconnectCause.REMOTE) {
                 // Something went wrong or busy
                 val reason = disconnectCause.label?.toString() ?: when(disconnectCause.code) {
@@ -231,6 +243,46 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
             }
         }
     }
+    
+    override fun onShouldSuggestSpeakerChanged(shouldSuggest: Boolean) {
+        shouldSuggestSpeaker = shouldSuggest
+    }
+}
+
+@Composable
+fun SpeakerSuggestionDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { 
+            Text(
+                text = stringResource(R.string.speaker_suggestion_title),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            ) 
+        },
+        text = { 
+            Text(
+                text = stringResource(R.string.speaker_suggestion_desc),
+                style = MaterialTheme.typography.titleMedium
+            ) 
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+            ) {
+                Text(stringResource(R.string.yes))
+            }
+        },
+        dismissButton = {
+             androidx.compose.material3.TextButton(onClick = onDismiss) {
+                 Text(stringResource(R.string.no))
+             }
+        }
+    )
 }
 
 @Composable
