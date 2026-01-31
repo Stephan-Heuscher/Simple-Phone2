@@ -41,6 +41,7 @@ class CallService : InCallService() {
     private var sensorManager: android.hardware.SensorManager? = null
     private var proximitySensor: android.hardware.Sensor? = null
     private var isProximitySensorRegistered = false
+    private var isPhoneAtEar = false // Track proximity state for logic updates
 
     companion object {
         // Track recent callers for repeat caller exception (number -> timestamp)
@@ -76,6 +77,7 @@ class CallService : InCallService() {
             callStateListeners.add(listener)
             // Immediately notify with current state
             listener.onCallStateChanged(callState, callerNumber, callerName, currentAudioState)
+            listener.onShouldSuggestSpeakerChanged(shouldHighlightSpeaker)
         }
         
         fun removeCallStateListener(listener: CallStateListener) {
@@ -170,54 +172,9 @@ class CallService : InCallService() {
                 // Safest check: if distance < maxRange and distance < 5cm => NEAR
                 
                 val isNear = distance < maxRange && distance < 5.0f // 5cm threshold
+                isPhoneAtEar = isNear
                 
-                // Get Aggressive Setting
-                val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(this@CallService)
-                if (!settingsRepository.aggressiveSpeakerSwitch) return
-                
-                val currentRoute = CallService.currentAudioState?.route ?: CallAudioState.ROUTE_EARPIECE
-                
-                // Logic for "Glow" effect:
-                
-                if (isNear) {
-                    // Phone is AT EAR (or covered)
-                    Log.d(CallService.TAG, "Proximity: NEAR")
-                    
-                    // If we are on SPEAKER, switch to EARPIECE automatically
-                    if (currentRoute == CallAudioState.ROUTE_SPEAKER) {
-                        Log.d(CallService.TAG, "Proximity: Auto-switching to EARPIECE")
-                        setAudioRoute(CallAudioState.ROUTE_EARPIECE)
-                    }
-                    
-                    // Never highlight if near
-                    if (CallService.shouldHighlightSpeaker) {
-                         CallService.shouldHighlightSpeaker = false
-                         CallService.notifyCallStateChanged()
-                    }
-                    
-                } else {
-                    // Phone is AWAY from ear
-                    Log.d(CallService.TAG, "Proximity: FAR")
-                    
-                    // Highlight if NOT on speaker (and call is active/dialing/connecting)
-                    // "only if speaker" constraint from user -> Loophole: Bluetooth? 
-                    // If currentRoute is SPEAKER, we don't highlight.
-                    // If currentRoute is EARPIECE, BLUETOOTH, WIRED -> We highlight.
-                    
-                    val isActiveOrDialing = CallService.callState == Call.STATE_ACTIVE || 
-                                          CallService.callState == Call.STATE_DIALING || 
-                                          CallService.callState == Call.STATE_CONNECTING
-                                          
-                    if (isActiveOrDialing) {
-                         // Check if we should start highlighting
-                         val shouldHighlight = currentRoute != CallAudioState.ROUTE_SPEAKER
-                         
-                         if (CallService.shouldHighlightSpeaker != shouldHighlight) {
-                             CallService.shouldHighlightSpeaker = shouldHighlight
-                             CallService.notifyCallStateChanged()
-                         }
-                    }
-                }
+                updateSpeakerHighlightState()
             }
         }
 
@@ -225,6 +182,43 @@ class CallService : InCallService() {
             // No-op
         }
     }
+    
+    private fun updateSpeakerHighlightState() {
+        // Get Aggressive Setting
+        val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(this)
+        if (!settingsRepository.aggressiveSpeakerSwitch) return
+        
+        val currentRoute = CallService.currentAudioState?.route ?: CallAudioState.ROUTE_EARPIECE
+        
+        if (isPhoneAtEar) {
+            // Phone is AT EAR
+            // If on SPEAKER, switch to EARPIECE
+            if (currentRoute == CallAudioState.ROUTE_SPEAKER) {
+                setAudioRoute(CallAudioState.ROUTE_EARPIECE)
+            }
+            
+            // Never highlight if near
+            if (CallService.shouldHighlightSpeaker) {
+                CallService.shouldHighlightSpeaker = false
+                CallService.notifyCallStateChanged()
+            }
+        } else {
+            // Phone is AWAY
+            val isActiveOrDialing = CallService.callState == Call.STATE_ACTIVE || 
+                                  CallService.callState == Call.STATE_DIALING || 
+                                  CallService.callState == Call.STATE_CONNECTING
+                                  
+            if (isActiveOrDialing) {
+                 val shouldHighlight = currentRoute != CallAudioState.ROUTE_SPEAKER
+                 if (CallService.shouldHighlightSpeaker != shouldHighlight) {
+                     CallService.shouldHighlightSpeaker = shouldHighlight
+                     CallService.notifyCallStateChanged()
+                 }
+            }
+        }
+    }
+                
+
 
     fun connectBluetoothDevice(device: android.bluetooth.BluetoothDevice) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -249,6 +243,7 @@ class CallService : InCallService() {
                     showOngoingCallNotification(call)
                 }
                 CallService.notifyCallStateChanged()
+                updateSpeakerHighlightState() // Re-evaluate glow when call state changes (e.g. Ringing -> Active)
             }
 
             
@@ -873,6 +868,7 @@ class CallService : InCallService() {
     override fun onCallAudioStateChanged(audioState: CallAudioState?) {
         Log.d(TAG, "Audio state changed: ${audioState?.route}")
         CallService.currentAudioState = audioState
+        updateSpeakerHighlightState() // Re-evaluate glow when audio route changes
         CallService.notifyCallStateChanged()
     }
     private fun startProximitySensor() {
