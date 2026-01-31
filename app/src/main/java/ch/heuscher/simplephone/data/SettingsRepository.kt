@@ -101,7 +101,7 @@ class SettingsRepository(context: Context) {
         set(value) = prefs.edit().putBoolean(KEY_SILENCE_CALL_ON_TOUCH, value).apply()
 
     var aggressiveSpeakerSwitch: Boolean
-        get() = prefs.getBoolean(KEY_AGGRESSIVE_SPEAKER_SWITCH, false)
+        get() = prefs.getBoolean(KEY_AGGRESSIVE_SPEAKER_SWITCH, true)
         set(value) = prefs.edit().putBoolean(KEY_AGGRESSIVE_SPEAKER_SWITCH, value).apply()
 
     // Derived properties for backward compatibility / ease of use

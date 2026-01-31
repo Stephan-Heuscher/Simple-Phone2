@@ -680,35 +680,7 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(24.dp))
         }
 
-        // --- Aggressive Speaker Switch Section ---
-        item {
-            Text(
-                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_aggressive_speaker_title),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_aggressive_speaker_desc),
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(top = 8.dp)
-            )
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(top = 16.dp, bottom = 32.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                BigToggleButton(
-                    isEnabled = aggressiveSpeakerSwitch,
-                    onToggle = { vibrate(); onAggressiveSpeakerSwitchChange(!aggressiveSpeakerSwitch) },
-                    label = if (aggressiveSpeakerSwitch) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
-                )
-            }
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(24.dp))
-        }
 
         // --- Call Confirmation Section ---
         item {
