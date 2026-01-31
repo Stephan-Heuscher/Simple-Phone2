@@ -176,7 +176,7 @@ class CallService : InCallService() {
                 val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(this@CallService)
                 if (!settingsRepository.aggressiveSpeakerSwitch) return
                 
-                val currentRoute = CallService.currentAudioState?.route ?: return
+                val currentRoute = CallService.currentAudioState?.route ?: CallAudioState.ROUTE_EARPIECE
                 
                 if (isNear) {
                     // Phone is AT EAR (or covered)
