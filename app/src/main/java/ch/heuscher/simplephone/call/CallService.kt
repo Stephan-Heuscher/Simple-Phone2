@@ -186,6 +186,8 @@ class CallService : InCallService() {
                     if (currentRoute == CallAudioState.ROUTE_SPEAKER) {
                         Log.d(CallService.TAG, "Proximity: Auto-switching to EARPIECE")
                         setAudioRoute(CallAudioState.ROUTE_EARPIECE)
+                        // Reset decline state so prompt can appear again when phone is taken away
+                        CallService.userDeclinedSpeakerSuggestion = false
                     }
                     
                     // Always dismiss suggestion if near
