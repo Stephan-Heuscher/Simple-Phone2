@@ -185,16 +185,19 @@ class CallService : InCallService() {
     
     private fun updateSpeakerHighlightState() {
         val currentRoute = CallService.currentAudioState?.route ?: CallAudioState.ROUTE_EARPIECE
+        Log.d(TAG, "UpdateGlow: AtEar=$isPhoneAtEar, Route=$currentRoute, State=$callState, Highlight=$shouldHighlightSpeaker")
         
         if (isPhoneAtEar) {
             // Phone is AT EAR
             // If on SPEAKER, switch to EARPIECE
             if (currentRoute == CallAudioState.ROUTE_SPEAKER) {
+                Log.d(TAG, "UpdateGlow: Auto-switch to EARPIECE (Near)")
                 setAudioRoute(CallAudioState.ROUTE_EARPIECE)
             }
             
             // Never highlight if near
             if (CallService.shouldHighlightSpeaker) {
+                Log.d(TAG, "UpdateGlow: Setting FALSE (At Ear)")
                 CallService.shouldHighlightSpeaker = false
                 CallService.notifyCallStateChanged()
             }
@@ -208,9 +211,14 @@ class CallService : InCallService() {
                  val shouldHighlight = currentRoute != CallAudioState.ROUTE_SPEAKER
                  
                  if (CallService.shouldHighlightSpeaker != shouldHighlight) {
+                     Log.d(TAG, "UpdateGlow: Changing to $shouldHighlight (Away, Not Speaker)")
                      CallService.shouldHighlightSpeaker = shouldHighlight
                      CallService.notifyCallStateChanged()
+                 } else {
+                     Log.d(TAG, "UpdateGlow: No change (Already $shouldHighlight)")
                  }
+            } else {
+                Log.d(TAG, "UpdateGlow: Not active/dialing")
             }
         }
     }
