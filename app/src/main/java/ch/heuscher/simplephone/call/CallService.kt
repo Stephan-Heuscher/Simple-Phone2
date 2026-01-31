@@ -184,10 +184,6 @@ class CallService : InCallService() {
     }
     
     private fun updateSpeakerHighlightState() {
-        // Get Aggressive Setting
-        val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(this)
-        if (!settingsRepository.aggressiveSpeakerSwitch) return
-        
         val currentRoute = CallService.currentAudioState?.route ?: CallAudioState.ROUTE_EARPIECE
         
         if (isPhoneAtEar) {
@@ -210,6 +206,7 @@ class CallService : InCallService() {
                                   
             if (isActiveOrDialing) {
                  val shouldHighlight = currentRoute != CallAudioState.ROUTE_SPEAKER
+                 
                  if (CallService.shouldHighlightSpeaker != shouldHighlight) {
                      CallService.shouldHighlightSpeaker = shouldHighlight
                      CallService.notifyCallStateChanged()
