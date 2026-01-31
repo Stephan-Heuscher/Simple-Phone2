@@ -29,6 +29,8 @@ import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.animation.core.*
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -114,19 +116,6 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
         val useSimplifiedScreen = settingsRepository.simplifiedContactCallScreen
         
         setContent {
-            // Observe dialog state
-            if (shouldSuggestSpeaker) {
-                 SpeakerSuggestionDialog(
-                     onConfirm = {
-                         CallService.setAudioRoute(CallAudioState.ROUTE_SPEAKER)
-                         CallService.dismissSpeakerSuggestion() // Clear service state to prevent re-pop
-                         shouldSuggestSpeaker = false
-                     },
-                     onDismiss = {
-                         CallService.dismissSpeakerSuggestion()
-                     }
-                 )
-            }
             
             SimplePhoneTheme(darkThemeOption = 2) { // Force Dark Mode for calls
                 CallScreen(
@@ -136,6 +125,7 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
                     isIncoming = isIncoming && callState == Call.STATE_RINGING,
                     callState = callState,
                     audioState = audioState,
+                    shouldHighlightSpeaker = shouldSuggestSpeaker, // Mapping to UI param
                     useSimplifiedScreen = useSimplifiedScreen,
                     onAnswer = {
                         CallService.answerCall()
@@ -294,6 +284,7 @@ fun CallScreen(
     isIncoming: Boolean,
     callState: Int,
     audioState: CallAudioState?,
+    shouldHighlightSpeaker: Boolean = false,
     useSimplifiedScreen: Boolean = false,
     onAnswer: () -> Unit,
     onReject: () -> Unit,
@@ -443,6 +434,7 @@ fun CallScreen(
                         icon = Icons.AutoMirrored.Filled.VolumeUp,
                         label = stringResource(R.string.speaker),
                         isSelected = isSelected,
+                        shouldHighlight = shouldHighlightSpeaker && !isSelected, // Highlight if suggested and NOT already selected
                         onClick = { 
                             vibrate(context)
                             onAudioRouteSelected(CallAudioState.ROUTE_SPEAKER) 
@@ -716,6 +708,7 @@ fun AudioRouteButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     isSelected: Boolean,
+    shouldHighlight: Boolean = false,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -723,20 +716,64 @@ fun AudioRouteButton(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.clickable(onClick = onClick)
     ) {
-        FilledIconButton(
-            onClick = onClick,
-            modifier = Modifier.size(56.dp),
-            colors = IconButtonDefaults.filledIconButtonColors(
-                containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+        val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition()
+        val pulseScale by if (shouldHighlight) {
+            infiniteTransition.animateFloat(
+                initialValue = 1f,
+                targetValue = 1.2f,
+                animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+                    animation = androidx.compose.animation.core.tween(1000),
+                    repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+                ), label = "pulse"
             )
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                modifier = Modifier.size(28.dp)
-            )
+        } else {
+            remember { mutableFloatStateOf(1f) }
         }
+
+        val pulseAlpha by if (shouldHighlight) {
+            infiniteTransition.animateFloat(
+                initialValue = 0.5f,
+                targetValue = 0f,
+                animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+                    animation = androidx.compose.animation.core.tween(1000),
+                    repeatMode = androidx.compose.animation.core.RepeatMode.Restart
+                ), label = "alpha"
+            )
+        } else {
+            remember { mutableFloatStateOf(0f) }
+        }
+
+        Box(contentAlignment = Alignment.Center) {
+            // Glow effect behind
+            if (shouldHighlight) {
+                 Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .graphicsLayer {
+                            scaleX = pulseScale
+                            scaleY = pulseScale
+                            alpha = 0.5f // Fixed alpha or pulsating alpha
+                        }
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), CircleShape)
+                 )
+            }
+            
+            FilledIconButton(
+                onClick = onClick,
+                modifier = Modifier.size(56.dp),
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        }
+        
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = label,
@@ -797,6 +834,7 @@ fun DtmfKeypadOverlay(
             }
         }
     }
+
 }
 
 @Composable
