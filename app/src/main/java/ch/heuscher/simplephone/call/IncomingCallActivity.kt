@@ -241,8 +241,6 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
 }
 
 @Composable
-
-@Composable
 fun CallScreen(
     callerNumber: String?,
     callerName: String,
