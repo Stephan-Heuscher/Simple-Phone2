@@ -119,7 +119,8 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
                  SpeakerSuggestionDialog(
                      onConfirm = {
                          CallService.setAudioRoute(CallAudioState.ROUTE_SPEAKER)
-                         shouldSuggestSpeaker = false // Local dismiss, service will update too eventually
+                         CallService.dismissSpeakerSuggestion() // Clear service state to prevent re-pop
+                         shouldSuggestSpeaker = false
                      },
                      onDismiss = {
                          CallService.dismissSpeakerSuggestion()
