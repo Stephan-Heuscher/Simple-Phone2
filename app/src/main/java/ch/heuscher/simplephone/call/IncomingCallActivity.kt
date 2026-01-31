@@ -241,40 +241,6 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
 }
 
 @Composable
-fun SpeakerSuggestionDialog(
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    androidx.compose.material3.AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { 
-            Text(
-                text = stringResource(R.string.speaker_suggestion_title),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            ) 
-        },
-        text = { 
-            Text(
-                text = stringResource(R.string.speaker_suggestion_desc),
-                style = MaterialTheme.typography.titleMedium
-            ) 
-        },
-        confirmButton = {
-            Button(
-                onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-            ) {
-                Text(stringResource(R.string.yes))
-            }
-        },
-        dismissButton = {
-             androidx.compose.material3.TextButton(onClick = onDismiss) {
-                 Text(stringResource(R.string.no))
-             }
-        }
-    )
-}
 
 @Composable
 fun CallScreen(
@@ -719,10 +685,10 @@ fun AudioRouteButton(
         val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition()
         val pulseScale by if (shouldHighlight) {
             infiniteTransition.animateFloat(
-                initialValue = 1f,
-                targetValue = 1.2f,
+                initialValue = 1.15f, // Visible even if animations are OFF
+                targetValue = 1.35f,
                 animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-                    animation = androidx.compose.animation.core.tween(1000),
+                    animation = androidx.compose.animation.core.tween(800),
                     repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
                 ), label = "pulse"
             )
@@ -732,11 +698,11 @@ fun AudioRouteButton(
 
         val pulseAlpha by if (shouldHighlight) {
             infiniteTransition.animateFloat(
-                initialValue = 0.5f,
-                targetValue = 0f,
+                initialValue = 0.6f,
+                targetValue = 0.2f,
                 animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-                    animation = androidx.compose.animation.core.tween(1000),
-                    repeatMode = androidx.compose.animation.core.RepeatMode.Restart
+                    animation = androidx.compose.animation.core.tween(800),
+                    repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
                 ), label = "alpha"
             )
         } else {
@@ -752,9 +718,9 @@ fun AudioRouteButton(
                         .graphicsLayer {
                             scaleX = pulseScale
                             scaleY = pulseScale
-                            alpha = 0.5f // Fixed alpha or pulsating alpha
+                            alpha = pulseAlpha // Animate alpha
                         }
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), CircleShape)
+                        .background(MaterialTheme.colorScheme.primary, CircleShape)
                  )
             }
             

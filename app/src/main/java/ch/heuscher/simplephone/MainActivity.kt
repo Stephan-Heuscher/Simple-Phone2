@@ -492,7 +492,7 @@ fun SimplePhoneApp(
 
     var simplifiedContactCallScreen by remember { mutableStateOf(settingsRepository.simplifiedContactCallScreen) }
     var silenceCallOnTouch by remember { mutableStateOf(settingsRepository.silenceCallOnTouch) }
-    var aggressiveSpeakerSwitch by remember { mutableStateOf(settingsRepository.aggressiveSpeakerSwitch) }
+
 
     // Triple tap logic
     var titleTapCount by remember { androidx.compose.runtime.mutableIntStateOf(0) }
@@ -792,11 +792,6 @@ fun SimplePhoneApp(
                         onSilenceCallOnTouchChange = {
                             silenceCallOnTouch = it
                             settingsRepository.silenceCallOnTouch = it
-                        },
-                        aggressiveSpeakerSwitch = aggressiveSpeakerSwitch,
-                        onAggressiveSpeakerSwitchChange = {
-                            aggressiveSpeakerSwitch = it
-                            settingsRepository.aggressiveSpeakerSwitch = it
                         }
                     )
                 }
