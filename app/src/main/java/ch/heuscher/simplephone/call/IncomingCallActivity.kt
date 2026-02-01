@@ -599,6 +599,31 @@ private fun CallScreenLandscape(
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                     )
                 }
+                
+                Spacer(modifier = Modifier.weight(1f)) // Push buttons to bottom of this column
+                
+                // Action buttons (Inside left column now)
+                if (isIncoming) {
+                    IncomingCallButtonsLandscape(
+                        context = context,
+                        useSimplifiedScreen = useSimplifiedScreen && isKnownContact,
+                        onAnswer = onAnswer,
+                        onReject = onReject,
+                        onSilence = onSilence
+                    )
+                } else {
+                    // Active call: hangup button (horizontal in landscape)
+                    CallActionButtonHorizontal(
+                        icon = Icons.Filled.CallEnd,
+                        label = stringResource(R.string.end_call),
+                        color = RedHangup,
+                        onClick = {
+                            vibrate(context)
+                            onHangup()
+                        },
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                    )
+                }
             }
             
             // Right side: Audio controls panel (vertical)
@@ -624,35 +649,6 @@ private fun CallScreenLandscape(
             }
         }
         
-        // Bottom: Full-width action buttons
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            if (isIncoming) {
-                IncomingCallButtonsLandscape(
-                    context = context,
-                    useSimplifiedScreen = useSimplifiedScreen && isKnownContact,
-                    onAnswer = onAnswer,
-                    onReject = onReject,
-                    onSilence = onSilence
-                )
-            } else {
-                // Active call: hangup button (horizontal in landscape)
-                CallActionButtonHorizontal(
-                    icon = Icons.Filled.CallEnd,
-                    label = stringResource(R.string.end_call),
-                    color = RedHangup,
-                    onClick = {
-                        vibrate(context)
-                        onHangup()
-                    },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)
-                )
-            }
-        }
     }
 }
 
@@ -670,19 +666,19 @@ private fun CallActionButtonHorizontal(
     Button(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(containerColor = color),
-        modifier = modifier.height(64.dp),
+        modifier = modifier.height(80.dp),
         shape = CircleShape
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = Color.White,
-            modifier = Modifier.size(28.dp)
+            modifier = Modifier.size(32.dp)
         )
         Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = label,
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.headlineSmall,
             color = Color.White,
             fontWeight = FontWeight.Bold
         )
