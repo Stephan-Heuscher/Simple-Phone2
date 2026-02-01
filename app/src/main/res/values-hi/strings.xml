@@ -1,0 +1,188 @@
+<resources>
+    <string name="app_name">Simple Phone</string>
+    <string name="widget_description">अपने पसंदीदा लोगों को तुरंत कॉल करें। कॉल करने के लिए फोटो या हरे बटन पर टैप करें।</string>
+    
+    <!-- Main Screen -->
+    <string name="missed_calls">छूटी हुई कॉल</string>
+    <string name="show_all">सभी देखें ></string>
+    <string name="no_missed_calls">कोई छूटी हुई कॉल नहीं</string>
+    <string name="favorites">पसंदीदा</string>
+    <string name="no_favorites">कोई पसंदीदा नहीं</string>
+    <string name="phone_book">संपर्क</string>
+    <string name="search_results">खोज परिणाम</string>
+    <string name="contacts_found">%d संपर्क मिले</string>
+    <string name="search_placeholder">खोजें...</string>
+    <string name="default_app_warning">⚠️ डिफ़ॉल्ट फोन ऐप के रूप में सेट नहीं है</string>
+    <string name="default_app_enable">कॉल सेट अप करने के लिए टैप करें</string>
+    <string name="all_calls">सभी कॉल</string>
+    <string name="back">पीछे</string>
+
+    <!-- Call Log -->
+    <string name="call_history">कॉल इतिहास</string>
+    <string name="unknown_contact">अज्ञात</string>
+    <string name="no_recent_calls">कोई हालिया कॉल नहीं</string>
+    
+    <!-- Settings -->
+    <string name="settings_title">विकल्प</string>
+    <string name="settings_appearance">प्रदर्शन मोड</string>
+    <string name="settings_appearance_desc">चुनें कि संपर्क कैसे प्रदर्शित हों:</string>
+    <string name="display_mode_standard">मानक</string>
+    <string name="display_mode_large_text">बड़ा टेक्स्ट</string>
+    <string name="display_mode_big_photos">बड़ी तस्वीरें</string>
+    <string name="display_mode_grid">ग्रिड दृश्य</string>
+    <string name="settings_huge_text">विशाल टेक्स्ट</string>
+    <string name="settings_huge_picture">विशाल चित्र</string>
+    <string name="settings_huge_picture_desc">स्पष्ट टेक्स्ट के साथ बड़ा चित्र</string>
+    <string name="settings_grid_view">ग्रिड दृश्य</string>
+    <string name="settings_grid_view_desc">केवल संपर्क चित्र (प्रति पंक्ति 2)</string>
+    <string name="default_phone_app">डिफ़ॉल्ट फोन ऐप</string>
+    <string name="set_default_desc">इस ऐप को अपना डिफ़ॉल्ट फोन ऐप सेट करें:</string>
+    <string name="set_default_btn">डिफ़ॉल्ट सेट करें</string>
+    <string name="text_size">टेक्स्ट आकार</string>
+    <string name="text_size_desc">संपर्क नाम बहुत बड़ा करें (चित्र के समान आकार):</string>
+    <string name="dark_mode">डार्क मोड</string>
+    <string name="dark_mode_desc">ऐप का स्वरूप चुनें:</string>
+    <string name="mode_system">सिस्टम</string>
+    <string name="mode_light">लाइट</string>
+    <string name="mode_dark">डार्क</string>
+    <string name="call_confirm">कॉल पुष्टि</string>
+    <string name="call_confirm_desc">कॉल करने से पहले पूछें (आकस्मिक कॉल रोकता है):</string>
+    <string name="vibration_feedback">कंपन प्रतिक्रिया</string>
+    <string name="vibration_desc">बटन दबाने पर कंपन करें:</string>
+    <string name="voice_announcements">आवाज़ घोषणाएं</string>
+    <string name="voice_desc">कॉल करते समय संपर्क का नाम बोलें:</string>
+    <string name="missed_calls_display">छूटी हुई कॉल प्रदर्शन</string>
+    <string name="missed_calls_desc">पिछले समय की छूटी हुई कॉल दिखाएं:</string>
+    <string name="hours_format">%d घंटे</string>
+    <string name="favorites_order">पसंदीदा क्रम</string>
+    <string name="favorites_order_desc">पुनर्व्यवस्थित करने के लिए फोटो को देर तक दबाएं और खींचें</string>
+    <string name="call_behavior">कॉल व्यवहार</string>
+    <string name="block_unknown">अज्ञात नंबर ब्लॉक करें</string>
+    <string name="block_unknown_desc">उन नंबरों से कॉल ब्लॉक करें जो आपकी फोन बुक में नहीं हैं।</string>
+    <string name="on">चालू</string>
+    <string name="off">बंद</string>
+    
+    <!-- Call Screen -->
+    <string name="incoming_call">आने वाली कॉल</string>
+    <string name="calling">कॉल किया जा रहा है...</string>
+    <string name="on_call">कॉल पर</string>
+    <string name="on_hold">होल्ड पर</string>
+    <string name="connecting">कनेक्ट हो रहा है...</string>
+    <string name="reject">अस्वीकार करें</string>
+    <string name="answer">उत्तर दें</string>
+    <string name="end_call">कॉल समाप्त करें</string>
+    <string name="speaker">स्पीकर</string>
+    <string name="bluetooth">ब्लूटूथ</string>
+    <string name="earpiece">ईयरपीस</string>
+    <string name="advanced_settings">उन्नत विकल्प</string>
+
+    <string name="calls">कॉल्स</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">Simple Phone में आपका स्वागत है</string>
+    <string name="onboarding_welcome_desc">Simple Phone का उपयोग करना आसान है। इसमें बड़े बटन और स्पष्ट टेक्स्ट है।</string>
+    <string name="onboarding_favorites_title">पसंदीदा तक त्वरित पहुंच</string>
+    <string name="onboarding_favorites_desc">आपके पसंदीदा संपर्क एक-टैप कॉलिंग के लिए शीर्ष पर दिखाई देते हैं। कॉल करने के लिए फोटो या हरे बटन पर टैप करें।</string>
+    <string name="onboarding_search_title">आसान संपर्क खोज</string>
+    <string name="onboarding_search_desc">किसी भी संपर्क को जल्दी से खोजने के लिए खोज बार का उपयोग करें। नाम टाइप करें और कॉल करने के लिए टैप करें।</string>
+    <string name="onboarding_missed_title">छूटी हुई कॉल</string>
+    <string name="onboarding_missed_desc">अपनी हाल की छूटी हुई कॉल को रीसेंट टैब पर एक नज़र में देखें।</string>
+    <string name="onboarding_audio_title">कॉल के दौरान ऑडियो विकल्प</string>
+    <string name="onboarding_audio_desc">आसानी से टैप करने वाले बटनों के साथ कॉल के दौरान स्पीकर, ब्लूटूथ और ईयरपीस के बीच स्विच करें।</string>
+    <string name="onboarding_settings_title">अनुकूलन योग्य सेटिंग्स</string>
+    <string name="onboarding_settings_desc">टेक्स्ट आकार समायोजित करें, डार्क मोड, कॉल पुष्टि, कंपन और आवाज़ घोषणाओं को सेटिंग्स में सक्षम करें।</string>
+    <string name="onboarding_default_title">अनुमतियाँ और डिफ़ॉल्ट</string>
+    <string name="onboarding_default_desc">Simple Phone को कॉल तक पहुंच की आवश्यकता है। आपको इसे अपने डिफ़ॉल्ट फोन ऐप के रूप में सेट करने के लिए कहा जाएगा।</string>
+    <string name="skip">छोड़ें</string>
+    <string name="next">आगे</string>
+    <string name="get_started">शुरू करें</string>
+
+    <!-- Accessibility -->
+
+    <string name="cd_backspace_button">बैकस्पेस</string>
+    <string name="cd_decrease_hours">घंटे घटाएं</string>
+    <string name="cd_increase_hours">घंटे बढ़ाएं</string>
+    <string name="cd_move_up">%s को ऊपर ले जाएं</string>
+    <string name="cd_move_down">%s को नीचे ले जाएं</string>
+    <string name="cd_toggle">%s टॉगल करें</string>
+    <string name="cd_button">बटन %s</string>
+    <string name="cd_open_dialer">डायलर खोलें</string>
+    <string name="cd_clear_search">खोज साफ़ करें</string>
+    <string name="cd_search">खोजें</string>
+    <string name="cd_contact_action">संपर्क %s, कॉल करने के लिए चित्र या हरे बटन पर टैप करें</string>
+    <string name="cd_call_contact">%s को कॉल करें</string>
+    <string name="cd_contact_huge">संपर्क %s, विशाल चित्र मोड</string>
+    <string name="cd_audio_output">%s ऑडियो आउटपुट</string>
+    <string name="cd_end_call">कॉल समाप्त करें</string>
+    <string name="audio_output_title">ऑडियो आउटपुट</string>
+    <string name="keypad">कीपैड</string>
+    <string name="hide_keypad">कीपैड छिपाएं</string>
+    <string name="wired_headset">हेडसेट</string>
+    <string name="hearing_aid">हियरिंग एड</string>
+    
+    <!-- MainActivity & Dialogs -->
+    <string name="calling_announcement">%s को कॉल किया जा रहा है</string>
+    <string name="toast_default_dialer_set">ऐप अब डिफ़ॉल्ट डायलर है!</string>
+    <string name="toast_default_dialer_declined">डिफ़ॉल्ट डायलर अनुरोध अस्वीकार कर दिया गया।</string>
+    <string name="demo_mode_enabled">डेमो मोड सक्षम</string>
+    <string name="demo_mode_disabled">डेमो मोड अक्षम</string>
+    <string name="calling_title">कॉल किया जा रहा है...</string>
+    <string name="demo_mode_dialog_title">डेमो मोड सक्षम करें?</string>
+    <string name="demo_mode_dialog_message">यह आपके वर्तमान डेटा को प्रदर्शन उद्देश्यों के लिए उदाहरण डेटा से बदल देगा। (%d सेकंड में गायब हो जाएगा)</string>
+    <string name="call_confirmation_title">%s को कॉल करें?</string>
+    <string name="yes">हाँ</string>
+    <string name="no">नहीं</string>
+    
+    <!-- Screen Titles -->
+    <string name="screen_home">होम</string>
+    <string name="screen_recents">हालिया</string>
+    <string name="screen_dialer">डायलर</string>
+    <string name="screen_call_log">कॉल लॉग</string>
+    
+    <!-- Accessibility -->
+    <string name="cd_go_back">वापस जाएं</string>
+    <string name="cd_open_settings">सेटिंग्स खोलें</string>
+    <string name="cd_call_button">फोन कॉल करें</string>
+    <string name="cd_favorite">पसंदीदा</string>
+    <string name="cd_contact_photo">%s की फोटो</string>
+
+    <!-- Blocked Calls -->
+    <string name="notification_blocked_call_title">कॉल ब्लॉक किया गया</string>
+    <string name="notification_blocked_call_content">ब्लॉक किया गया नंबर: %s</string>
+    <string name="settings_last_blocked">(अंतिम ब्लॉक: %s)</string>
+
+    <!-- Zoom Factor -->
+    <string name="settings_zoom_factor">UI स्केल / ज़ूम</string>
+    <string name="zoom_factor_current_screen">वर्तमान स्क्रीन (%s)</string>
+    <string name="zoom_screen_compact">सामान्य फोन</string>
+    <string name="zoom_screen_medium">बड़ा फोन / अनफोल्डेड</string>
+    <string name="zoom_screen_expanded"> टैबलेट</string>
+    <string name="zoom_value_format">%d%%</string>
+    <string name="cd_decrease_zoom">ज़ूम घटाएं</string>
+    <string name="cd_increase_zoom">ज़ूम बढ़ाएं</string>
+    <string name="reset_zoom">ज़ूम रीसेट करें</string>
+
+    <!-- About & Legal -->
+    <string name="about_legal">विधिक जानकारी</string>
+    <string name="privacy_policy">गोपनीयता नीति</string>
+    <string name="terms_of_service">सेवा की शर्तें</string>
+    <string name="send_feedback">प्रतिक्रिया भेजें</string>
+    <string name="feedback_subject">Simple Phone प्रतिक्रिया</string>
+    <string name="feedback_body">\n\n\n---\nडिवाइस की जानकारी (इससे हमें बहुत मदद मिलती है!)\nचूंकि Simple Phone कोई डेटा एकत्र नहीं करता है, इसलिए आपकी प्रतिक्रिया ही मुद्दों और सुधारों के बारे में जानने का हमारा एकमात्र तरीका है। यदि आप चाहें तो इसे हटा सकते हैं।\n\nऐप संस्करण: %1$s (%2$d)\nएंड्रॉइड संस्करण: %3$s (API %4$d)\nडिवाइस: %5$s %6$s\nभाषा: %7$s\n---</string>
+    <string name="how_to_use">उपयोग कैसे करें / ट्यूटोरियल</string>
+    <string name="toast_open_contact_error">संपर्क विवरण नहीं खोला जा सकता</string>
+    <string name="toast_open_contact_exception">संपर्क ऐप खोलने में त्रुटि</string>
+    <string name="permission_needed_title">अनुमति की आवश्यकता है</string>
+    <string name="ok_button">ठीक है</string>
+
+    <!-- Simplified Contact Call Screen -->
+    <string name="settings_simplified_contact_screen">सरल कॉल स्क्रीन</string>
+    <string name="settings_simplified_contact_screen_desc">ज्ञात संपर्कों के लिए बड़ा उत्तर बटन दिखाएं:</string>
+    <string name="silence">मौन</string>
+    <string name="paste">चिपकाएं</string>
+
+    <!-- Silence on Touch -->
+    <string name="settings_silence_on_touch_title">स्पर्श पर मौन</string>
+    <string name="settings_silence_on_touch_desc">स्क्रीन को छूकर या वॉल्यूम बटन दबाकर आने वाली कॉल को मौन करें</string>
+
+</resources>

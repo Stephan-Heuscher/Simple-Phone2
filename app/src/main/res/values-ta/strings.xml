@@ -1,0 +1,188 @@
+<resources>
+    <string name="app_name">Simple Phone</string>
+    <string name="widget_description">உங்கள் விருப்பமானவர்களை விரைவாக அழைக்கவும். அழைக்க புகைப்படத்தை அல்லது பச்சை பட்டனைத் தட்டவும்.</string>
+    
+    <!-- Main Screen -->
+    <string name="missed_calls">தவறிய அழைப்புகள்</string>
+    <string name="show_all">அனைத்தையும் காட்டு ></string>
+    <string name="no_missed_calls">தவறிய அழைப்புகள் இல்லை</string>
+    <string name="favorites">விருப்பமானவை</string>
+    <string name="no_favorites">விருப்பமானவை இல்லை</string>
+    <string name="phone_book">தொலைபேசி புத்தகம்</string>
+    <string name="search_results">தேடல் முடிவுகள்</string>
+    <string name="contacts_found">%d தொடர்புகள் கண்டறியப்பட்டன</string>
+    <string name="search_placeholder">தேடு...</string>
+    <string name="default_app_warning">⚠️ இயல்புநிலை ஃபோன் பயன்பாடாக அமைக்கப்படவில்லை</string>
+    <string name="default_app_enable">அழைப்புகளை அமைக்க இங்கே தட்டவும்</string>
+    <string name="all_calls">அனைத்து அழைப்புகள்</string>
+    <string name="back">பின்செல்</string>
+
+    <!-- Call Log -->
+    <string name="call_history">அழைப்பு வரலாறு</string>
+    <string name="unknown_contact">தெரியாதவர்</string>
+    <string name="no_recent_calls">சமீபத்திய அழைப்புகள் இல்லை</string>
+    
+    <!-- Settings -->
+    <string name="settings_title">விருப்பங்கள்</string>
+    <string name="settings_appearance">காட்சி பயன்முறை</string>
+    <string name="settings_appearance_desc">தொடர்புகள் எப்படி தோன்ற வேண்டும் என்பதைத் தேர்வுசெய்க:</string>
+    <string name="display_mode_standard">தரநிலை</string>
+    <string name="display_mode_large_text">பெரிய எழுத்து</string>
+    <string name="display_mode_big_photos">பெரிய புகைப்படங்கள்</string>
+    <string name="display_mode_grid">கட்டம் காட்சி</string>
+    <string name="settings_huge_text">மிகப் பெரிய எழுத்து</string>
+    <string name="settings_huge_picture">மிகப் பெரிய படம்</string>
+    <string name="settings_huge_picture_desc">தெளிவான எழுத்துக்களுடன் கூடிய பெரிய படம்</string>
+    <string name="settings_grid_view">கட்டம் காட்சி</string>
+    <string name="settings_grid_view_desc">தொடர்பு படங்கள் மட்டும் (வரிசைக்கு 2)</string>
+    <string name="default_phone_app">இயல்புநிலை ஃபோன் ஆப்</string>
+    <string name="set_default_desc">இந்த பயன்பாட்டை உங்கள் இயல்புநிலை ஃபோன் பயன்பாடாக அமைக்கவும்:</string>
+    <string name="set_default_btn">இயல்புநிலையை அமை</string>
+    <string name="text_size">எழுத்து அளவு</string>
+    <string name="text_size_desc">தொடர்பு பெயர்களை மிகப் பெரிதாக்கு (படத்தின் அதே அளவு):</string>
+    <string name="dark_mode">டார்க் மோட்</string>
+    <string name="dark_mode_desc">பயன்பாட்டின் தோற்றத்தைத் தேர்வுசெய்க:</string>
+    <string name="mode_system">சிஸ்டம்</string>
+    <string name="mode_light">லைட்</string>
+    <string name="mode_dark">டார்க்</string>
+    <string name="call_confirm">அழைப்பு உறுதிப்படுத்தல்</string>
+    <string name="call_confirm_desc">அழைப்பதற்கு முன் கேட்கவும் (தவறுதலாக அழைப்பதைத் தடுக்கும்):</string>
+    <string name="vibration_feedback">அதிர்வு</string>
+    <string name="vibration_desc">பொத்தான்களை அழுத்தும்போது அதிர்வு:</string>
+    <string name="voice_announcements">குரல் அறிவிப்புகள்</string>
+    <string name="voice_desc">அழைக்கும் போது தொடர்பு பெயரை ஒலிக்கவும்:</string>
+    <string name="missed_calls_display">தவறிய அழைப்புகள் காட்சி</string>
+    <string name="missed_calls_desc">கடந்த கால தவறிய அழைப்புகளைக் காட்டு:</string>
+    <string name="hours_format">%d மணி</string>
+    <string name="favorites_order">விருப்பமானவை வரிசை</string>
+    <string name="favorites_order_desc">வரிசைப்படுத்த புகைப்படத்தை நீண்ட நேரம் அழுத்தி இழுக்கவும்</string>
+    <string name="call_behavior">அழைப்பு நடத்தை</string>
+    <string name="block_unknown">தெரியாத எண்களைத் தடு</string>
+    <string name="block_unknown_desc">உங்கள் தொலைபேசி புத்தகத்தில் இல்லாத எண்களிலிருந்து வரும் அழைப்புகளைத் தடுக்கும்.</string>
+    <string name="on">ஆன்</string>
+    <string name="off">ஆஃப்</string>
+    
+    <!-- Call Screen -->
+    <string name="incoming_call">வரும் அழைப்பு</string>
+    <string name="calling">அழைக்கிறது...</string>
+    <string name="on_call">அழைப்பில்</string>
+    <string name="on_hold">ஹோல்டில்</string>
+    <string name="connecting">இணைக்கிறது...</string>
+    <string name="reject">நிராகரி</string>
+    <string name="answer">ஏற்பு</string>
+    <string name="end_call">அழைப்பை முடி</string>
+    <string name="speaker">ஸ்பீக்கர்</string>
+    <string name="bluetooth">ப்ளூடூத்</string>
+    <string name="earpiece">இயர்பீஸ்</string>
+    <string name="advanced_settings">மேம்பட்ட விருப்பங்கள்</string>
+
+    <string name="calls">அழைப்புகள்</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">Simple Phone வரவேற்கிறோம்</string>
+    <string name="onboarding_welcome_desc">Simple Phone பயன்படுத்த எளிதானது. இதில் பெரிய பொத்தான்கள் மற்றும் தெளிவான எழுத்துக்கள் உள்ளன.</string>
+    <string name="onboarding_favorites_title">விருப்பமானவைக்கு விரைவு அணுகல்</string>
+    <string name="onboarding_favorites_desc">உங்கள் நட்சத்திரமிட்ட தொடர்புகள் ஒரே தட்டல் அழைப்புக்காக மேலே தோன்றும். அழைக்க புகைப்படத்தை அல்லது பச்சை பட்டனைத் தட்டவும்.</string>
+    <string name="onboarding_search_title">எளிய தொடர்பு தேடல்</string>
+    <string name="onboarding_search_desc">எந்தவொரு தொடர்பையும் விரைவாகக் கண்டறிய தேடல் பட்டியைப் பயன்படுத்தவும். பெயரைத் தட்டச்சு செய்து அழைக்க தட்டவும்.</string>
+    <string name="onboarding_missed_title">தவறிய அழைப்புகள்</string>
+    <string name="onboarding_missed_desc">உங்கள் சமீபத்திய தவறிய அழைப்புகளை சமீபத்திய தாவலில் ஒரு பார்வையில் காணுங்கள்.</string>
+    <string name="onboarding_audio_title">அழைப்புகளின் போது ஆடியோ விருப்பங்கள்</string>
+    <string name="onboarding_audio_desc">அழைப்புகளின் போது ஸ்பீக்கர், ப்ளூடூத் மற்றும் இயர்பீஸ் இடையே எளிதாகத் தட்டக்கூடிய பொத்தான்களுடன் மாறவும்.</string>
+    <string name="onboarding_settings_title">தனிப்பயனாக்கக்கூடிய அமைப்புகள்</string>
+    <string name="onboarding_settings_desc">அமைப்புகளில் உரை அளவு, டார்க் மோட், அழைப்பு உறுதிப்படுத்தல், அதிர்வு மற்றும் குரல் அறிவிப்புகளைச் சரிசெய்யவும்.</string>
+    <string name="onboarding_default_title">அனுமதிகள் மற்றும் இயல்புநிலை</string>
+    <string name="onboarding_default_desc">Simple Phone-க்கு அழைப்புகளுக்கான அணுகல் தேவை. இதை உங்கள் இயல்புநிலை ஃபோன் பயன்பாடாக அமைக்க கேட்கப்படுவீர்கள்.</string>
+    <string name="skip">தவிர்</string>
+    <string name="next">அடுத்து</string>
+    <string name="get_started">தொடங்கு</string>
+
+    <!-- Accessibility -->
+
+    <string name="cd_backspace_button">பேக்ஸ்பேஸ்</string>
+    <string name="cd_decrease_hours">மணிநேரத்தைக் குறை</string>
+    <string name="cd_increase_hours">மணிநேரத்தை அதிகரி</string>
+    <string name="cd_move_up">%s ஐ மேலே நகர்த்து</string>
+    <string name="cd_move_down">%s ஐ கீழே நகர்த்து</string>
+    <string name="cd_toggle">%s ஐ மாற்று</string>
+    <string name="cd_button">பொத்தான் %s</string>
+    <string name="cd_open_dialer">டயலரைத் திற</string>
+    <string name="cd_clear_search">தேடலை அழி</string>
+    <string name="cd_search">தேடு</string>
+    <string name="cd_contact_action">தொடர்பு %s, அழைக்க படம் அல்லது பச்சை பொத்தானைத் தட்டவும்</string>
+    <string name="cd_call_contact">%s ஐ அழைக்கவும்</string>
+    <string name="cd_contact_huge">தொடர்பு %s, மிகப் பெரிய பட முறை</string>
+    <string name="cd_audio_output">%s ஆடியோ வெளியீடு</string>
+    <string name="cd_end_call">அழைப்பை முடி</string>
+    <string name="audio_output_title">ஆடியோ வெளியீடு</string>
+    <string name="keypad">கீபேட்</string>
+    <string name="hide_keypad">கீபேடை மறை</string>
+    <string name="wired_headset">ஹெட்செட்</string>
+    <string name="hearing_aid">கேட்கும் கருவி</string>
+    
+    <!-- MainActivity & Dialogs -->
+    <string name="calling_announcement">%s ஐ அழைக்கிறது</string>
+    <string name="toast_default_dialer_set">பயன்பாடு இப்போது இயல்புநிலை டயலர்!</string>
+    <string name="toast_default_dialer_declined">இயல்புநிலை டயலர் கோரிக்கை நிராகரிக்கப்பட்டது.</string>
+    <string name="demo_mode_enabled">டெமோ பயன்முறை இயக்கப்பட்டது</string>
+    <string name="demo_mode_disabled">டெமோ பயன்முறை முடக்கப்பட்டது</string>
+    <string name="calling_title">அழைக்கிறது...</string>
+    <string name="demo_mode_dialog_title">டெமோ பயன்முறையை இயக்கவா?</string>
+    <string name="demo_mode_dialog_message">இது உங்கள் தற்போதைய தரவை விளக்கக்காட்சி நோக்கங்களுக்காக எடுத்துக்காட்டுத் தரவுடன் மாற்றும். (%d வினாடிகளில் மறைந்துவிடும்)</string>
+    <string name="call_confirmation_title">%s ஐ அழைக்கவா?</string>
+    <string name="yes">ஆம்</string>
+    <string name="no">இல்லை</string>
+    
+    <!-- Screen Titles -->
+    <string name="screen_home">முகப்பு</string>
+    <string name="screen_recents">சமீபத்திய</string>
+    <string name="screen_dialer">டயலர்</string>
+    <string name="screen_call_log">அழைப்புப் பதிவு</string>
+    
+    <!-- Accessibility -->
+    <string name="cd_go_back">திரும்பிச் செல்</string>
+    <string name="cd_open_settings">அமைப்புகளைத் திற</string>
+    <string name="cd_call_button">தொலைபேசி அழைப்பு செய்</string>
+    <string name="cd_favorite">விருப்பமானவர்</string>
+    <string name="cd_contact_photo">%s இன் புகைப்படம்</string>
+
+    <!-- Blocked Calls -->
+    <string name="notification_blocked_call_title">அழைப்பு தடுக்கப்பட்டது</string>
+    <string name="notification_blocked_call_content">தடுக்கப்பட்ட எண்: %s</string>
+    <string name="settings_last_blocked">(கடைசியாகத் தடுக்கப்பட்டது: %s)</string>
+
+    <!-- Zoom Factor -->
+    <string name="settings_zoom_factor">UI அளவு / ஜூம்</string>
+    <string name="zoom_factor_current_screen">தற்போதைய திரை (%s)</string>
+    <string name="zoom_screen_compact">சாதாரண ஃபோன்</string>
+    <string name="zoom_screen_medium">பெரிய ஃபோன் / விரிந்தது</string>
+    <string name="zoom_screen_expanded">டேப்லெட்</string>
+    <string name="zoom_value_format">%d%%</string>
+    <string name="cd_decrease_zoom">ஜூம் குறை</string>
+    <string name="cd_increase_zoom">ஜூம் அதிகரி</string>
+    <string name="reset_zoom">ஜூம் மீட்டமை</string>
+
+    <!-- About & Legal -->
+    <string name="about_legal">சட்டம் மற்றும் பிற</string>
+    <string name="privacy_policy">தனியுரிமைக் கொள்கை</string>
+    <string name="terms_of_service">சேவை விதிமுறைகள்</string>
+    <string name="send_feedback">கருத்து அனுப்பு</string>
+    <string name="feedback_subject">Simple Phone கருத்து</string>
+    <string name="feedback_body">\n\n\n---\nசாதனத் தகவல் (இது எங்களுக்கு மிகவும் உதவுகிறது!)\nSimple Phone எந்தத் தரவையும் சேகரிக்காததால், உங்கள் கருத்து மட்டுமே சிக்கல்கள் மற்றும் மேம்பாடுகளைப் பற்றி அறிய எங்களுக்கு ஒரே வழி. நீங்கள் விரும்பினால் இதை நீக்கலாம்.\n\nபயன்பாட்டு பதிப்பு: %1$s (%2$d)\nஆண்ட்ராய்டு பதிப்பு: %3$s (API %4$d)\nசாதனம்: %5$s %6$s\nமொழி: %7$s\n---</string>
+    <string name="how_to_use">எப்படி பயன்படுத்துவது / டுடோரியல்</string>
+    <string name="toast_open_contact_error">தொடர்பு விவரங்களைத் திறக்க முடியவில்லை</string>
+    <string name="toast_open_contact_exception">தொடர்பு பயன்பாட்டைத் திறப்பதில் பிழை</string>
+    <string name="permission_needed_title">அனுமதி தேவை</string>
+    <string name="ok_button">சரி</string>
+
+    <!-- Simplified Contact Call Screen -->
+    <string name="settings_simplified_contact_screen">எளிய அழைப்புத் திரை</string>
+    <string name="settings_simplified_contact_screen_desc">தெரிந்த தொடர்புகளுக்கு பெரிய பதில் பொத்தானைக் காட்டு:</string>
+    <string name="silence">அமைதி</string>
+    <string name="paste">ஒட்டு</string>
+
+    <!-- Silence on Touch -->
+    <string name="settings_silence_on_touch_title">தொடும்போது அமைதி</string>
+    <string name="settings_silence_on_touch_desc">திரையைத் தொடுவதன் மூலம் அல்லது வால்யூம் பொத்தான்களை அழுத்துவதன் மூலம் வரும் அழைப்புகளை அமைதிப்படுத்தவும்</string>
+
+</resources>
