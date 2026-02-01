@@ -5,8 +5,50 @@ platform :android do
   lane :deploy_internal do
     # 1. Ensure Version Code matches version.properties
     props = load_version_properties(file_path: "app/version.properties")
-    build_number = props['VERSION_CODE']
+    build_number = props['VERSION_CODE'].to_i
     api_key = ENV['GOOGLE_API_KEY']
+
+    # --- SAFE BUMP LOGIC START ---
+    # Check Google Play for the highest version code to avoid collisions
+    UI.message("Checking Google Play for existing version codes...")
+    begin
+      # Fetch version codes from ALL tracks to be safe (or at least internal/production)
+      # We check 'internal' specifically as that's where we upload first.
+      play_store_versions = google_play_track_version_codes(
+        package_name: 'ch.heuscher.simplephone',
+        track: 'internal'
+      )
+      
+      # Also check production just in case internal was cleaned but prod has higher
+      play_store_versions_prod = google_play_track_version_codes(
+        package_name: 'ch.heuscher.simplephone',
+        track: 'production'
+      )
+      
+      max_play_version = (play_store_versions + play_store_versions_prod).max || 0
+      UI.message("Highest version on Play Store: #{max_play_version}. Local version: #{build_number}")
+      
+      if build_number <= max_play_version
+        new_safe_code = max_play_version + 1
+        UI.important("⚠️  Local version #{build_number} collision detected! Bumping to #{new_safe_code} to be safe.")
+        
+        # Update props object
+        props['VERSION_CODE'] = new_safe_code.to_s
+        props['VERSION_PATCH'] = (props['VERSION_PATCH'].to_i + (new_safe_code - build_number)).to_s
+        # Reconstruct Version Name
+        props['VERSION_NAME'] = "#{props['VERSION_MAJOR']}.#{props['VERSION_MINOR']}.#{props['VERSION_PATCH']}"
+        
+        # Write back to file BEFORE build
+        save_version_properties(props: props, file_path: "app/version.properties")
+        
+        # Update local variable
+        build_number = new_safe_code
+      end
+    rescue => e
+      UI.error("Could not fetch remote versions: #{e.message}")
+      UI.important("Proceeding with local version #{build_number}. If upload fails, check Play Console.")
+    end
+    # --- SAFE BUMP LOGIC END ---
     
     # 2. Fetch raw commits
     raw_commits = changelog_from_git_commits(
@@ -99,8 +141,41 @@ platform :android do
   lane :deploy_smart do
     # 1. Ensure Version Code matches version.properties
     props = load_version_properties(file_path: "app/version.properties")
-    build_number = props['VERSION_CODE']
+    build_number = props['VERSION_CODE'].to_i
     api_key = ENV['GOOGLE_API_KEY']
+
+    # --- SAFE BUMP LOGIC START ---
+    UI.message("Checking Google Play for existing version codes...")
+    begin
+      play_store_versions = google_play_track_version_codes(
+        package_name: 'ch.heuscher.simplephone',
+        track: 'internal'
+      )
+      play_store_versions_prod = google_play_track_version_codes(
+        package_name: 'ch.heuscher.simplephone',
+        track: 'production'
+      )
+      max_play_version = (play_store_versions + play_store_versions_prod).max || 0
+      UI.message("Highest version on Play Store: #{max_play_version}. Local version: #{build_number}")
+      
+      if build_number <= max_play_version
+        new_safe_code = max_play_version + 1
+        UI.important("⚠️  Local version #{build_number} collision detected! Bumping to #{new_safe_code} to be safe.")
+        
+        props['VERSION_CODE'] = new_safe_code.to_s
+        props['VERSION_PATCH'] = (props['VERSION_PATCH'].to_i + (new_safe_code - build_number)).to_s
+        props['VERSION_NAME'] = "#{props['VERSION_MAJOR']}.#{props['VERSION_MINOR']}.#{props['VERSION_PATCH']}"
+        
+        save_version_properties(props: props, file_path: "app/version.properties")
+        build_number = new_safe_code
+        
+        # Commit this immediate bump so the tag/changelog is accurate? 
+        # Actually existing logic commits at the end. We just need the build to use this new number.
+      end
+    rescue => e
+      UI.error("Could not fetch remote versions: #{e.message}")
+    end
+    # --- SAFE BUMP LOGIC END ---
     
     # 2. Fetch raw commits
     raw_commits = changelog_from_git_commits(
@@ -307,18 +382,32 @@ platform :android do
     props['VERSION_PATCH'] = (props['VERSION_PATCH'].to_i + 1).to_s
     # Reconstruct Version Name for context
     new_version_name = "#{props['VERSION_MAJOR']}.#{props['VERSION_MINOR']}.#{props['VERSION_PATCH']}"
-    # Update hash so it's written back to file
+    # Update hash
     props['VERSION_NAME'] = new_version_name
     
-    # Write back
+    save_version_properties(props: props, file_path: robust_path)
+    
+    puts "Bumping version to #{new_version_name} (Code: #{props['VERSION_CODE']})"
+    
+    return new_version_name
+  end
+
+  # Helper to save properties hash to file
+  def save_version_properties(props:, file_path:)
+    fastfile_dir = File.dirname(__FILE__)
+    # Handle both relative (if passed simply) and absolute paths logic
+    # If file_path is already absolute or relative to CWD, use it?
+    # Better to force robust resolution again if passed a short path
+    if file_path == "app/version.properties"
+       robust_path = File.expand_path("../app/version.properties", fastfile_dir)
+    else
+       robust_path = file_path
+    end
+
     File.open(robust_path, 'w') do |file|
       props.each do |k, v|
         file.write("#{k}=#{v}\n")
       end
     end
-    
-    puts "Bumping version to #{new_version_name} (Code: #{props['VERSION_CODE']})"
-    
-    return new_version_name
   end
 end
