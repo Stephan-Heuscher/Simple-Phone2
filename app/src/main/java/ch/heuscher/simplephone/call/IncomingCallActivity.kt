@@ -526,6 +526,7 @@ private fun CallScreenLandscape(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding() // Fix for landscape audio panel overlap
             .padding(16.dp)
     ) {
         // Main content: Left side (contact) + Right side (controls)
@@ -639,19 +640,52 @@ private fun CallScreenLandscape(
                     onSilence = onSilence
                 )
             } else {
-                // Active call: hangup button (full width in landscape)
-                CallActionButton(
+                // Active call: hangup button (horizontal in landscape)
+                CallActionButtonHorizontal(
                     icon = Icons.Filled.CallEnd,
                     label = stringResource(R.string.end_call),
-                    backgroundColor = RedHangup,
+                    color = RedHangup,
                     onClick = {
                         vibrate(context)
                         onHangup()
                     },
-                    size = 80.dp // Slightly smaller for landscape
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)
                 )
             }
         }
+    }
+}
+
+/**
+ * Landscape specific action button with horizontal layout (Icon + Text)
+ */
+@Composable
+private fun CallActionButtonHorizontal(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    color: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(containerColor = color),
+        modifier = modifier.height(64.dp),
+        shape = CircleShape
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(28.dp)
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleLarge,
+            color = Color.White,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 
