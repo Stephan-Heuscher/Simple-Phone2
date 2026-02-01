@@ -59,12 +59,18 @@ platform :android do
 
 
 
-    ['en-US', 'de-DE'].each do |locale|
+    ['en-US', 'de-DE', 'hi-IN', 'ta-IN'].each do |locale|
       final_notes = nil
 
       # 3. Try AI Generation if Key exists
       if api_key
-        language = locale == 'de-DE' ? "German" : "English"
+        language = case locale
+                   when 'de-DE' then "German"
+                   when 'hi-IN' then "Hindi"
+                   when 'ta-IN' then "Tamil"
+                   else "English"
+                   end
+
         prompt = "Summarize these git commits into a friendly, professional release notes list (bullet points) for a mobile app. " \
                  "Target Audience: Seniors. Language: #{language}. " \
                  "Rules: Exclude technical chores/docs/CI. Focus on user-facing features/fixes. " \
@@ -75,7 +81,13 @@ platform :android do
 
       # 4. Fallback: Smart Filter (Rubylogic)
       unless final_notes && !final_notes.empty?
-        header = locale == 'de-DE' ? "Neuigkeiten:" : "What's New:"
+        header = case locale
+                 when 'de-DE' then "Neuigkeiten:"
+                 when 'hi-IN' then "नया क्या है:"
+                 when 'ta-IN' then "புதியவை:"
+                 else "What's New:"
+                 end
+
         filtered = raw_commits.split("\n").select do |line|
            !line.match?(/^(- (chore|docs|test|refactor|style|ci)(\(.*\))?:)/i)
         end.take(10).join("\n")
@@ -185,11 +197,17 @@ platform :android do
     )
 
     # Generate changelogs for both locales
-    ['en-US', 'de-DE'].each do |locale|
+    ['en-US', 'de-DE', 'hi-IN', 'ta-IN'].each do |locale|
       final_notes = nil
 
       if api_key
-        language = locale == 'de-DE' ? "German" : "English"
+        language = case locale
+                   when 'de-DE' then "German"
+                   when 'hi-IN' then "Hindi"
+                   when 'ta-IN' then "Tamil"
+                   else "English"
+                   end
+
         prompt = "Summarize these git commits into a friendly, professional release notes list (bullet points) for a mobile app. " \
                  "Target Audience: Seniors. Language: #{language}. " \
                  "Rules: Exclude technical chores/docs/CI. Focus on user-facing features/fixes. " \
@@ -199,7 +217,13 @@ platform :android do
       end
 
       unless final_notes && !final_notes.empty?
-        header = locale == 'de-DE' ? "Neuigkeiten:" : "What's New:"
+        header = case locale
+                 when 'de-DE' then "Neuigkeiten:"
+                 when 'hi-IN' then "नया क्या है:"
+                 when 'ta-IN' then "புதியவை:"
+                 else "What's New:"
+                 end
+
         filtered = raw_commits.split("\n").select do |line|
            !line.match?(/^(- (chore|docs|test|refactor|style|ci)(\(.*\))?:)/i)
         end.take(10).join("\n")
