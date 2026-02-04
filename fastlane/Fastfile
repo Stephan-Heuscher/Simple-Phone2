@@ -269,25 +269,6 @@ platform :android do
     # Note: We can't 100% reliably check "Pending Review" status via API.
     # To be safe, we only proceed if the user wants this automation.
     # For now, we try to deploy to production. If it fails (some reviews block edits), we just catch it.
-    # 4. Promote to Open Testing (Beta)
-    # This allows a wider release without touching Production reviews
-    puts "🚀 Attempting promotion to OPEN TESTING (Beta) track..."
-    begin
-      upload_to_play_store(
-        track: 'internal',
-        track_promote_to: 'beta',
-        skip_upload_aab: true,
-        skip_upload_apk: true,
-        version_code: build_number,
-        changes_not_sent_for_review: true,
-        rescue_changes_not_sent_for_review: false,
-        package_name: 'ch.heuscher.simplephone'
-      )
-      puts "✅ Successfully promoted to OPEN TESTING!"
-      deployed_track = 'beta'
-    rescue => e
-      puts "⚠️  Open Testing deployment skipped/failed: #{e.message}"
-    end
 
     begin
       puts "🚀 Attempting promotion to PRODUCTION track..."
