@@ -401,59 +401,6 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(24.dp))
         }
 
-        // --- Dark Mode Section ---
-        item {
-            Text(
-                androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.dark_mode),
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.dark_mode_desc),
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-
-            Column(
-                modifier = Modifier
-                    .padding(top = 16.dp, bottom = 32.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // System Default
-                    SettingsOptionButton(
-                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.mode_system),
-                        isSelected = darkModeOption == 0,
-                        onClick = { vibrate(); onDarkModeOptionChange(0) },
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    // Light
-                    SettingsOptionButton(
-                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.mode_light),
-                        isSelected = darkModeOption == 1,
-                        onClick = { vibrate(); onDarkModeOptionChange(1) },
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    // Dark
-                    SettingsOptionButton(
-                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.mode_dark),
-                        isSelected = darkModeOption == 2,
-                        onClick = { vibrate(); onDarkModeOptionChange(2) },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-
-            HorizontalDivider(thickness = 2.dp)
-            Spacer(modifier = Modifier.height(24.dp))
-        }
 
         // --- Missed Calls Section ---
         item {
@@ -612,6 +559,104 @@ fun SettingsScreen(
                     isEnabled = blockUnknownCallers,
                     onToggle = { vibrate(); onBlockUnknownCallersChange(!blockUnknownCallers) },
                     label = if (blockUnknownCallers) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
+                )
+            }
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // --- Dark Mode Section (Moved to Advanced) ---
+        item {
+            Text(
+                androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.dark_mode),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.dark_mode_desc),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Column(
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // System Default
+                    SettingsOptionButton(
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.mode_system),
+                        isSelected = darkModeOption == 0,
+                        onClick = { vibrate(); onDarkModeOptionChange(0) },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    // Light
+                    SettingsOptionButton(
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.mode_light),
+                        isSelected = darkModeOption == 1,
+                        onClick = { vibrate(); onDarkModeOptionChange(1) },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    // Dark
+                    SettingsOptionButton(
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.mode_dark),
+                        isSelected = darkModeOption == 2,
+                        onClick = { vibrate(); onDarkModeOptionChange(2) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // --- Ringtone Silence timeout Section ---
+        item {
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_ringtone_silence),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_ringtone_silence_desc),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth()
+            ) {
+                BigIconButton(
+                    icon = Icons.Filled.Remove,
+                    contentDescription = stringResource(R.string.cd_decrease_seconds),
+                    onClick = { vibrate(); if (ringtoneSilenceTimeout > 0) onRingtoneSilenceTimeoutChange((ringtoneSilenceTimeout - 5).coerceAtLeast(0)) },
+                    modifier = Modifier.weight(1f)
+                )
+
+                Text(
+                    if (ringtoneSilenceTimeout == 0) stringResource(R.string.off_label) else stringResource(R.string.seconds_format, ringtoneSilenceTimeout),
+                    style = MaterialTheme.typography.displayMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+
+                BigIconButton(
+                    icon = Icons.Filled.Add,
+                    contentDescription = stringResource(R.string.cd_increase_seconds),
+                    onClick = { vibrate(); onRingtoneSilenceTimeoutChange(ringtoneSilenceTimeout + 5) },
+                    modifier = Modifier.weight(1f)
                 )
             }
             HorizontalDivider()
