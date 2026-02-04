@@ -621,6 +621,7 @@ fun SettingsScreen(
 
         // --- Ringtone Silence timeout Section ---
         item {
+            val timeoutSteps = listOf(0, 1, 2, 3, 5, 8, 10, 15)
             Text(
                 text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_ringtone_silence),
                 style = MaterialTheme.typography.titleLarge,
@@ -641,7 +642,13 @@ fun SettingsScreen(
                 BigIconButton(
                     icon = Icons.Filled.Remove,
                     contentDescription = stringResource(R.string.cd_decrease_seconds),
-                    onClick = { vibrate(); if (ringtoneSilenceTimeout > 0) onRingtoneSilenceTimeoutChange((ringtoneSilenceTimeout - 5).coerceAtLeast(0)) },
+                    onClick = { 
+                        vibrate()
+                        val currentIndex = timeoutSteps.indexOf(ringtoneSilenceTimeout).coerceAtLeast(0)
+                        if (currentIndex > 0) {
+                            onRingtoneSilenceTimeoutChange(timeoutSteps[currentIndex - 1])
+                        }
+                    },
                     modifier = Modifier.weight(1f)
                 )
 
@@ -655,7 +662,19 @@ fun SettingsScreen(
                 BigIconButton(
                     icon = Icons.Filled.Add,
                     contentDescription = stringResource(R.string.cd_increase_seconds),
-                    onClick = { vibrate(); onRingtoneSilenceTimeoutChange(ringtoneSilenceTimeout + 5) },
+                    onClick = { 
+                        vibrate()
+                        val currentIndex = timeoutSteps.indexOf(ringtoneSilenceTimeout)
+                        if (currentIndex < timeoutSteps.lastIndex) {
+                            if (currentIndex == -1) {
+                                // If current value is not in steps, find first step > current
+                                val nextStep = timeoutSteps.firstOrNull { it > ringtoneSilenceTimeout } ?: timeoutSteps.last()
+                                onRingtoneSilenceTimeoutChange(nextStep)
+                            } else {
+                                onRingtoneSilenceTimeoutChange(timeoutSteps[currentIndex + 1])
+                            }
+                        }
+                    },
                     modifier = Modifier.weight(1f)
                 )
             }
