@@ -183,6 +183,14 @@
     <!-- Silence on Touch -->
     <string name="settings_silence_on_touch_title">Stummschalten bei Berührung</string>
     <string name="settings_silence_on_touch_desc">Klingelton durch Berühren des Bildschirms oder einer Taste stummschalten</string>
+    
+    <!-- Ringtone Silence Timeout -->
+    <string name="settings_ringtone_silence">Autom. Stummschaltung</string>
+    <string name="settings_ringtone_silence_desc">Klingelton automatisch stummschalten nach:</string>
+    <string name="seconds_format">%d Sekunden</string>
+    <string name="off_label">Aus</string>
+    <string name="cd_decrease_seconds">Sekunden verringern</string>
+    <string name="cd_increase_seconds">Sekunden erhöhen</string>
 
 
 </resources>

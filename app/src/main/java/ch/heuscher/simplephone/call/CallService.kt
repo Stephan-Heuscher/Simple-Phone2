@@ -42,6 +42,9 @@ class CallService : InCallService() {
     private var proximitySensor: android.hardware.Sensor? = null
     private var isProximitySensorRegistered = false
     private var isPhoneAtEar = false // Track proximity state for logic updates
+    
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var silenceRunnable: Runnable? = null
 
     companion object {
         // Track recent callers for repeat caller exception (number -> timestamp)
@@ -469,6 +472,19 @@ class CallService : InCallService() {
         }
         if (ringtone?.isPlaying == false) {
             ringtone?.play()
+            
+            // Schedule automatic silence if timeout is set
+            val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(this)
+            val timeoutSeconds = settingsRepository.ringtoneSilenceTimeout
+            if (timeoutSeconds > 0) {
+                Log.d(TAG, "Scheduling automatic silence after $timeoutSeconds seconds")
+                silenceRunnable?.let { handler.removeCallbacks(it) }
+                silenceRunnable = Runnable {
+                    Log.d(TAG, "Automatic silence timeout reached")
+                    stopRinging()
+                }
+                handler.postDelayed(silenceRunnable!!, timeoutSeconds * 1000L)
+            }
         }
         
         // Start vibration
@@ -513,6 +529,12 @@ class CallService : InCallService() {
             ringtone?.stop()
         }
         stopVibrating()
+        
+        // Cancel any pending silence timer
+        silenceRunnable?.let { 
+            handler.removeCallbacks(it)
+            silenceRunnable = null
+        }
     }
     
     /**

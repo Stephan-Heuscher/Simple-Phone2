@@ -492,6 +492,7 @@ fun SimplePhoneApp(
 
     var simplifiedContactCallScreen by remember { mutableStateOf(settingsRepository.simplifiedContactCallScreen) }
     var silenceCallOnTouch by remember { mutableStateOf(settingsRepository.silenceCallOnTouch) }
+    var ringtoneSilenceTimeout by remember { mutableStateOf(settingsRepository.ringtoneSilenceTimeout) }
 
 
     // Triple tap logic
@@ -792,6 +793,11 @@ fun SimplePhoneApp(
                         onSilenceCallOnTouchChange = {
                             silenceCallOnTouch = it
                             settingsRepository.silenceCallOnTouch = it
+                        },
+                        ringtoneSilenceTimeout = ringtoneSilenceTimeout,
+                        onRingtoneSilenceTimeoutChange = {
+                            ringtoneSilenceTimeout = it
+                            settingsRepository.ringtoneSilenceTimeout = it
                         }
                     )
                 }

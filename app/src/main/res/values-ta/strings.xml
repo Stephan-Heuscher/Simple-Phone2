@@ -183,6 +183,14 @@
 
     <!-- Silence on Touch -->
     <string name="settings_silence_on_touch_title">தொடும்போது அமைதி</string>
-    <string name="settings_silence_on_touch_desc">திரையைத் தொடுவதன் மூலம் அல்லது வால்யூம் பொத்தான்களை அழுத்துவதன் மூலம் வரும் அழைப்புகளை அமைதிப்படுத்தவும்</string>
+    <string name="settings_silence_on_touch_desc">திரையைத் தொடுவதன் மூலம் அல்லது பொத்தானை அழுத்தி வரும் அழைப்புகளை அமைதியாக்குங்கள்</string>
+    
+    <!-- Ringtone Silence Timeout -->
+    <string name="settings_ringtone_silence">ரிங்டோன் அமைதி நேரம்</string>
+    <string name="settings_ringtone_silence_desc">ரிங்டோனை தானாக அமைதியாக்க:</string>
+    <string name="seconds_format">%d வினாடிகள்</string>
+    <string name="off_label">ஆஃப்</string>
+    <string name="cd_decrease_seconds">வினாடிகளைக் குறைக்கவும்</string>
+    <string name="cd_increase_seconds">வினாடிகளை அதிகரிக்கவும்</string>
 
 </resources>

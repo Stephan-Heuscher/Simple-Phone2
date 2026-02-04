@@ -185,5 +185,13 @@
     <string name="settings_silence_on_touch_title">Silence on touch</string>
     <string name="settings_silence_on_touch_desc">Silence incoming calls by touching screen or pressing volume buttons</string>
 
+    <!-- Ringtone Silence Timeout -->
+    <string name="settings_ringtone_silence">Ringtone silence timeout</string>
+    <string name="settings_ringtone_silence_desc">Automatically silence the ringtone after:</string>
+    <string name="seconds_format">%d seconds</string>
+    <string name="off_label">Off</string>
+    <string name="cd_decrease_seconds">Decrease seconds</string>
+    <string name="cd_increase_seconds">Increase seconds</string>
+
 
 </resources>

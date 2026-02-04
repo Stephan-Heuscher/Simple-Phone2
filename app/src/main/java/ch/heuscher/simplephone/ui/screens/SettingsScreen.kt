@@ -113,7 +113,9 @@ fun SettingsScreen(
     simplifiedContactCallScreen: Boolean = false,
     onSimplifiedContactCallScreenChange: (Boolean) -> Unit = {},
     silenceCallOnTouch: Boolean = false,
-    onSilenceCallOnTouchChange: (Boolean) -> Unit = {}
+    onSilenceCallOnTouchChange: (Boolean) -> Unit = {},
+    ringtoneSilenceTimeout: Int = 0,
+    onRingtoneSilenceTimeoutChange: (Int) -> Unit = {}
 ) {
     // Remember favorites order for reordering
     val mutableFavorites = remember { mutableStateListOf<Contact>() }

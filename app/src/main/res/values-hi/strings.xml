@@ -183,6 +183,14 @@
 
     <!-- Silence on Touch -->
     <string name="settings_silence_on_touch_title">स्पर्श पर मौन</string>
-    <string name="settings_silence_on_touch_desc">स्क्रीन को छूकर या वॉल्यूम बटन दबाकर आने वाली कॉल को मौन करें</string>
+    <string name="settings_silence_on_touch_desc">स्क्रीन को छूकर या किसी बटन को दबाकर आने वाली कॉल को मौन करें</string>
+    
+    <!-- Ringtone Silence Timeout -->
+    <string name="settings_ringtone_silence">रिंगटोन मौन समय</string>
+    <string name="settings_ringtone_silence_desc">बाद में रिंगटोन को स्वचालित रूप से मौन करें:</string>
+    <string name="seconds_format">%d सेकंड</string>
+    <string name="off_label">बंद</string>
+    <string name="cd_decrease_seconds">सेकंड कम करें</string>
+    <string name="cd_increase_seconds">सेकंड बढ़ाएं</string>
 
 </resources>

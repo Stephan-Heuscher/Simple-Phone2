@@ -56,4 +56,12 @@ class SettingsRepositoryTest {
         verify { editor.putInt("missed_calls_hours", 48) }
         verify { editor.apply() }
     }
+
+    @Test
+    fun `saving ringtoneSilenceTimeout writes to SharedPreferences`() {
+        settingsRepository.ringtoneSilenceTimeout = 30
+        
+        verify { editor.putInt("ringtone_silence_timeout", 30) }
+        verify { editor.apply() }
+    }
 }
