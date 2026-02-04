@@ -537,6 +537,16 @@ class CallService : InCallService() {
 
     override fun onCallAdded(call: Call) {
         Log.d(TAG, "Call added")
+        
+        // Block incoming calls if we already have an active/ringing call
+        val activeCall = CallService.currentCall
+        if (activeCall != null && activeCall.state != Call.STATE_DISCONNECTED && call.state == Call.STATE_RINGING) {
+            Log.i(TAG, "Blocking incoming call: Already in a call (state=${activeCall.state})")
+            showMissedCallNotification(call)
+            call.reject(false, null)
+            return
+        }
+
         shouldHighlightSpeaker = false
         
         // Check blocking immediately
