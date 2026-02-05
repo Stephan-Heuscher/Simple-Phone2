@@ -24,3 +24,4 @@ build-log.txt
 # Error reports
 hs_err_pid*
 replay_pid*
+fastlane/service-account.json
