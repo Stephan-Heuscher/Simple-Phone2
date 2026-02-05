@@ -1,0 +1,51 @@
+Gentle Phone: Caregiver-Assisted Senior Phone
+
+Gentle Phone is a simplified phone app designed for seniors and people who need a little extra help with technology. What makes it special? A caregiver can remotely adjust the phone's settings through a simple web portal—no more frustrating tech support calls!
+
+Why Gentle Phone?
+
+Seniors often struggle with modern smartphones. Gentle Phone combines an ultra-simple interface with remote caregiver control, giving loved ones peace of mind while preserving the user's independence.
+
+Key Features:
+
+🌿 Caregiver Remote Control
+• Connect via simple pairing code
+• Change display, audio, and call settings remotely
+• Adjustments sync to the phone in real-time
+• No app installation needed for caregivers—just use the web portal
+
+📱 Senior-Friendly Interface
+• Extra Large Touch Targets: All buttons 48dp+ for easy tapping
+• High Contrast Colors: Designed for maximum visibility
+• Huge Text Option: Make names as large as photos
+• Photo Contacts: One-tap calling from photos
+• Simple Search: Find any contact quickly
+
+🔒 Safety Features
+• Block Unknown Callers: Protect from spam and scam calls
+• Call Confirmation: Prevent accidental calls
+• Voice Announcements: Hear names spoken when calling
+
+♿ Accessibility Focused
+• Haptic Feedback: Feel vibration on button press
+• Dark Mode: Reduce eye strain in low light
+• No Confusing Gestures: Everything is a simple tap
+
+🛡️ Privacy First
+• 100% Offline: Contact data stays on the phone
+• No Ads: Clean, distraction-free experience
+• Secure: Caregiver settings use encrypted Firebase connection
+
+How Caregiver Pairing Works:
+1. Open Gentle Phone → Settings → Caregiver Pairing
+2. Share the pairing code with your caregiver
+3. Caregiver visits gentlephone.web.app
+4. Enter the code and start adjusting settings!
+
+Perfect For:
+• Elderly parents living independently
+• Seniors in assisted living
+• People with visual impairments
+• Anyone who needs simplified technology
+
+Download Gentle Phone today and give your loved ones the support they need!

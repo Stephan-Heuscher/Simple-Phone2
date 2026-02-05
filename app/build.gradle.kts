@@ -7,6 +7,11 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+// Apply Google Services plugin only for gentlephone builds
+if (gradle.startParameter.taskNames.any { it.lowercase().contains("gentlephone") }) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 kotlin {
     jvmToolchain(17)
 }
@@ -57,6 +62,24 @@ android {
             signingConfig = signingConfigs.getByName("release")
         }
     }
+    
+    // Product Flavors for Simple Phone and Gentle Phone
+    flavorDimensions += "version"
+    productFlavors {
+        create("simplephone") {
+            dimension = "version"
+            applicationId = "ch.heuscher.simplephone"
+            resValue("string", "app_name", "Simple Phone")
+            buildConfigField("Boolean", "REMOTE_SETTINGS_ENABLED", "false")
+        }
+        create("gentlephone") {
+            dimension = "version"
+            applicationId = "ch.heuscher.gentlephone"
+            resValue("string", "app_name", "Gentle Phone")
+            buildConfigField("Boolean", "REMOTE_SETTINGS_ENABLED", "true")
+        }
+    }
+    
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -66,6 +89,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     packaging {
         resources {
@@ -98,6 +122,14 @@ dependencies {
 
     // LibPhone number for better formatting
     implementation("com.googlecode.libphonenumber:libphonenumber:8.13.32")
+
+    // Firebase for Gentle Phone remote settings
+    "gentlephoneImplementation"(platform("com.google.firebase:firebase-bom:32.7.0"))
+    "gentlephoneImplementation"("com.google.firebase:firebase-firestore-ktx")
+    
+    // Coroutines for async remote settings sync
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("io.mockk:mockk:1.13.8")

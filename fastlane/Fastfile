@@ -325,6 +325,120 @@ platform :android do
     )
   end
 
+  desc "Deploy Gentle Phone to Play Store Internal Track"
+  lane :deploy_gentlephone do
+    props = load_version_properties(file_path: "app/version.properties")
+    build_number = props['VERSION_CODE'].to_i
+    api_key = ENV['GOOGLE_API_KEY']
+    gentlephone_package = 'ch.heuscher.gentlephone'
+
+    # Check for version collisions on Gentle Phone's Play Store listing
+    UI.message("Checking Gentle Phone Play Store for existing version codes...")
+    begin
+      play_store_versions = google_play_track_version_codes(
+        package_name: gentlephone_package,
+        track: 'internal'
+      ) rescue []
+      play_store_versions_prod = google_play_track_version_codes(
+        package_name: gentlephone_package,
+        track: 'production'
+      ) rescue []
+      
+      max_play_version = (play_store_versions + play_store_versions_prod).max || 0
+      UI.message("Gentle Phone highest version: #{max_play_version}. Local: #{build_number}")
+      
+      if build_number <= max_play_version
+        new_safe_code = max_play_version + 1
+        UI.important("⚠️  Version collision! Bumping to #{new_safe_code}")
+        props['VERSION_CODE'] = new_safe_code.to_s
+        props['VERSION_PATCH'] = (props['VERSION_PATCH'].to_i + (new_safe_code - build_number)).to_s
+        props['VERSION_NAME'] = "#{props['VERSION_MAJOR']}.#{props['VERSION_MINOR']}.#{props['VERSION_PATCH']}"
+        save_version_properties(props: props, file_path: "app/version.properties")
+        build_number = new_safe_code
+      end
+    rescue => e
+      UI.error("Could not fetch versions: #{e.message}")
+    end
+
+    # Generate changelog
+    raw_commits = changelog_from_git_commits(
+      commits_count: 15, 
+      merge_commit_filtering: "exclude_merges",
+      pretty: "- %s" 
+    )
+
+    ['en-US', 'de-DE'].each do |locale|
+      final_notes = nil
+
+      if api_key
+        language = locale == 'de-DE' ? "German" : "English"
+        prompt = "Summarize these git commits into friendly release notes for Gentle Phone (senior phone with caregiver remote settings). " \
+                 "Target: Seniors and caregivers. Language: #{language}. " \
+                 "CRITICAL: Under 480 chars, plain text bullets."
+        
+        final_notes = ask_gemini(api_key, prompt, raw_commits)
+      end
+
+      unless final_notes && !final_notes.empty?
+        header = locale == 'de-DE' ? "Neuigkeiten:" : "What's New:"
+        filtered = raw_commits.split("\n").select do |line|
+           !line.match?(/^(- (chore|docs|test|refactor|style|ci)(\(.*\))?:)/i)
+        end.take(10).join("\n")
+        final_notes = "#{header}\n#{filtered}"
+        final_notes = final_notes[0..485] + "..." if final_notes.length > 490
+      end
+      
+      fastfile_dir = File.dirname(__FILE__)
+      changelog_path = File.expand_path("metadata/gentlephone/#{locale}/changelogs/#{build_number}.txt", fastfile_dir)
+      
+      FileUtils.mkdir_p(File.dirname(changelog_path))
+      File.write(changelog_path, final_notes)
+      
+      puts "--- Gentle Phone Release Notes for #{locale} (v#{build_number}) ---"
+      puts final_notes
+    end
+
+    # Build the Gentle Phone AAB
+    root_dir = File.expand_path("..", File.dirname(__FILE__))
+    gradlew_path = File.join(root_dir, "gradlew")
+    sh "chmod +x #{gradlew_path}"
+    Dir.chdir(root_dir) do
+      cmd = "./gradlew bundleGentlephoneRelease --stacktrace --no-configuration-cache"
+      puts "Building Gentle Phone: #{cmd}"
+      unless system(cmd)
+        raise "Gentle Phone build failed! Exit: #{$?.exitstatus}"
+      end
+    end
+
+    aab_path = File.join(root_dir, "app/build/outputs/bundle/gentlephoneRelease/app-gentlephone-release.aab")
+    
+    # Upload to Gentle Phone's Play Store listing
+    puts "🚀 Deploying Gentle Phone to internal track..."
+    upload_to_play_store(
+      track: 'internal',
+      package_name: gentlephone_package,
+      aab: aab_path,
+      metadata_path: File.expand_path("metadata/gentlephone", File.dirname(__FILE__))
+    )
+    puts "✅ Gentle Phone deployed successfully!"
+
+    # Version bump and commit
+    new_version_name = increment_version_properties(file_path: "app/version.properties")
+    
+    ENV['GIT_AUTHOR_NAME'] = 'Fastlane Deploy'
+    ENV['GIT_AUTHOR_EMAIL'] = 'deploy@fastlane.tools'
+    ENV['GIT_COMMITTER_NAME'] = 'Fastlane Deploy'
+    ENV['GIT_COMMITTER_EMAIL'] = 'deploy@fastlane.tools'
+
+    git_commit(
+      path: ["app/version.properties"],
+      message: "chore: bump version to #{new_version_name} [gentlephone]"
+    )
+    push_to_git_remote
+    
+    puts "🎉 Gentle Phone deployment complete! Version: #{new_version_name}"
+  end
+
   # Helper to ask Gemini
   def ask_gemini(api_key, system_prompt, user_text)
     require 'net/http'

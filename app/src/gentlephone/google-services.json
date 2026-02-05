@@ -1,0 +1,29 @@
+{
+    "project_info": {
+        "project_number": "584373734024",
+        "project_id": "gentle-phone",
+        "storage_bucket": "gentle-phone.firebasestorage.app"
+    },
+    "client": [
+        {
+            "client_info": {
+                "mobilesdk_app_id": "1:584373734024:android:fa9c7c7ed928a59f61ad3d",
+                "android_client_info": {
+                    "package_name": "ch.heuscher.gentlephone"
+                }
+            },
+            "oauth_client": [],
+            "api_key": [
+                {
+                    "current_key": "AIzaSyBRRdi2Up8FkDgBYFpH8GqIu2nSwpBvBcA"
+                }
+            ],
+            "services": {
+                "appinvite_service": {
+                    "other_platform_oauth_client": []
+                }
+            }
+        }
+    ],
+    "configuration_version": "1"
+}

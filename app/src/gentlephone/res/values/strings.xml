@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Note: app_name is set via resValue in build.gradle.kts -->
+    
+    <!-- Gentle Phone Specific Strings -->
+    <string name="gentle_phone_pairing_title">Caregiver Pairing</string>
+    <string name="gentle_phone_pairing_desc">Share this code with your caregiver so they can adjust your phone settings remotely:</string>
+    <string name="gentle_phone_pairing_code">Pairing Code</string>
+    <string name="gentle_phone_web_portal">Web Portal</string>
+    <string name="gentle_phone_web_portal_url">gentlephone.web.app</string>
+    <string name="gentle_phone_remote_settings">Remote Settings</string>
+    <string name="gentle_phone_remote_settings_desc">Settings can be changed by your caregiver</string>
+    <string name="gentle_phone_settings_synced">Settings synced from caregiver</string>
+    <string name="gentle_phone_settings_local">Using local settings</string>
+    
+    <!-- Onboarding Override -->
+    <string name="onboarding_welcome_title">Welcome to Gentle Phone</string>
+    <string name="onboarding_welcome_desc">Gentle Phone is designed for easy use. A caregiver can help adjust settings remotely.</string>
+    
+    <!-- Feedback Override -->
+    <string name="feedback_subject">Gentle Phone Feedback</string>
+</resources>

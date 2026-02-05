@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Gentle Phone Deutsche Strings -->
+    <string name="gentle_phone_pairing_title">Betreuer-Kopplung</string>
+    <string name="gentle_phone_pairing_desc">Teilen Sie diesen Code mit Ihrem Betreuer, damit er die Telefoneinstellungen aus der Ferne anpassen kann:</string>
+    <string name="gentle_phone_pairing_code">Kopplungscode</string>
+    <string name="gentle_phone_web_portal">Web-Portal</string>
+    <string name="gentle_phone_remote_settings">Ferneinstellungen</string>
+    <string name="gentle_phone_remote_settings_desc">Einstellungen können von Ihrem Betreuer geändert werden</string>
+    <string name="gentle_phone_settings_synced">Einstellungen vom Betreuer synchronisiert</string>
+    <string name="gentle_phone_settings_local">Lokale Einstellungen verwenden</string>
+    
+    <!-- Onboarding Override -->
+    <string name="onboarding_welcome_title">Willkommen bei Gentle Phone</string>
+    <string name="onboarding_welcome_desc">Gentle Phone ist für einfache Bedienung konzipiert. Ein Betreuer kann Einstellungen aus der Ferne anpassen.</string>
+    
+    <!-- Feedback Override -->
+    <string name="feedback_subject">Gentle Phone Feedback</string>
+</resources>

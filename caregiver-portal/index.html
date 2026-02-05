@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gentle Phone - Caregiver Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface-hover: #334155;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #818cf8, #a78bfa);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .pairing-form {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .pairing-input {
+            flex: 1;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.875rem 1rem;
+            font-size: 1.25rem;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            text-align: center;
+        }
+
+        .pairing-input::placeholder {
+            letter-spacing: 0;
+            text-transform: none;
+            color: var(--text-muted);
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 0.875rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .settings-panel {
+            display: none;
+        }
+
+        .settings-panel.active {
+            display: block;
+        }
+
+        .device-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .device-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .device-badge .dot {
+            width: 10px;
+            height: 10px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .disconnect-btn {
+            background: transparent;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .setting-row:last-child {
+            border-bottom: none;
+        }
+
+        .setting-label h3 {
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .setting-label p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Toggle Switch */
+        .toggle {
+            position: relative;
+            width: 52px;
+            height: 28px;
+        }
+
+        .toggle input {
+            display: none;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            inset: 0;
+            background: var(--border);
+            border-radius: 28px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            left: 3px;
+            top: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .toggle input:checked+.toggle-slider {
+            background: var(--primary);
+        }
+
+        .toggle input:checked+.toggle-slider::before {
+            transform: translateX(24px);
+        }
+
+        /* Select Dropdown */
+        .setting-select {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: var(--text);
+            font-size: 0.9rem;
+            min-width: 140px;
+        }
+
+        .status-msg {
+            text-align: center;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .status-msg.success {
+            display: block;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .status-msg.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌿 Gentle Phone</h1>
+            <p>Caregiver Settings Portal</p>
+        </div>
+
+        <!-- Pairing Section -->
+        <div class="card" id="pairing-section">
+            <h2 style="margin-bottom: 1rem; font-size: 1.1rem;">Connect to a Phone</h2>
+            <p style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+                Enter the pairing code shown on the Gentle Phone device.
+            </p>
+            <div class="pairing-form">
+                <input type="text" class="pairing-input" id="pairing-code" placeholder="ABC123..." maxlength="12">
+                <button class="btn" id="connect-btn" onclick="connectToDevice()">Connect</button>
+            </div>
+            <div class="status-msg" id="pairing-status"></div>
+        </div>
+
+        <!-- Settings Panel -->
+        <div class="settings-panel" id="settings-panel">
+            <div class="card">
+                <div class="device-info">
+                    <div class="device-badge">
+                        <span class="dot"></span>
+                        <span id="device-name">Connected Device</span>
+                    </div>
+                    <button class="btn disconnect-btn" onclick="disconnect()">Disconnect</button>
+                </div>
+
+                <!-- Dark Mode -->
+                <div class="setting-row">
+                    <div class="setting-label">
+                        <h3>🌙 Dark Mode</h3>
+                        <p>Screen appearance</p>
+                    </div>
+                    <select class="setting-select" id="darkMode" onchange="saveSetting('darkMode', this.value)">
+                        <option value="0">System</option>
+                        <option value="1">Light</option>
+                        <option value="2">Dark</option>
+                    </select>
+                </div>
+
+                <!-- Display Mode -->
+                <div class="setting-row">
+                    <div class="setting-label">
+                        <h3>📱 Display Mode</h3>
+                        <p>Contact display style</p>
+                    </div>
+                    <select class="setting-select" id="displayMode" onchange="saveSetting('displayMode', this.value)">
+                        <option value="0">Standard</option>
+                        <option value="1">Large Text</option>
+                        <option value="2">Big Photos</option>
+                        <option value="3">Grid View</option>
+                    </select>
+                </div>
+
+                <!-- Confirm Before Call -->
+                <div class="setting-row">
+                    <div class="setting-label">
+                        <h3>☎️ Confirm Calls</h3>
+                        <p>Ask before making calls</p>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="confirmBeforeCall"
+                            onchange="saveSetting('confirmBeforeCall', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <!-- Haptic Feedback -->
+                <div class="setting-row">
+                    <div class="setting-label">
+                        <h3>📳 Vibration</h3>
+                        <p>Vibrate on button press</p>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="hapticFeedback"
+                            onchange="saveSetting('hapticFeedback', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <!-- Voice Announcements -->
+                <div class="setting-row">
+                    <div class="setting-label">
+                        <h3>🔊 Voice Announce</h3>
+                        <p>Speak contact names</p>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="voiceAnnouncements"
+                            onchange="saveSetting('voiceAnnouncements', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <!-- Block Unknown -->
+                <div class="setting-row">
+                    <div class="setting-label">
+                        <h3>🚫 Block Unknown</h3>
+                        <p>Block unrecognized callers</p>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="blockUnknown" onchange="saveSetting('blockUnknown', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <!-- Silence on Touch -->
+                <div class="setting-row">
+                    <div class="setting-label">
+                        <h3>🤫 Silence on Touch</h3>
+                        <p>Touch screen to silence ring</p>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" id="silenceOnTouch"
+                            onchange="saveSetting('silenceOnTouch', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <!-- Ringtone Timeout -->
+                <div class="setting-row">
+                    <div class="setting-label">
+                        <h3>⏱️ Ringtone Timeout</h3>
+                        <p>Auto-silence after seconds</p>
+                    </div>
+                    <select class="setting-select" id="ringtoneTimeout"
+                        onchange="saveSetting('ringtoneTimeout', this.value)">
+                        <option value="0">Off</option>
+                        <option value="1">1 sec</option>
+                        <option value="2">2 sec</option>
+                        <option value="3">3 sec</option>
+                        <option value="5">5 sec</option>
+                        <option value="8">8 sec</option>
+                        <option value="10">10 sec</option>
+                        <option value="15">15 sec</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="status-msg success" id="save-status" style="display:none;">
+                ✓ Settings saved and synced!
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Changes sync to the phone in real-time.</p>
+            <p style="margin-top: 0.5rem;">© 2026 Heuscher</p>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCyHmOAeHiezSFw7h_HqfvCKSsdT7Ug2LY",
+            authDomain: "gentle-phone.firebaseapp.com",
+            projectId: "gentle-phone",
+            storageBucket: "gentle-phone.firebasestorage.app",
+            messagingSenderId: "584373734024",
+            appId: "1:584373734024:web:6fc8b712d81488ec61ad3d",
+            measurementId: "G-D02NXHS08W"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let currentDeviceId = localStorage.getItem('gentlephone_device') || null;
+        let unsubscribe = null;
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            if (currentDeviceId) {
+                connectToDevice(currentDeviceId);
+            }
+        });
+
+        window.connectToDevice = async function (existingId) {
+            const deviceId = existingId || document.getElementById('pairing-code').value.toUpperCase().trim();
+            if (!deviceId || deviceId.length < 6) {
+                showStatus('pairing-status', 'Please enter a valid pairing code', 'error');
+                return;
+            }
+
+            try {
+                const deviceDoc = await getDoc(doc(db, 'devices', deviceId));
+                if (!deviceDoc.exists()) {
+                    showStatus('pairing-status', 'Device not found. Check the code.', 'error');
+                    return;
+                }
+
+                currentDeviceId = deviceId;
+                localStorage.setItem('gentlephone_device', deviceId);
+
+                const deviceData = deviceDoc.data();
+                document.getElementById('device-name').textContent = deviceData.deviceName || 'Gentle Phone';
+
+                // Subscribe to settings changes
+                if (unsubscribe) unsubscribe();
+                unsubscribe = onSnapshot(doc(db, 'devices', deviceId, 'settings', 'current'), (snapshot) => {
+                    if (snapshot.exists()) {
+                        loadSettings(snapshot.data());
+                    }
+                });
+
+                document.getElementById('pairing-section').style.display = 'none';
+                document.getElementById('settings-panel').classList.add('active');
+
+            } catch (error) {
+                console.error(error);
+                showStatus('pairing-status', 'Connection error. Try again.', 'error');
+            }
+        };
+
+        window.disconnect = function () {
+            if (unsubscribe) unsubscribe();
+            currentDeviceId = null;
+            localStorage.removeItem('gentlephone_device');
+            document.getElementById('pairing-section').style.display = 'block';
+            document.getElementById('settings-panel').classList.remove('active');
+            document.getElementById('pairing-code').value = '';
+        };
+
+        window.saveSetting = async function (key, value) {
+            if (!currentDeviceId) return;
+
+            try {
+                const settingsRef = doc(db, 'devices', currentDeviceId, 'settings', 'current');
+                const updateData = {};
+                updateData[key] = typeof value === 'string' && !isNaN(value) ? parseInt(value) : value;
+
+                await setDoc(settingsRef, updateData, { merge: true });
+
+                const saveStatus = document.getElementById('save-status');
+                saveStatus.style.display = 'block';
+                setTimeout(() => { saveStatus.style.display = 'none'; }, 2000);
+            } catch (error) {
+                console.error('Save error:', error);
+            }
+        };
+
+        function loadSettings(settings) {
+            if (settings.darkMode !== undefined) {
+                document.getElementById('darkMode').value = settings.darkMode;
+            }
+            if (settings.displayMode !== undefined) {
+                document.getElementById('displayMode').value = settings.displayMode;
+            }
+            if (settings.confirmBeforeCall !== undefined) {
+                document.getElementById('confirmBeforeCall').checked = settings.confirmBeforeCall;
+            }
+            if (settings.hapticFeedback !== undefined) {
+                document.getElementById('hapticFeedback').checked = settings.hapticFeedback;
+            }
+            if (settings.voiceAnnouncements !== undefined) {
+                document.getElementById('voiceAnnouncements').checked = settings.voiceAnnouncements;
+            }
+            if (settings.blockUnknown !== undefined) {
+                document.getElementById('blockUnknown').checked = settings.blockUnknown;
+            }
+            if (settings.silenceOnTouch !== undefined) {
+                document.getElementById('silenceOnTouch').checked = settings.silenceOnTouch;
+            }
+            if (settings.ringtoneTimeout !== undefined) {
+                document.getElementById('ringtoneTimeout').value = settings.ringtoneTimeout;
+            }
+        }
+
+        function showStatus(elementId, message, type) {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.className = 'status-msg ' + type;
+            if (type === 'success') {
+                setTimeout(() => { el.className = 'status-msg'; }, 3000);
+            }
+        }
+    </script>
+</body>
+
+</html>

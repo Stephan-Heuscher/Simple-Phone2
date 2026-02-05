@@ -1,0 +1,51 @@
+Gentle Phone: Senioren-Telefon mit Betreuer-Unterstützung
+
+Gentle Phone ist eine vereinfachte Telefon-App für Senioren und Menschen, die etwas Hilfe mit Technologie brauchen. Das Besondere: Ein Betreuer kann die Einstellungen des Telefons über ein Web-Portal fernsteuern – keine frustrierenden Technik-Gespräche mehr!
+
+Warum Gentle Phone?
+
+Viele Senioren haben Schwierigkeiten mit modernen Smartphones. Gentle Phone kombiniert eine ultra-einfache Benutzeroberfläche mit Fernsteuerung für Betreuer. So haben Angehörige Ruhe und der Nutzer behält seine Unabhängigkeit.
+
+Hauptfunktionen:
+
+🌿 Betreuer-Fernsteuerung
+• Verbindung über einfachen Kopplungscode
+• Anzeige-, Audio- und Anrufeinstellungen aus der Ferne ändern
+• Änderungen werden in Echtzeit synchronisiert
+• Keine App-Installation für Betreuer nötig – nur das Web-Portal nutzen
+
+📱 Seniorenfreundliche Oberfläche
+• Extra große Schaltflächen: Alle Buttons 48dp+ für einfaches Tippen
+• Hoher Kontrast: Für maximale Sichtbarkeit gestaltet
+• Riesige Textgröße: Namen so groß wie Fotos
+• Foto-Kontakte: Ein-Tipp-Anrufe über Fotos
+• Einfache Suche: Jeden Kontakt schnell finden
+
+🔒 Sicherheitsfunktionen
+• Unbekannte Anrufer blockieren: Schutz vor Spam und Betrug
+• Anrufbestätigung: Versehentliche Anrufe verhindern
+• Sprachansagen: Namen beim Anrufen vorlesen
+
+♿ Barrierefreiheit
+• Haptisches Feedback: Vibration bei Tastendruck
+• Dunkelmodus: Augenbelastung bei wenig Licht reduzieren
+• Keine verwirrenden Gesten: Alles ist ein einfaches Tippen
+
+🛡️ Datenschutz
+• 100% Offline: Kontaktdaten bleiben auf dem Telefon
+• Keine Werbung: Saubere, ablenkungsfreie Erfahrung
+• Sicher: Betreuer-Einstellungen nutzen verschlüsselte Firebase-Verbindung
+
+So funktioniert die Betreuer-Kopplung:
+1. Gentle Phone öffnen → Einstellungen → Betreuer-Kopplung
+2. Kopplungscode mit dem Betreuer teilen
+3. Betreuer besucht gentlephone.web.app
+4. Code eingeben und Einstellungen anpassen!
+
+Perfekt für:
+• Ältere Eltern, die selbstständig leben
+• Senioren in betreuten Wohnungen
+• Menschen mit Sehbeeinträchtigungen
+• Alle, die vereinfachte Technik brauchen
+
+Laden Sie Gentle Phone noch heute herunter und geben Sie Ihren Liebsten die Unterstützung, die sie brauchen!
