@@ -115,7 +115,7 @@ platform :android do
     sh "chmod +x #{gradlew_path}" # Ensure executable just in case
     # Execute from project root to ensure settings.gradle.kts is found
     Dir.chdir(root_dir) do
-      cmd = "./gradlew bundleRelease --stacktrace --no-configuration-cache"
+      cmd = "./gradlew bundleSimplephoneRelease --stacktrace --no-configuration-cache"
       puts "Executing raw command: #{cmd}"
       unless system(cmd)
         raise "Gradle build failed! Exit status: #{$?.exitstatus}"
@@ -124,7 +124,7 @@ platform :android do
     upload_to_play_store(
       track: 'internal',
       package_name: 'ch.heuscher.simplephone',
-      aab: File.join(root_dir, "app/build/outputs/bundle/release/app-release.aab")
+      aab: File.join(root_dir, "app/build/outputs/bundle/simplephoneRelease/app-simplephone-release.aab")
       # json_key_data is picked up from SUPPLY_JSON_KEY_DATA environment variable
     )
 
@@ -247,14 +247,14 @@ platform :android do
     gradlew_path = File.join(root_dir, "gradlew")
     sh "chmod +x #{gradlew_path}"
     Dir.chdir(root_dir) do
-      cmd = "./gradlew bundleRelease --stacktrace --no-configuration-cache"
+      cmd = "./gradlew bundleSimplephoneRelease --stacktrace --no-configuration-cache"
       puts "Executing raw command: #{cmd}"
       unless system(cmd)
         raise "Gradle build failed! Exit status: #{$?.exitstatus}"
       end
     end
 
-    aab_path = File.join(root_dir, "app/build/outputs/bundle/release/app-release.aab")
+    aab_path = File.join(root_dir, "app/build/outputs/bundle/simplephoneRelease/app-simplephone-release.aab")
     # 3. Always Deploy to INTERNAL first (Safe, doesn't reset Prod reviews)
     puts "🚀 Deploying to INTERNAL track..."
     upload_to_play_store(
