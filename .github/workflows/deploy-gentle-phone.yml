@@ -1,0 +1,61 @@
+name: Gentle Phone Deploy
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'app/src/gentlephone/**'
+      - 'caregiver-portal/**'
+      - 'fastlane/metadata/gentlephone/**'
+      - '.github/workflows/deploy-gentle-phone.yml'
+
+jobs:
+  android_deploy:
+    name: Android Deploy (Play Store)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Decode Keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 --decode > app/release.keystore
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
+
+      - name: Fastlane Deploy Gentle Phone
+        run: bundle exec fastlane deploy_gentlephone
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          SUPPLY_JSON_KEY_DATA: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+          BUILD_NUMBER: ${{ github.run_number }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+
+  web_deploy:
+    name: Web Deploy (Firebase Hosting)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Firebase Tools
+        run: npm install -g firebase-tools
+
+      - name: Deploy to Firebase Hosting
+        run: firebase deploy --only hosting --token "${{ secrets.FIREBASE_TOKEN }}" --project gentle-phone
