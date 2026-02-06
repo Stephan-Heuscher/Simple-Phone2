@@ -49,6 +49,14 @@ jobs:
           BUILD_NUMBER: ${{ github.run_number }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
 
+      - name: Upload AAB Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gentle-phone-release
+          path: app/build/outputs/bundle/gentlephoneRelease/app-gentlephone-release.aab
+          retention-days: 5
+
   web_deploy:
     name: Web Deploy (Firebase Hosting)
     runs-on: ubuntu-latest
