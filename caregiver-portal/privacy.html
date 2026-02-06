@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - gentle phone</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface-hover: #334155;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #818cf8, #a78bfa);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        h2:first-child {
+            margin-top: 0;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+
+        strong {
+            color: var(--text);
+        }
+
+        ul {
+            list-style-position: inside;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Portal</a>
+
+        <div class="header">
+            <h1>🌿 gentle phone</h1>
+            <p>Privacy Policy</p>
+        </div>
+
+        <div class="card">
+            <p><strong>Effective Date:</strong> February 6, 2026</p>
+
+            <p>This Privacy Policy describes how <strong>gentle phone</strong> ("we", "us", or "our") handles your
+                information when you use our mobile application (the "App") and the companion Caregiver Portal.</p>
+
+            <h2>1. Data Collection and Usage</h2>
+            <p><strong>gentle phone</strong> is designed to be a private, senior-friendly dialer. We prioritize your
+                privacy and minimize data collection.</p>
+
+            <p>We collect and use the following data:</p>
+            <ul>
+                <li><strong>Contacts:</strong> The App accesses your device's contacts solely to display them within the
+                    App and to facilitate making phone calls.</li>
+                <li><strong>Call Log:</strong> The App accesses your call log to display recent calls and missed calls.
+                </li>
+                <li><strong>Phone State:</strong> The App accesses phone state to detect incoming calls and ongoing
+                    calls.</li>
+                <li><strong>Device Settings:</strong> We store non-personal configuration settings (e.g., text size,
+                    dark mode preference, user display name) to synchronize your preferences across devices.</li>
+            </ul>
+
+            <h2>2. Internet Access and Data Sync</h2>
+            <p>Unlike the standard version of Simple Phone, <strong>gentle phone</strong> uses an internet connection to
+                provide remote management features for caregivers.</p>
+            <p>We use <strong>Google Firebase</strong> (Firestore and Authentication) to securely sync configuration
+                settings between the App and the Caregiver Portal. This allows caregivers to remotely assist with device
+                setup.</p>
+            <p><strong>No personal call data (audio, history, or contact details) is ever transmitted to our
+                    servers.</strong> Only configuration preferences are synced.</p>
+
+            <h2>3. Permissions</h2>
+            <p>The App requests the following permissions to function as a phone dialer and sync settings:</p>
+            <ul>
+                <li><strong>Read/Write Contacts:</strong> To display and manage your contacts locally.</li>
+                <li><strong>Call Phone:</strong> To initiate phone calls.</li>
+                <li><strong>Read Call Log:</strong> To display your call history locally.</li>
+                <li><strong>Read Phone State:</strong> To handle incoming and outgoing calls.</li>
+                <li><strong>Internet:</strong> To synchronize configuration settings with the Caregiver Portal.</li>
+                <li><strong>Default Dialer:</strong> To function as your primary phone application.</li>
+            </ul>
+
+            <h2>4. Authentication</h2>
+            <p>The Caregiver Portal uses <strong>Google Sign-In</strong> to authenticate caregivers. We receive your
+                basic profile information (name, email, and profile picture) to verify your identity and display your
+                manager status on the connected device.</p>
+
+            <h2>5. Children's Privacy</h2>
+            <p>Our App is safe for users of all ages. We do not knowingly collect personal identifiable information from
+                children under 13.</p>
+
+            <h2>6. Changes to This Privacy Policy</h2>
+            <p>We may update our Privacy Policy from time to time. Thus, you are advised to review this page
+                periodically for any changes.</p>
+
+            <h2>7. Contact Us</h2>
+            <p>If you have any questions or suggestions about our Privacy Policy, do not hesitate to contact us at
+                stv.heuscher@gmail.com.</p>
+        </div>
+
+        <div class="footer">
+            <p>© 2026 Heuscher</p>
+        </div>
+    </div>
+</body>
+
+</html>
