@@ -29,7 +29,10 @@ jobs:
         run: echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 --decode > app/release.keystore
 
       - name: Decode Google Services JSON
-        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > app/src/gentlephone/google-services.json
+        run: |
+          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > app/src/gentlephone/google-services.json
+          echo "Verifying google-services.json content (first 5 lines):"
+          head -n 5 app/src/gentlephone/google-services.json
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1

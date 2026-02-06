@@ -71,9 +71,11 @@ platform :android do
                    else "English"
                    end
 
-        prompt = "Summarize these git commits into a friendly, professional release notes list (bullet points) for a mobile app. " \
+        prompt = "Summarize these git commits into a friendly, professional release notes list (bullet points) for the app 'Simple Phone'. " \
                  "Target Audience: Seniors. Language: #{language}. " \
                  "Rules: Exclude technical chores/docs/CI. Focus on user-facing features/fixes. " \
+                 "CRITICAL: This app is called 'Simple Phone'. Do NOT confuse it with 'Gentle Phone' (a separate app). " \
+                 "If commits mention 'Gentle Phone' or rebranding, IGNORE those parts as they apply to the other flavor. " \
                  "CRITICAL: Output must be under 480 characters. No markdown bolding, just plain text bullets."
         
         final_notes = ask_gemini(api_key, prompt, raw_commits)
@@ -208,9 +210,11 @@ platform :android do
                    else "English"
                    end
 
-        prompt = "Summarize these git commits into a friendly, professional release notes list (bullet points) for a mobile app. " \
+        prompt = "Summarize these git commits into a friendly, professional release notes list (bullet points) for the app 'Simple Phone'. " \
                  "Target Audience: Seniors. Language: #{language}. " \
                  "Rules: Exclude technical chores/docs/CI. Focus on user-facing features/fixes. " \
+                 "CRITICAL: This app is called 'Simple Phone'. Do NOT confuse it with 'Gentle Phone' (a separate app). " \
+                 "If commits mention 'Gentle Phone' or rebranding, IGNORE those parts as they apply to the other flavor. " \
                  "CRITICAL: Output must be under 480 characters. No markdown bolding, just plain text bullets."
         
         final_notes = ask_gemini(api_key, prompt, raw_commits)
@@ -372,9 +376,11 @@ platform :android do
 
       if api_key
         language = locale == 'de-DE' ? "German" : "English"
-        prompt = "Summarize these git commits into friendly release notes for Gentle Phone (senior phone with caregiver remote settings). " \
+        prompt = "Summarize these git commits into friendly release notes for the app 'gentle phone' (senior phone with caregiver remote settings). " \
                  "Target: Seniors and caregivers. Language: #{language}. " \
-                 "CRITICAL: Under 480 chars, plain text bullets."
+                 "Rules: Exclude technical chores/docs/CI. Focus on user-facing features/fixes. " \
+                 "CRITICAL: This app is called 'gentle phone' (always lowercase). Ensure the tone matches the gentle phone identity. " \
+                 "CRITICAL: Output must be under 480 characters. No markdown bolding, just plain text bullets."
         
         final_notes = ask_gemini(api_key, prompt, raw_commits)
       end
