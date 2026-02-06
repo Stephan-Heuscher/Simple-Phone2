@@ -75,7 +75,7 @@ android {
         create("gentlephone") {
             dimension = "version"
             applicationId = "ch.heuscher.gentlephone"
-            resValue("string", "app_name", "Gentle Phone")
+            resValue("string", "app_name", "gentle phone")
             buildConfigField("Boolean", "REMOTE_SETTINGS_ENABLED", "true")
         }
     }

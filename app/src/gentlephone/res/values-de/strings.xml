@@ -11,9 +11,9 @@
     <string name="gentle_phone_settings_local">Lokale Einstellungen verwenden</string>
     
     <!-- Onboarding Override -->
-    <string name="onboarding_welcome_title">Willkommen bei Gentle Phone</string>
-    <string name="onboarding_welcome_desc">Gentle Phone ist für einfache Bedienung konzipiert. Ein Betreuer kann Einstellungen aus der Ferne anpassen.</string>
+    <string name="onboarding_welcome_title">Willkommen bei gentle phone</string>
+    <string name="onboarding_welcome_desc">gentle phone ist für einfache Bedienung konzipiert. Ein Betreuer kann Einstellungen aus der Ferne anpassen.</string>
     
     <!-- Feedback Override -->
-    <string name="feedback_subject">Gentle Phone Feedback</string>
+    <string name="feedback_subject">gentle phone Feedback</string>
 </resources>

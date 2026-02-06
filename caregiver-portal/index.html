@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gentle Phone - Caregiver Portal</title>
+    <title>gentle phone - Caregiver Portal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -322,7 +322,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🌿 Gentle Phone</h1>
+            <h1>🌿 gentle phone</h1>
             <p>Caregiver Settings Portal</p>
             <div id="user-display" class="user-profile" style="display: none;">
                 <!-- Filled by JS -->
@@ -333,7 +333,7 @@
         <div class="card" id="login-section">
             <h2 style="margin-bottom: 1rem; font-size: 1.1rem; text-align: center;">Welcome, Caregiver</h2>
             <p style="margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.9rem; text-align: center;">
-                Please sign in with Google to manage Gentle Phone settings.
+                Please sign in with Google to manage gentle phone settings.
             </p>
             <button class="google-btn" onclick="signIn()">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="google-icon"
@@ -347,7 +347,7 @@
             <div class="card" id="pairing-section">
                 <h2 style="margin-bottom: 1rem; font-size: 1.1rem;">Connect to a Phone</h2>
                 <p style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem;">
-                    Enter the pairing code shown on the Gentle Phone device.
+                    Enter the pairing code shown on the gentle phone device.
                 </p>
                 <div class="pairing-form">
                     <input type="text" class="pairing-input" id="pairing-code" placeholder="ABC123..." maxlength="12">
@@ -582,7 +582,7 @@
                 localStorage.setItem('gentlephone_device', deviceId);
 
                 const deviceData = deviceDoc.data();
-                document.getElementById('device-name').textContent = deviceData.deviceName || 'Gentle Phone';
+                document.getElementById('device-name').textContent = deviceData.deviceName || 'gentle phone';
 
                 // Subscribe to settings changes
                 if (unsubscribe) unsubscribe();

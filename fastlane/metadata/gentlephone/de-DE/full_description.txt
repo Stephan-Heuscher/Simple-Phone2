@@ -1,10 +1,10 @@
-Gentle Phone: Senioren-Telefon mit Betreuer-Unterstützung
+gentle phone: Senioren-Telefon mit Betreuer-Unterstützung
 
-Gentle Phone ist eine vereinfachte Telefon-App für Senioren und Menschen, die etwas Hilfe mit Technologie brauchen. Das Besondere: Ein Betreuer kann die Einstellungen des Telefons über ein Web-Portal fernsteuern – keine frustrierenden Technik-Gespräche mehr!
+gentle phone ist eine vereinfachte Telefon-App für Senioren und Menschen, die etwas Hilfe mit Technologie brauchen. Das Besondere: Ein Betreuer kann die Einstellungen des Telefons über ein Web-Portal fernsteuern – keine frustrierenden Technik-Gespräche mehr!
 
-Warum Gentle Phone?
+Warum gentle phone?
 
-Viele Senioren haben Schwierigkeiten mit modernen Smartphones. Gentle Phone kombiniert eine ultra-einfache Benutzeroberfläche mit Fernsteuerung für Betreuer. So haben Angehörige Ruhe und der Nutzer behält seine Unabhängigkeit.
+Viele Senioren haben Schwierigkeiten mit modernen Smartphones. gentle phone kombiniert eine ultra-einfache Benutzeroberfläche mit Fernsteuerung für Betreuer. So haben Angehörige Ruhe und der Nutzer behält seine Unabhängigkeit.
 
 Hauptfunktionen:
 
@@ -37,7 +37,7 @@ Hauptfunktionen:
 • Sicher: Betreuer-Einstellungen nutzen verschlüsselte Firebase-Verbindung
 
 So funktioniert die Betreuer-Kopplung:
-1. Gentle Phone öffnen → Einstellungen → Betreuer-Kopplung
+1. gentle phone öffnen → Einstellungen → Betreuer-Kopplung
 2. Kopplungscode mit dem Betreuer teilen
 3. Betreuer besucht gentlephone.web.app
 4. Code eingeben und Einstellungen anpassen!
@@ -48,4 +48,4 @@ Perfekt für:
 • Menschen mit Sehbeeinträchtigungen
 • Alle, die vereinfachte Technik brauchen
 
-Laden Sie Gentle Phone noch heute herunter und geben Sie Ihren Liebsten die Unterstützung, die sie brauchen!
+Laden Sie gentle phone noch heute herunter und geben Sie Ihren Liebsten die Unterstützung, die sie brauchen!

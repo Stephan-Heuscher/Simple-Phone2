@@ -325,7 +325,7 @@ platform :android do
     )
   end
 
-  desc "Deploy Gentle Phone to Play Store Internal Track"
+  desc "Deploy gentle phone to Play Store Internal Track"
   lane :deploy_gentlephone do
     props = load_version_properties(file_path: "app/version.properties")
     build_number = props['VERSION_CODE'].to_i
@@ -333,7 +333,7 @@ platform :android do
     gentlephone_package = 'ch.heuscher.gentlephone'
 
     # Check for version collisions on Gentle Phone's Play Store listing
-    UI.message("Checking Gentle Phone Play Store for existing version codes...")
+    UI.message("Checking gentle phone Play Store for existing version codes...")
     begin
       play_store_versions = google_play_track_version_codes(
         package_name: gentlephone_package,
@@ -345,7 +345,7 @@ platform :android do
       ) rescue []
       
       max_play_version = (play_store_versions + play_store_versions_prod).max || 0
-      UI.message("Gentle Phone highest version: #{max_play_version}. Local: #{build_number}")
+      UI.message("gentle phone highest version: #{max_play_version}. Local: #{build_number}")
       
       if build_number <= max_play_version
         new_safe_code = max_play_version + 1
@@ -394,7 +394,7 @@ platform :android do
       FileUtils.mkdir_p(File.dirname(changelog_path))
       File.write(changelog_path, final_notes)
       
-      puts "--- Gentle Phone Release Notes for #{locale} (v#{build_number}) ---"
+      puts "--- gentle phone Release Notes for #{locale} (v#{build_number}) ---"
       puts final_notes
     end
 
@@ -404,23 +404,23 @@ platform :android do
     sh "chmod +x #{gradlew_path}"
     Dir.chdir(root_dir) do
       cmd = "./gradlew bundleGentlephoneRelease --stacktrace --no-configuration-cache"
-      puts "Building Gentle Phone: #{cmd}"
+      puts "Building gentle phone: #{cmd}"
       unless system(cmd)
-        raise "Gentle Phone build failed! Exit: #{$?.exitstatus}"
+        raise "gentle phone build failed! Exit: #{$?.exitstatus}"
       end
     end
 
     aab_path = File.join(root_dir, "app/build/outputs/bundle/gentlephoneRelease/app-gentlephone-release.aab")
     
     # Upload to Gentle Phone's Play Store listing
-    puts "🚀 Deploying Gentle Phone to internal track..."
+    puts "🚀 Deploying gentle phone to internal track..."
     upload_to_play_store(
       track: 'internal',
       package_name: gentlephone_package,
       aab: aab_path,
       metadata_path: File.expand_path("metadata/gentlephone", File.dirname(__FILE__))
     )
-    puts "✅ Gentle Phone deployed successfully!"
+    puts "✅ gentle phone deployed successfully!"
 
     # Version bump and commit
     new_version_name = increment_version_properties(file_path: "app/version.properties")
@@ -436,7 +436,7 @@ platform :android do
     )
     push_to_git_remote
     
-    puts "🎉 Gentle Phone deployment complete! Version: #{new_version_name}"
+    puts "🎉 gentle phone deployment complete! Version: #{new_version_name}"
   end
 
   # Helper to ask Gemini
