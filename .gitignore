@@ -25,3 +25,5 @@ build-log.txt
 hs_err_pid*
 replay_pid*
 fastlane/service-account.json
+caregiver-portal/config.js
+app/**/google-services.json
