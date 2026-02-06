@@ -167,6 +167,55 @@
             font-size: 0.875rem;
         }
 
+        .user-profile {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--surface-hover);
+            object-fit: cover;
+        }
+
+        .google-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            background: white;
+            color: #3c4043;
+            width: 100%;
+            border-radius: 20px;
+            padding: 0.75rem;
+            font-weight: 500;
+            font-family: 'Roboto', sans-serif;
+            border: 1px solid #dadce0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .google-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .google-icon {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Hide content until auth checks out */
+        #auth-content {
+            display: none;
+        }
+
         .setting-row {
             display: flex;
             justify-content: space-between;
@@ -275,151 +324,171 @@
         <div class="header">
             <h1>🌿 Gentle Phone</h1>
             <p>Caregiver Settings Portal</p>
+            <div id="user-display" class="user-profile" style="display: none;">
+                <!-- Filled by JS -->
+            </div>
         </div>
 
-        <!-- Pairing Section -->
-        <div class="card" id="pairing-section">
-            <h2 style="margin-bottom: 1rem; font-size: 1.1rem;">Connect to a Phone</h2>
-            <p style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem;">
-                Enter the pairing code shown on the Gentle Phone device.
+        <!-- Login Section -->
+        <div class="card" id="login-section">
+            <h2 style="margin-bottom: 1rem; font-size: 1.1rem; text-align: center;">Welcome, Caregiver</h2>
+            <p style="margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.9rem; text-align: center;">
+                Please sign in with Google to manage Gentle Phone settings.
             </p>
-            <div class="pairing-form">
-                <input type="text" class="pairing-input" id="pairing-code" placeholder="ABC123..." maxlength="12">
-                <button class="btn" id="connect-btn" onclick="connectToDevice()">Connect</button>
-            </div>
-            <div class="status-msg" id="pairing-status"></div>
+            <button class="google-btn" onclick="signIn()">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="google-icon"
+                    alt="G">
+                Sign in with Google
+            </button>
         </div>
 
-        <!-- Settings Panel -->
-        <div class="settings-panel" id="settings-panel">
-            <div class="card">
-                <div class="device-info">
-                    <div class="device-badge">
-                        <span class="dot"></span>
-                        <span id="device-name">Connected Device</span>
+        <div id="auth-content">
+            <!-- Pairing Section -->
+            <div class="card" id="pairing-section">
+                <h2 style="margin-bottom: 1rem; font-size: 1.1rem;">Connect to a Phone</h2>
+                <p style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+                    Enter the pairing code shown on the Gentle Phone device.
+                </p>
+                <div class="pairing-form">
+                    <input type="text" class="pairing-input" id="pairing-code" placeholder="ABC123..." maxlength="12">
+                    <button class="btn" id="connect-btn" onclick="connectToDevice()">Connect</button>
+                </div>
+                <div class="status-msg" id="pairing-status"></div>
+            </div>
+
+            <!-- Settings Panel -->
+            <div class="settings-panel" id="settings-panel">
+                <div class="card">
+                    <div class="device-info">
+                        <div class="device-badge">
+                            <span class="dot"></span>
+                            <span id="device-name">Connected Device</span>
+                        </div>
+                        <button class="btn disconnect-btn" onclick="disconnect()">Disconnect</button>
                     </div>
-                    <button class="btn disconnect-btn" onclick="disconnect()">Disconnect</button>
+
+                    <!-- Dark Mode -->
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <h3>🌙 Dark Mode</h3>
+                            <p>Screen appearance</p>
+                        </div>
+                        <select class="setting-select" id="darkMode" onchange="saveSetting('darkMode', this.value)">
+                            <option value="0">System</option>
+                            <option value="1">Light</option>
+                            <option value="2">Dark</option>
+                        </select>
+                    </div>
+
+                    <!-- Display Mode -->
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <h3>📱 Display Mode</h3>
+                            <p>Contact display style</p>
+                        </div>
+                        <select class="setting-select" id="displayMode"
+                            onchange="saveSetting('displayMode', this.value)">
+                            <option value="0">Standard</option>
+                            <option value="1">Large Text</option>
+                            <option value="2">Big Photos</option>
+                            <option value="3">Grid View</option>
+                        </select>
+                    </div>
+
+                    <!-- Confirm Before Call -->
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <h3>☎️ Confirm Calls</h3>
+                            <p>Ask before making calls</p>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="confirmBeforeCall"
+                                onchange="saveSetting('confirmBeforeCall', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Haptic Feedback -->
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <h3>📳 Vibration</h3>
+                            <p>Vibrate on button press</p>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="hapticFeedback"
+                                onchange="saveSetting('hapticFeedback', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Voice Announcements -->
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <h3>🔊 Voice Announce</h3>
+                            <p>Speak contact names</p>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="voiceAnnouncements"
+                                onchange="saveSetting('voiceAnnouncements', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Block Unknown -->
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <h3>🚫 Block Unknown</h3>
+                            <p>Block unrecognized callers</p>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="blockUnknown"
+                                onchange="saveSetting('blockUnknown', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Silence on Touch -->
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <h3>🤫 Silence on Touch</h3>
+                            <p>Touch screen to silence ring</p>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="silenceOnTouch"
+                                onchange="saveSetting('silenceOnTouch', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Ringtone Timeout -->
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <h3>⏱️ Ringtone Timeout</h3>
+                            <p>Auto-silence after seconds</p>
+                        </div>
+                        <select class="setting-select" id="ringtoneTimeout"
+                            onchange="saveSetting('ringtoneTimeout', this.value)">
+                            <option value="0">Off</option>
+                            <option value="1">1 sec</option>
+                            <option value="2">2 sec</option>
+                            <option value="3">3 sec</option>
+                            <option value="5">5 sec</option>
+                            <option value="8">8 sec</option>
+                            <option value="10">10 sec</option>
+                            <option value="15">15 sec</option>
+                        </select>
+                    </div>
                 </div>
 
-                <!-- Dark Mode -->
-                <div class="setting-row">
-                    <div class="setting-label">
-                        <h3>🌙 Dark Mode</h3>
-                        <p>Screen appearance</p>
-                    </div>
-                    <select class="setting-select" id="darkMode" onchange="saveSetting('darkMode', this.value)">
-                        <option value="0">System</option>
-                        <option value="1">Light</option>
-                        <option value="2">Dark</option>
-                    </select>
-                </div>
-
-                <!-- Display Mode -->
-                <div class="setting-row">
-                    <div class="setting-label">
-                        <h3>📱 Display Mode</h3>
-                        <p>Contact display style</p>
-                    </div>
-                    <select class="setting-select" id="displayMode" onchange="saveSetting('displayMode', this.value)">
-                        <option value="0">Standard</option>
-                        <option value="1">Large Text</option>
-                        <option value="2">Big Photos</option>
-                        <option value="3">Grid View</option>
-                    </select>
-                </div>
-
-                <!-- Confirm Before Call -->
-                <div class="setting-row">
-                    <div class="setting-label">
-                        <h3>☎️ Confirm Calls</h3>
-                        <p>Ask before making calls</p>
-                    </div>
-                    <label class="toggle">
-                        <input type="checkbox" id="confirmBeforeCall"
-                            onchange="saveSetting('confirmBeforeCall', this.checked)">
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-
-                <!-- Haptic Feedback -->
-                <div class="setting-row">
-                    <div class="setting-label">
-                        <h3>📳 Vibration</h3>
-                        <p>Vibrate on button press</p>
-                    </div>
-                    <label class="toggle">
-                        <input type="checkbox" id="hapticFeedback"
-                            onchange="saveSetting('hapticFeedback', this.checked)">
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-
-                <!-- Voice Announcements -->
-                <div class="setting-row">
-                    <div class="setting-label">
-                        <h3>🔊 Voice Announce</h3>
-                        <p>Speak contact names</p>
-                    </div>
-                    <label class="toggle">
-                        <input type="checkbox" id="voiceAnnouncements"
-                            onchange="saveSetting('voiceAnnouncements', this.checked)">
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-
-                <!-- Block Unknown -->
-                <div class="setting-row">
-                    <div class="setting-label">
-                        <h3>🚫 Block Unknown</h3>
-                        <p>Block unrecognized callers</p>
-                    </div>
-                    <label class="toggle">
-                        <input type="checkbox" id="blockUnknown" onchange="saveSetting('blockUnknown', this.checked)">
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-
-                <!-- Silence on Touch -->
-                <div class="setting-row">
-                    <div class="setting-label">
-                        <h3>🤫 Silence on Touch</h3>
-                        <p>Touch screen to silence ring</p>
-                    </div>
-                    <label class="toggle">
-                        <input type="checkbox" id="silenceOnTouch"
-                            onchange="saveSetting('silenceOnTouch', this.checked)">
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-
-                <!-- Ringtone Timeout -->
-                <div class="setting-row">
-                    <div class="setting-label">
-                        <h3>⏱️ Ringtone Timeout</h3>
-                        <p>Auto-silence after seconds</p>
-                    </div>
-                    <select class="setting-select" id="ringtoneTimeout"
-                        onchange="saveSetting('ringtoneTimeout', this.value)">
-                        <option value="0">Off</option>
-                        <option value="1">1 sec</option>
-                        <option value="2">2 sec</option>
-                        <option value="3">3 sec</option>
-                        <option value="5">5 sec</option>
-                        <option value="8">8 sec</option>
-                        <option value="10">10 sec</option>
-                        <option value="15">15 sec</option>
-                    </select>
+                <div class="status-msg success" id="save-status" style="display:none;">
+                    ✓ Settings saved and synced!
                 </div>
             </div>
 
-            <div class="status-msg success" id="save-status" style="display:none;">
-                ✓ Settings saved and synced!
+            <div class="footer">
+                <p>Changes sync to the phone in real-time.</p>
+                <p style="margin-top: 0.5rem;">© 2026 Heuscher</p>
             </div>
-        </div>
-
-        <div class="footer">
-            <p>Changes sync to the phone in real-time.</p>
-            <p style="margin-top: 0.5rem;">© 2026 Heuscher</p>
         </div>
     </div>
 
@@ -427,6 +496,7 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
         import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyCyHmOAeHiezSFw7h_HqfvCKSsdT7Ug2LY",
@@ -440,15 +510,66 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
         let currentDeviceId = localStorage.getItem('gentlephone_device') || null;
         let unsubscribe = null;
+        let currentUser = null;
+
+        // Auth Logic
+        onAuthStateChanged(auth, (user) => {
+            const loginSection = document.getElementById('login-section');
+            const authContent = document.getElementById('auth-content');
+            const userDisplay = document.getElementById('user-display');
+
+            if (user) {
+                currentUser = user;
+                // Show Main Content
+                loginSection.style.display = 'none';
+                authContent.style.display = 'block';
+
+                // Show User Badge
+                userDisplay.style.display = 'flex';
+                userDisplay.innerHTML = `
+                    <img src="${user.photoURL}" class="user-avatar" alt="Avatar">
+                    <span>Managed by <strong>${user.displayName}</strong></span>
+                    <a href="#" onclick="logout()" style="color: var(--text-muted); margin-left: 0.5rem; font-size: 0.8rem;">(Sign Out)</a>
+                `;
+
+                // Auto-connect if ID exists
+                if (currentDeviceId && !unsubscribe) {
+                    connectToDevice(currentDeviceId);
+                } else {
+                    document.getElementById('pairing-section').style.display = 'block';
+                    document.getElementById('settings-panel').classList.remove('active');
+                }
+            } else {
+                currentUser = null;
+                // Show Login, Hide Content
+                loginSection.style.display = 'block';
+                authContent.style.display = 'none';
+                userDisplay.style.display = 'none';
+
+                if (unsubscribe) unsubscribe();
+            }
+        });
+
+        window.signIn = function () {
+            const provider = new GoogleAuthProvider();
+            signInWithPopup(auth, provider)
+                .catch((error) => {
+                    console.error("Login failed", error);
+                    alert("Login failed: " + error.message);
+                });
+        };
+
+        window.logout = function () {
+            signOut(auth);
+        };
 
         // Initialize on load
         window.addEventListener('DOMContentLoaded', () => {
-            if (currentDeviceId) {
-                connectToDevice(currentDeviceId);
-            }
+            // Auth listener handles flow
         });
 
         window.connectToDevice = async function (existingId) {
@@ -498,12 +619,16 @@
         };
 
         window.saveSetting = async function (key, value) {
-            if (!currentDeviceId) return;
+            if (!currentDeviceId || !currentUser) return;
 
             try {
                 const settingsRef = doc(db, 'devices', currentDeviceId, 'settings', 'current');
                 const updateData = {};
                 updateData[key] = typeof value === 'string' && !isNaN(value) ? parseInt(value) : value;
+
+                // Add Managed By metadata
+                updateData['managedBy'] = currentUser.displayName;
+                updateData['lastUpdated'] = new Date().toISOString();
 
                 await setDoc(settingsRef, updateData, { merge: true });
 
