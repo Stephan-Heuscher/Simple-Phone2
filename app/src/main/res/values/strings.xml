@@ -138,6 +138,12 @@
     <string name="screen_recents">Recent</string>
     <string name="screen_dialer">Dialer</string>
     <string name="screen_call_log">Call Log</string>
+
+    <!-- Gentle Phone -->
+    <string name="toast_copied_to_clipboard">Copied to clipboard</string>
+    <string name="click_to_copy">Tap to copy</string>
+    <string name="share_pairing_code_title">Share Pairing Code</string>
+    <string name="share_pairing_code_message">Here is my Gentle Phone pairing code: %s</string>
     
     <!-- Accessibility -->
     <string name="cd_go_back">Go back</string>

@@ -12,6 +12,7 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.horizontalScroll
@@ -39,6 +40,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -217,21 +221,58 @@ fun SettingsScreen(
                     modifier = Modifier.padding(top = 8.dp)
                 )
 
+                val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
+                val context = LocalContext.current
+                
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 16.dp)
-                        .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(16.dp))
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.secondaryContainer)
+                        .clickable {
+                            clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(pairingCode))
+                            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+                                // Android 13+ automatically shows a toast for clipboard copy
+                                android.widget.Toast.makeText(context, R.string.toast_copied_to_clipboard, android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                        }
                         .padding(24.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = pairingCode,
-                        style = MaterialTheme.typography.displayMedium,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 4.sp,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = pairingCode,
+                            style = MaterialTheme.typography.displayMedium,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 4.sp,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                           text = stringResource(R.string.click_to_copy),
+                           style = MaterialTheme.typography.labelMedium,
+                           color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                        )
+                    }
+                    
+                    // Share Button
+                    androidx.compose.material3.IconButton(
+                        onClick = {
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, context.getString(R.string.share_pairing_code_message, pairingCode))
+                            }
+                            context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_pairing_code_title)))
+                        },
+                        modifier = Modifier.align(Alignment.TopEnd).offset(x = 12.dp, y = (-12).dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = stringResource(R.string.share_pairing_code_title),
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
                 }
                 
                 Column(
