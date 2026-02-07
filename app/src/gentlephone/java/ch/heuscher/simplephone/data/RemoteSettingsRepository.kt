@@ -98,6 +98,10 @@ class RemoteSettingsRepository(private val context: Context) {
      * Listen for real-time settings changes from Firestore.
      * This allows caregivers to change settings and have them apply immediately.
      */
+    /**
+     * Listen for real-time settings changes from Firestore.
+     * This allows caregivers to change settings and have them apply immediately.
+     */
     fun listenForSettingsChanges(onSettingsChanged: (Map<String, Any>?) -> Unit) {
         firestore
             .collection(COLLECTION_DEVICES)
@@ -114,5 +118,32 @@ class RemoteSettingsRepository(private val context: Context) {
                     onSettingsChanged(snapshot.data)
                 }
             }
+    }
+
+    /**
+     * Update a specific setting in Firestore.
+     * This ensures the web portal reflects changes made on the device.
+     */
+    fun updateRemoteSetting(key: String, value: Any) {
+        try {
+            firestore
+                .collection(COLLECTION_DEVICES)
+                .document(deviceId)
+                .collection(DOC_SETTINGS)
+                .document("current")
+                .update(key, value)
+                .addOnFailureListener { e ->
+                    // If update fails (e.g. document doesn't exist), try set with merge
+                    val data = mapOf(key to value)
+                    firestore
+                        .collection(COLLECTION_DEVICES)
+                        .document(deviceId)
+                        .collection(DOC_SETTINGS)
+                        .document("current")
+                        .set(data, com.google.firebase.firestore.SetOptions.merge())
+                }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }

@@ -24,4 +24,11 @@ class RemoteSettingsRepository(context: Context) {
     fun listenForSettingsChanges(onSettingsChanged: (Map<String, Any>?) -> Unit) {
         // No-op - Simple Phone doesn't support remote settings
     }
+
+    /**
+     * No-op update for Simple Phone
+     */
+    fun updateRemoteSetting(key: String, value: Any) {
+        // No-op
+    }
 }

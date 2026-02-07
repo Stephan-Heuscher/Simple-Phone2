@@ -3,13 +3,33 @@ package ch.heuscher.simplephone.data
 import android.content.Context
 import android.content.SharedPreferences
 import ch.heuscher.simplephone.BuildConfig
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+/**
+ * Data class holding all application settings.
+ * This allows the UI to observe a single stream of state.
+ */
+data class AppSettings(
+    val missedCallsHours: Int,
+    val darkModeOption: Int,
+    val confirmBeforeCall: Boolean,
+    val useHapticFeedback: Boolean,
+    val useVoiceAnnouncements: Boolean,
+    val blockUnknownCallers: Boolean,
+    val displayMode: Int,
+    val simplifiedContactCallScreen: Boolean,
+    val silenceCallOnTouch: Boolean,
+    val ringtoneSilenceTimeout: Int,
+    val isDemoMode: Boolean,
+    val onboardingCompleted: Boolean,
+    val lastBlockedNumber: String?
+)
 
 /**
  * Manages app settings and preferences.
- * For Gentle Phone: Remote settings from caregiver override local settings.
+ * For Gentle Phone: Remote settings from caregiver override local settings and changes are synced back.
  * For Simple Phone: Only local SharedPreferences are used.
  */
 class SettingsRepository(private val context: Context) {
@@ -24,6 +44,10 @@ class SettingsRepository(private val context: Context) {
     // Cache of remote settings - these override local settings when present
     private var remoteCache: Map<String, Any>? = null
     
+    // Reactive state of settings
+    private val _settings = MutableStateFlow(loadSettings())
+    val settings: StateFlow<AppSettings> = _settings.asStateFlow()
+
     companion object {
         private const val PREFS_NAME = "simple_phone_prefs"
         private const val KEY_MISSED_CALLS_HOURS = "missed_calls_hours"
@@ -77,6 +101,11 @@ class SettingsRepository(private val context: Context) {
         if (BuildConfig.REMOTE_SETTINGS_ENABLED) {
             startRemoteSettingsSync()
         }
+        
+        // Listen for local preference changes to update flow if changed elsewhere (unlikely but safe)
+        prefs.registerOnSharedPreferenceChangeListener { _, _ ->
+            refreshSettings()
+        }
     }
     
     /**
@@ -85,6 +114,7 @@ class SettingsRepository(private val context: Context) {
     private fun startRemoteSettingsSync() {
         remoteSettings.listenForSettingsChanges { settings ->
             remoteCache = settings
+            refreshSettings()
         }
     }
     
@@ -94,7 +124,30 @@ class SettingsRepository(private val context: Context) {
     suspend fun syncRemoteSettings() {
         if (BuildConfig.REMOTE_SETTINGS_ENABLED) {
             remoteCache = remoteSettings.fetchRemoteSettings()
+            refreshSettings()
         }
+    }
+    
+    private fun refreshSettings() {
+        _settings.value = loadSettings()
+    }
+    
+    private fun loadSettings(): AppSettings {
+        return AppSettings(
+            missedCallsHours = prefs.getInt(KEY_MISSED_CALLS_HOURS, DEFAULT_MISSED_CALLS_HOURS), // No remote override for this yet
+            darkModeOption = getRemoteInt(REMOTE_KEY_DARK_MODE) ?: prefs.getInt(KEY_DARK_MODE_OPTION, DARK_MODE_SYSTEM),
+            confirmBeforeCall = getRemoteBool(REMOTE_KEY_CONFIRM_BEFORE_CALL) ?: prefs.getBoolean(KEY_CONFIRM_BEFORE_CALL, false),
+            useHapticFeedback = getRemoteBool(REMOTE_KEY_HAPTIC_FEEDBACK) ?: prefs.getBoolean(KEY_USE_HAPTIC_FEEDBACK, true),
+            useVoiceAnnouncements = getRemoteBool(REMOTE_KEY_VOICE_ANNOUNCEMENTS) ?: prefs.getBoolean(KEY_USE_VOICE_ANNOUNCEMENTS, false),
+            blockUnknownCallers = getRemoteBool(REMOTE_KEY_BLOCK_UNKNOWN) ?: prefs.getBoolean(KEY_BLOCK_UNKNOWN_CALLERS, false),
+            displayMode = getRemoteInt(REMOTE_KEY_DISPLAY_MODE) ?: prefs.getInt(KEY_DISPLAY_MODE, DISPLAY_MODE_STANDARD),
+            simplifiedContactCallScreen = prefs.getBoolean(KEY_SIMPLIFIED_CONTACT_CALL_SCREEN, true), // No remote override yet
+            silenceCallOnTouch = getRemoteBool(REMOTE_KEY_SILENCE_ON_TOUCH) ?: prefs.getBoolean(KEY_SILENCE_CALL_ON_TOUCH, false),
+            ringtoneSilenceTimeout = getRemoteInt(REMOTE_KEY_RINGTONE_TIMEOUT) ?: prefs.getInt(KEY_RINGTONE_SILENCE_TIMEOUT, 0),
+            isDemoMode = prefs.getBoolean(KEY_IS_DEMO_MODE, false),
+            onboardingCompleted = prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false),
+            lastBlockedNumber = prefs.getString(KEY_LAST_BLOCKED_NUMBER, null)
+        )
     }
     
     /**
@@ -113,71 +166,97 @@ class SettingsRepository(private val context: Context) {
     // Helper to get remote Boolean value
     private fun getRemoteBool(key: String): Boolean? = remoteCache?.get(key) as? Boolean
     
-    // ========== SETTINGS WITH REMOTE OVERRIDE ==========
+    // Helper to update remote setting
+    private fun updateRemote(key: String, value: Any) {
+        if (isRemoteSettingsEnabled()) {
+            remoteSettings.updateRemoteSetting(key, value)
+        }
+    }
+    
+    // ========== SETTINGS WITH REMOTE OVERRIDE & SYNC ==========
     
     var missedCallsHours: Int
-        get() = prefs.getInt(KEY_MISSED_CALLS_HOURS, DEFAULT_MISSED_CALLS_HOURS)
-        set(value) = prefs.edit().putInt(KEY_MISSED_CALLS_HOURS, value).apply()
+        get() = settings.value.missedCallsHours
+        set(value) {
+            prefs.edit().putInt(KEY_MISSED_CALLS_HOURS, value).apply()
+            // Not remotely synced currently
+        }
 
     var darkModeOption: Int
-        get() = getRemoteInt(REMOTE_KEY_DARK_MODE) 
-            ?: prefs.getInt(KEY_DARK_MODE_OPTION, DARK_MODE_SYSTEM)
-        set(value) = prefs.edit().putInt(KEY_DARK_MODE_OPTION, value).apply()
+        get() = settings.value.darkModeOption
+        set(value) {
+            prefs.edit().putInt(KEY_DARK_MODE_OPTION, value).apply()
+            updateRemote(REMOTE_KEY_DARK_MODE, value)
+        }
 
     var confirmBeforeCall: Boolean
-        get() = getRemoteBool(REMOTE_KEY_CONFIRM_BEFORE_CALL) 
-            ?: prefs.getBoolean(KEY_CONFIRM_BEFORE_CALL, false)
-        set(value) = prefs.edit().putBoolean(KEY_CONFIRM_BEFORE_CALL, value).apply()
+        get() = settings.value.confirmBeforeCall
+        set(value) {
+            prefs.edit().putBoolean(KEY_CONFIRM_BEFORE_CALL, value).apply()
+            updateRemote(REMOTE_KEY_CONFIRM_BEFORE_CALL, value)
+        }
 
     var useHapticFeedback: Boolean
-        get() = getRemoteBool(REMOTE_KEY_HAPTIC_FEEDBACK) 
-            ?: prefs.getBoolean(KEY_USE_HAPTIC_FEEDBACK, true)
-        set(value) = prefs.edit().putBoolean(KEY_USE_HAPTIC_FEEDBACK, value).apply()
+        get() = settings.value.useHapticFeedback
+        set(value) {
+            prefs.edit().putBoolean(KEY_USE_HAPTIC_FEEDBACK, value).apply()
+            updateRemote(REMOTE_KEY_HAPTIC_FEEDBACK, value)
+        }
 
     var useVoiceAnnouncements: Boolean
-        get() = getRemoteBool(REMOTE_KEY_VOICE_ANNOUNCEMENTS) 
-            ?: prefs.getBoolean(KEY_USE_VOICE_ANNOUNCEMENTS, false)
-        set(value) = prefs.edit().putBoolean(KEY_USE_VOICE_ANNOUNCEMENTS, value).apply()
+        get() = settings.value.useVoiceAnnouncements
+        set(value) {
+            prefs.edit().putBoolean(KEY_USE_VOICE_ANNOUNCEMENTS, value).apply()
+            updateRemote(REMOTE_KEY_VOICE_ANNOUNCEMENTS, value)
+        }
 
     var onboardingCompleted: Boolean
-        get() = prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false)
+        get() = settings.value.onboardingCompleted
         set(value) = prefs.edit().putBoolean(KEY_ONBOARDING_COMPLETED, value).apply()
 
     var isDemoMode: Boolean
-        get() = prefs.getBoolean(KEY_IS_DEMO_MODE, false)
+        get() = settings.value.isDemoMode
         set(value) = prefs.edit().putBoolean(KEY_IS_DEMO_MODE, value).apply()
 
     var blockUnknownCallers: Boolean
-        get() = getRemoteBool(REMOTE_KEY_BLOCK_UNKNOWN) 
-            ?: prefs.getBoolean(KEY_BLOCK_UNKNOWN_CALLERS, false)
-        set(value) = prefs.edit().putBoolean(KEY_BLOCK_UNKNOWN_CALLERS, value).apply()
+        get() = settings.value.blockUnknownCallers
+        set(value) {
+            prefs.edit().putBoolean(KEY_BLOCK_UNKNOWN_CALLERS, value).apply()
+            updateRemote(REMOTE_KEY_BLOCK_UNKNOWN, value)
+        }
         
     var lastBlockedNumber: String?
-        get() = prefs.getString(KEY_LAST_BLOCKED_NUMBER, null)
+        get() = settings.value.lastBlockedNumber
         set(value) = prefs.edit().putString(KEY_LAST_BLOCKED_NUMBER, value).apply()
 
 
-
     var displayMode: Int
-        get() = getRemoteInt(REMOTE_KEY_DISPLAY_MODE) 
-            ?: prefs.getInt(KEY_DISPLAY_MODE, DISPLAY_MODE_STANDARD)
-        set(value) = prefs.edit().putInt(KEY_DISPLAY_MODE, value).apply()
+        get() = settings.value.displayMode
+        set(value) {
+            prefs.edit().putInt(KEY_DISPLAY_MODE, value).apply()
+            updateRemote(REMOTE_KEY_DISPLAY_MODE, value)
+        }
 
     var simplifiedContactCallScreen: Boolean
-        get() = prefs.getBoolean(KEY_SIMPLIFIED_CONTACT_CALL_SCREEN, true)
-        set(value) = prefs.edit().putBoolean(KEY_SIMPLIFIED_CONTACT_CALL_SCREEN, value).apply()
+        get() = settings.value.simplifiedContactCallScreen
+        set(value) {
+            prefs.edit().putBoolean(KEY_SIMPLIFIED_CONTACT_CALL_SCREEN, value).apply()
+            // Not remotely synced currently, but could be
+        }
 
     var silenceCallOnTouch: Boolean
-        get() = getRemoteBool(REMOTE_KEY_SILENCE_ON_TOUCH) 
-            ?: prefs.getBoolean(KEY_SILENCE_CALL_ON_TOUCH, false)
-        set(value) = prefs.edit().putBoolean(KEY_SILENCE_CALL_ON_TOUCH, value).apply()
+        get() = settings.value.silenceCallOnTouch
+        set(value) {
+            prefs.edit().putBoolean(KEY_SILENCE_CALL_ON_TOUCH, value).apply()
+            updateRemote(REMOTE_KEY_SILENCE_ON_TOUCH, value)
+        }
 
     var ringtoneSilenceTimeout: Int
-        get() = getRemoteInt(REMOTE_KEY_RINGTONE_TIMEOUT) 
-            ?: prefs.getInt(KEY_RINGTONE_SILENCE_TIMEOUT, 0)
-        set(value) = prefs.edit().putInt(KEY_RINGTONE_SILENCE_TIMEOUT, value).apply()
-
-
+        get() = settings.value.ringtoneSilenceTimeout
+        set(value) {
+            prefs.edit().putInt(KEY_RINGTONE_SILENCE_TIMEOUT, value).apply()
+            updateRemote(REMOTE_KEY_RINGTONE_TIMEOUT, value)
+        }
 
     // Derived properties for backward compatibility / ease of use
     val useHugeText: Boolean
