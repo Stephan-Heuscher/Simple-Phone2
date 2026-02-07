@@ -145,6 +145,12 @@
     <string name="share_pairing_code_title">Share Pairing Code</string>
     <string name="share_pairing_code_message">Here is my Gentle Phone pairing code: %s</string>
     
+    <!-- Gentle Phone (Placeholder for Simple Phone) -->
+    <string name="gentle_phone_pairing_title">Caregiver Pairing</string>
+    <string name="gentle_phone_pairing_desc">Share this code with your caregiver so they can adjust your phone settings remotely:</string>
+    <string name="gentle_phone_web_portal">Web Portal</string>
+    <string name="gentle_phone_web_portal_url">gentlephone.web.app</string>
+    
     <!-- Accessibility -->
     <string name="cd_go_back">Go back</string>
     <string name="cd_open_settings">Open settings</string>
