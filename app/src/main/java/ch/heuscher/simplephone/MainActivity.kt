@@ -798,7 +798,9 @@ fun SimplePhoneApp(
                         onRingtoneSilenceTimeoutChange = {
                             ringtoneSilenceTimeout = it
                             settingsRepository.ringtoneSilenceTimeout = it
-                        }
+                        },
+                        pairingCode = settingsRepository.getPairingCode(),
+                        showPairingCode = settingsRepository.isRemoteSettingsEnabled()
                     )
                 }
                 composable(Screen.InCall.route) {

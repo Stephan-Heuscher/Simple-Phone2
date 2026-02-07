@@ -1,6 +1,7 @@
 package ch.heuscher.simplephone.ui.screens
 
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.sp
 import ch.heuscher.simplephone.R
 
 
@@ -115,7 +116,10 @@ fun SettingsScreen(
     silenceCallOnTouch: Boolean = false,
     onSilenceCallOnTouchChange: (Boolean) -> Unit = {},
     ringtoneSilenceTimeout: Int = 0,
-    onRingtoneSilenceTimeoutChange: (Int) -> Unit = {}
+    onRingtoneSilenceTimeoutChange: (Int) -> Unit = {},
+    // Gentle Phone Specific
+    pairingCode: String? = null,
+    showPairingCode: Boolean = false
 ) {
     // Remember favorites order for reordering
     val mutableFavorites = remember { mutableStateListOf<Contact>() }
@@ -198,6 +202,60 @@ fun SettingsScreen(
                 }
             }
     ) {
+        // --- Pairing Code Section (Gentle Phone Only) ---
+        if (showPairingCode && pairingCode != null) {
+            item {
+                Text(
+                    text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.gentle_phone_pairing_title),
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.gentle_phone_pairing_desc),
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp)
+                        .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(16.dp))
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = pairingCode,
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 4.sp,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+                
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                     Text(
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.gentle_phone_web_portal),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.gentle_phone_web_portal_url),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
+
+                HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(vertical = 24.dp))
+            }
+        }
+
         // --- Zoom Factor Section (First Item) ---
         item {
             Text(
