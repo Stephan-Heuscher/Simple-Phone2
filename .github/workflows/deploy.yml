@@ -3,6 +3,15 @@ name: Android Deploy
 on:
   push:
     branches: [ master ]
+    paths:
+      - 'app/src/main/**'
+      - 'app/src/simplephone/**'
+      - 'fastlane/metadata/android/**'
+      - '.github/workflows/deploy.yml'
+      - 'fastlane/Fastfile'
+      - 'Gemfile'
+      - 'Gemfile.lock'
+      - 'app/build.gradle.kts'
 
 permissions:
   contents: write
