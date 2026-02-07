@@ -14,6 +14,8 @@ import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -109,6 +111,11 @@ class MainActivity : ComponentActivity() {
         
         settingsRepository = SettingsRepository(this)
         contactRepository = ContactRepository(this) // Kept for Activity usage if any, but VM handles data
+        
+        // Trigger initial sync to ensure device is registered in Firestore (Gentle Phone)
+        lifecycleScope.launch {
+            settingsRepository.syncRemoteSettings()
+        }
         
         // Initialize View Model
         val viewModel = ViewModelProvider(this)[MainViewModel::class.java]
