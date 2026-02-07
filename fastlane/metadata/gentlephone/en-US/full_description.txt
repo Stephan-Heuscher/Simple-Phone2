@@ -1,51 +1,20 @@
-gentle phone: Caregiver-Assisted Senior Phone
+gentle phone: Connectivity Simplified.
 
-gentle phone is a simplified phone app designed for seniors and people who need a little extra help with technology. What makes it special? A caregiver can remotely adjust the phone's settings through a simple web portal—no more frustrating tech support calls!
+gentle phone is the caregiver-supported variant of the popular "Simple Phone". It is designed specifically for seniors and anyone needing a simplified interface due to vision or dexterity challenges.
 
-Why gentle phone?
+The Best of Both Worlds
+You get the rock-solid reliability of Simple Phone's interface, plus a unique Caregiver Portal. This allows family members to remotely configure the phone—adjusting font sizes, managing display settings, or customizing the experience—from any web browser. No more confusing phone calls trying to explain which button to press!
 
-Seniors often struggle with modern smartphones. gentle phone combines an ultra-simple interface with remote caregiver control, giving loved ones peace of mind while preserving the user's independence.
+Why Choose gentle phone?
+*   Remote Caregiver Support: Settings can be managed remotely by a trusted contact.
+*   See Clearly: Large fonts and high-contrast themes (Deep Blue / Bright Green).
+*   Touch Easily: Massive buttons ensure you never miss a tap.
+*   Stay Safe: Optional "Call Confirmation" prevents accidental dials.
+*   Focus on What Matters: Smart "Photo Contacts" put loved ones one tap away.
 
-Key Features:
+Smart Features for Seniors:
+*   Voice Announcements: Hear who you are calling before the call connects.
+*   No Accidental Swipes: A simple, tap-based interface tailored for motor control challenges.
+*   Privacy Focused: No ads, no tracking. Your data stays on your device.
 
-🌿 Caregiver Remote Control
-• Connect via simple pairing code
-• Change display, audio, and call settings remotely
-• Adjustments sync to the phone in real-time
-• No app installation needed for caregivers—just use the web portal
-
-📱 Senior-Friendly Interface
-• Extra Large Touch Targets: All buttons 48dp+ for easy tapping
-• High Contrast Colors: Designed for maximum visibility
-• Huge Text Option: Make names as large as photos
-• Photo Contacts: One-tap calling from photos
-• Simple Search: Find any contact quickly
-
-🔒 Safety Features
-• Block Unknown Callers: Protect from spam and scam calls
-• Call Confirmation: Prevent accidental calls
-• Voice Announcements: Hear names spoken when calling
-
-♿ Accessibility Focused
-• Haptic Feedback: Feel vibration on button press
-• Dark Mode: Reduce eye strain in low light
-• No Confusing Gestures: Everything is a simple tap
-
-🛡️ Privacy First
-• 100% Offline: Contact data stays on the phone
-• No Ads: Clean, distraction-free experience
-• Secure: Caregiver settings use encrypted Firebase connection
-
-How Caregiver Pairing Works:
-1. Open gentle phone → Settings → Caregiver Pairing
-2. Share the pairing code with your caregiver
-3. Caregiver visits gentlephone.web.app
-4. Enter the code and start adjusting settings!
-
-Perfect For:
-• Elderly parents living independently
-• Seniors in assisted living
-• People with visual impairments
-• Anyone who needs simplified technology
-
-Download gentle phone today and give your loved ones the support they need!
+Download gentle phone to restore the joy of simple communication.
