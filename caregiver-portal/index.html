@@ -568,19 +568,37 @@
         });
 
         window.connectToDevice = async function (existingId) {
-            const deviceId = existingId || document.getElementById('pairing-code').value.toUpperCase().trim();
-            if (!deviceId || deviceId.length < 6) {
+            const inputCode = existingId || document.getElementById('pairing-code').value.trim();
+            if (!inputCode || inputCode.length < 6) {
                 showStatus('pairing-status', 'Please enter a valid pairing code', 'error');
                 return;
             }
 
             try {
-                const deviceDoc = await getDoc(doc(db, 'devices', deviceId));
-                if (!deviceDoc.exists()) {
+                // Try finding the device with the exact code, then upper, then lower to be robust
+                let validDeviceId = null;
+                let deviceDoc = null;
+
+                // Order of preference: Uppercase (Standard), Exact Input, Lowercase (Legacy)
+                const candidates = [inputCode.toUpperCase(), inputCode, inputCode.toLowerCase()];
+                // Deduplicate
+                const uniqueCandidates = [...new Set(candidates)];
+
+                for (const code of uniqueCandidates) {
+                    const docSnap = await getDoc(doc(db, 'devices', code));
+                    if (docSnap.exists()) {
+                        validDeviceId = code;
+                        deviceDoc = docSnap;
+                        break;
+                    }
+                }
+
+                if (!validDeviceId) {
                     showStatus('pairing-status', 'Device not found. Check the code.', 'error');
                     return;
                 }
 
+                const deviceId = validDeviceId;
                 currentDeviceId = deviceId;
                 localStorage.setItem('gentlephone_device', deviceId);
 
