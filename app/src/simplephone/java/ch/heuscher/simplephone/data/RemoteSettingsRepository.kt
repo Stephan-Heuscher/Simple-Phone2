@@ -31,4 +31,11 @@ class RemoteSettingsRepository(context: Context) {
     fun updateRemoteSetting(key: String, value: Any) {
         // No-op
     }
+
+    /**
+     * No-op upload for Simple Phone
+     */
+    fun uploadFavorites(favorites: List<ch.heuscher.simplephone.model.Contact>) {
+        // No-op
+    }
 }

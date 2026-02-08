@@ -146,4 +146,34 @@ class RemoteSettingsRepository(private val context: Context) {
             e.printStackTrace()
         }
     }
+    /**
+     * Upload favorite contacts (ID and Name only) to Firestore.
+     * This allows the caregiver portal to display them for reordering.
+     * Phone numbers and photos are NOT uploaded.
+     */
+    fun uploadFavorites(favorites: List<ch.heuscher.simplephone.model.Contact>) {
+        try {
+            val data = mapOf(
+                "contacts" to favorites.map { 
+                    mapOf(
+                        "id" to it.id,
+                        "name" to it.name
+                    ) 
+                },
+                "updatedAt" to System.currentTimeMillis()
+            )
+            
+            firestore
+                .collection(COLLECTION_DEVICES)
+                .document(deviceId)
+                .collection("data")
+                .document("favorites")
+                .set(data)
+                .addOnFailureListener { e ->
+                    e.printStackTrace()
+                }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 }

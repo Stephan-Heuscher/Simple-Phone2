@@ -162,8 +162,14 @@
             <p>We use <strong>Google Firebase</strong> (Firestore and Authentication) to securely sync configuration
                 settings between the App and the Caregiver Portal. This allows caregivers to remotely assist with device
                 setup.</p>
-            <p><strong>No personal call data (audio, history, or contact details) is ever transmitted to our
-                    servers.</strong> Only configuration preferences are synced.</p>
+            <p><strong>Specific Data Synced:</strong></p>
+            <ul>
+                <li><strong>Configuration:</strong> Settings like text size, color theme, and behavior preferences.</li>
+                <li><strong>Favorites:</strong> To allow caregivers to reorder your favorite contacts, we store the
+                    <strong>names and internal IDs</strong> of your favorite contacts in the cloud. <strong>Phone
+                        numbers and contact photos are NOT uploaded</strong> and remain strictly on your device.</li>
+            </ul>
+            <p><strong>No personal call data (audio, history) is ever transmitted to our servers.</strong></p>
 
             <h2>3. Permissions</h2>
             <p>The App requests the following permissions to function as a phone dialer and sync settings:</p>

@@ -3,6 +3,7 @@ package ch.heuscher.simplephone.data
 import android.content.Context
 import android.content.SharedPreferences
 import ch.heuscher.simplephone.BuildConfig
+import ch.heuscher.simplephone.model.Contact
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -66,11 +67,12 @@ class SettingsRepository(private val context: Context) {
         private const val KEY_RINGTONE_SILENCE_TIMEOUT = "ringtone_silence_timeout"
         
         // Zoom factors per screen size
+        // Zoom factors per screen size
         private const val KEY_ZOOM_COMPACT = "zoom_compact"
         private const val KEY_ZOOM_MEDIUM = "zoom_medium"
         private const val KEY_ZOOM_EXPANDED = "zoom_expanded"
         
-        private const val DEFAULT_MISSED_CALLS_HOURS = 4
+        private const val DEFAULT_MISSED_CALLS_HOURS = 24
         
         // Dark Mode Options
         const val DARK_MODE_SYSTEM = 0
@@ -94,6 +96,9 @@ class SettingsRepository(private val context: Context) {
         private const val REMOTE_KEY_BLOCK_UNKNOWN = "blockUnknown"
         private const val REMOTE_KEY_SILENCE_ON_TOUCH = "silenceOnTouch"
         private const val REMOTE_KEY_RINGTONE_TIMEOUT = "ringtoneTimeout"
+        private const val REMOTE_KEY_MISSED_CALLS_HOURS = "missedCallsHours"
+        private const val REMOTE_KEY_ZOOM_FACTOR = "zoomFactor"
+        private const val REMOTE_KEY_FAVORITES_ORDER = "favoritesOrder"
     }
     
     init {
@@ -103,8 +108,18 @@ class SettingsRepository(private val context: Context) {
         }
         
         // Listen for local preference changes to update flow if changed elsewhere (unlikely but safe)
-        prefs.registerOnSharedPreferenceChangeListener { _, _ ->
+        prefs.registerOnSharedPreferenceChangeListener { _, key ->
             refreshSettings()
+            
+            // Special handling for Zoom changes to sync back to remote
+            if (key == KEY_ZOOM_COMPACT || key == KEY_ZOOM_MEDIUM || key == KEY_ZOOM_EXPANDED) {
+               // We only sync one "zoomFactor" to remote, assume Compact is the primary one for now 
+               // OR check which one changed. 
+               // For simplicity in this iteration, we might not sync LOCAL -> REMOTE for Zoom 
+               // if we consider Remote as "Source of Truth" for configuration.
+               // However, if user changes it on phone, it should update portal.
+               // Let's defer that specific logic to the setter.
+            }
         }
     }
     
@@ -114,6 +129,28 @@ class SettingsRepository(private val context: Context) {
     private fun startRemoteSettingsSync() {
         remoteSettings.listenForSettingsChanges { settings ->
             remoteCache = settings
+            
+            // Apply Zoom from Remote if present
+            getRemoteFloat(REMOTE_KEY_ZOOM_FACTOR)?.let { zoom ->
+                // Apply to all screen sizes for consistency when set remotely
+                prefs.edit()
+                    .putFloat(KEY_ZOOM_COMPACT, zoom)
+                    .putFloat(KEY_ZOOM_MEDIUM, zoom)
+                    .putFloat(KEY_ZOOM_EXPANDED, zoom)
+                    .apply()
+            }
+
+            // Apply Favorites Order from Remote if present
+            // The remote list is a list of Strings (IDs)
+            val remoteOrder = remoteCache?.get(REMOTE_KEY_FAVORITES_ORDER) as? List<*>
+            if (remoteOrder != null) {
+                // Safely cast to List<String>
+                val idList = remoteOrder.filterIsInstance<String>()
+                if (idList.isNotEmpty()) {
+                    saveFavoritesOrder(idList)
+                }
+            }
+
             refreshSettings()
         }
     }
@@ -124,6 +161,22 @@ class SettingsRepository(private val context: Context) {
     suspend fun syncRemoteSettings() {
         if (BuildConfig.REMOTE_SETTINGS_ENABLED) {
             remoteCache = remoteSettings.fetchRemoteSettings()
+            // Apply Zoom logic here too... (duplicated for now, could be refactored)
+             getRemoteFloat(REMOTE_KEY_ZOOM_FACTOR)?.let { zoom ->
+                prefs.edit()
+                    .putFloat(KEY_ZOOM_COMPACT, zoom)
+                    .putFloat(KEY_ZOOM_MEDIUM, zoom)
+                    .putFloat(KEY_ZOOM_EXPANDED, zoom)
+                    .apply()
+            }
+            // Apply Favorites Order logic here too...
+            val remoteOrder = remoteCache?.get(REMOTE_KEY_FAVORITES_ORDER) as? List<*>
+            if (remoteOrder != null) {
+                val idList = remoteOrder.filterIsInstance<String>()
+                if (idList.isNotEmpty()) {
+                    saveFavoritesOrder(idList)
+                }
+            }
             refreshSettings()
         }
     }
@@ -134,7 +187,7 @@ class SettingsRepository(private val context: Context) {
     
     private fun loadSettings(): AppSettings {
         return AppSettings(
-            missedCallsHours = prefs.getInt(KEY_MISSED_CALLS_HOURS, DEFAULT_MISSED_CALLS_HOURS), // No remote override for this yet
+            missedCallsHours = getRemoteInt(REMOTE_KEY_MISSED_CALLS_HOURS) ?: prefs.getInt(KEY_MISSED_CALLS_HOURS, DEFAULT_MISSED_CALLS_HOURS),
             darkModeOption = getRemoteInt(REMOTE_KEY_DARK_MODE) ?: prefs.getInt(KEY_DARK_MODE_OPTION, DARK_MODE_SYSTEM),
             confirmBeforeCall = getRemoteBool(REMOTE_KEY_CONFIRM_BEFORE_CALL) ?: prefs.getBoolean(KEY_CONFIRM_BEFORE_CALL, false),
             useHapticFeedback = getRemoteBool(REMOTE_KEY_HAPTIC_FEEDBACK) ?: prefs.getBoolean(KEY_USE_HAPTIC_FEEDBACK, true),
@@ -165,11 +218,23 @@ class SettingsRepository(private val context: Context) {
     
     // Helper to get remote Boolean value
     private fun getRemoteBool(key: String): Boolean? = remoteCache?.get(key) as? Boolean
+
+    // Helper to get remote Float value
+    private fun getRemoteFloat(key: String): Float? = (remoteCache?.get(key) as? Number)?.toFloat()
     
     // Helper to update remote setting
     private fun updateRemote(key: String, value: Any) {
         if (isRemoteSettingsEnabled()) {
             remoteSettings.updateRemoteSetting(key, value)
+        }
+    }
+
+    /**
+     * Upload favorites to remote for reordering in portal
+     */
+    fun uploadFavorites(favorites: List<ch.heuscher.simplephone.model.Contact>) {
+        if (isRemoteSettingsEnabled()) {
+            remoteSettings.uploadFavorites(favorites)
         }
     }
     
@@ -179,7 +244,7 @@ class SettingsRepository(private val context: Context) {
         get() = settings.value.missedCallsHours
         set(value) {
             prefs.edit().putInt(KEY_MISSED_CALLS_HOURS, value).apply()
-            // Not remotely synced currently
+            updateRemote(REMOTE_KEY_MISSED_CALLS_HOURS, value)
         }
 
     var darkModeOption: Int
@@ -306,5 +371,6 @@ class SettingsRepository(private val context: Context) {
             else -> KEY_ZOOM_COMPACT
         }
         prefs.edit().putFloat(key, factor).apply()
+        updateRemote(REMOTE_KEY_ZOOM_FACTOR, factor)
     }
 }

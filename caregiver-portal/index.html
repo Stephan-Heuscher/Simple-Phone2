@@ -310,6 +310,34 @@
             color: var(--danger);
         }
 
+        .btn-mini {
+            background: var(--surface-hover);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .btn-mini:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .btn-mini:disabled {
+            opacity: 0.3;
+            cursor: default;
+            background: var(--surface-hover);
+            color: var(--text);
+            border-color: var(--border);
+        }
+
         .footer {
             text-align: center;
             margin-top: 2rem;
@@ -478,6 +506,55 @@
                             <option value="15">15 sec</option>
                         </select>
                     </div>
+
+                    <!-- Missed Calls Display -->
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <h3>📞 Missed Calls</h3>
+                            <p>Show for recent hours</p>
+                        </div>
+                        <select class="setting-select" id="missedCallsHours"
+                            onchange="saveSetting('missedCallsHours', this.value)">
+                            <option value="0">0 (Immediate)</option>
+                            <option value="1">1 Hour</option>
+                            <option value="2">2 Hours</option>
+                            <option value="3">3 Hours</option>
+                            <option value="5">5 Hours</option>
+                            <option value="8">8 Hours</option>
+                            <option value="12">12 Hours</option>
+                            <option value="24">24 Hours</option>
+                            <option value="-1">Never Hide</option>
+                        </select>
+                    </div>
+
+                    <!-- Zoom / Text Size -->
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <h3>🔍 Zoom Level</h3>
+                            <p>Interface scale</p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span id="zoomValueDisplay" style="font-weight: 600; min-width: 3ch;">1.0</span>x
+                            <input type="range" id="zoomFactor" min="0.5" max="2.0" step="0.05" value="1.0"
+                                oninput="document.getElementById('zoomValueDisplay').textContent = parseFloat(this.value).toFixed(2)"
+                                onchange="saveSetting('zoomFactor', parseFloat(this.value))">
+                        </div>
+                    </div>
+
+                    <!-- Favorites Reordering -->
+                    <div class="setting-row" style="display: block;">
+                        <div class="setting-label" style="margin-bottom: 0.5rem;">
+                            <h3>⭐ Favorites Order</h3>
+                            <p>Reorder contacts on home screen</p>
+                        </div>
+                        <div id="favorites-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <p style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">
+                                Loading favorites...
+                            </p>
+                        </div>
+                        <!-- Hidden input to store current order -->
+                        <input type="hidden" id="favoritesOrder">
+                    </div>
                 </div>
 
                 <div class="status-msg success" id="save-status" style="display:none;">
@@ -613,6 +690,8 @@
                     }
                 });
 
+                setupFavoritesListener(deviceId);
+
                 document.getElementById('pairing-section').style.display = 'none';
                 document.getElementById('settings-panel').classList.add('active');
 
@@ -624,6 +703,7 @@
 
         window.disconnect = function () {
             if (unsubscribe) unsubscribe();
+            if (favoritesUnsubscribe) favoritesUnsubscribe();
             currentDeviceId = null;
             localStorage.removeItem('gentlephone_device');
             document.getElementById('pairing-section').style.display = 'block';
@@ -678,7 +758,86 @@
             if (settings.ringtoneTimeout !== undefined) {
                 document.getElementById('ringtoneTimeout').value = settings.ringtoneTimeout;
             }
+            if (settings.missedCallsHours !== undefined) {
+                document.getElementById('missedCallsHours').value = settings.missedCallsHours;
+            }
+            if (settings.zoomFactor !== undefined) {
+                document.getElementById('zoomFactor').value = settings.zoomFactor;
+                document.getElementById('zoomValueDisplay').textContent = parseFloat(settings.zoomFactor).toFixed(2);
+            }
         }
+
+        // Favorites Logic
+        let favoritesUnsubscribe = null;
+
+        async function setupFavoritesListener(deviceId) {
+            if (favoritesUnsubscribe) favoritesUnsubscribe();
+
+            // Listen to the 'favorites' document in 'data' collection
+            favoritesUnsubscribe = onSnapshot(doc(db, 'devices', deviceId, 'data', 'favorites'), (doc) => {
+                if (doc.exists()) {
+                    const data = doc.data();
+                    const contacts = data.contacts || []; // Expecting array of {id: '...', name: '...'}
+                    renderFavorites(contacts);
+                } else {
+                    document.getElementById('favorites-list').innerHTML =
+                        '<p style="font-size: 0.8rem; color: var(--text-muted);">No favorites yet or app not synced.</p>';
+                }
+            });
+        }
+
+        function renderFavorites(contacts) {
+            const container = document.getElementById('favorites-list');
+            container.innerHTML = '';
+
+            if (contacts.length === 0) {
+                container.innerHTML = '<p style="font-size: 0.8rem; color: var(--text-muted);">No favorites found.</p>';
+                return;
+            }
+
+            contacts.forEach((contact, index) => {
+                const div = document.createElement('div');
+                div.className = 'favorite-item';
+                div.style.cssText = `
+                    display: flex; justify-content: space-between; align-items: center;
+                    background: var(--bg); padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid var(--border);
+                `;
+
+                div.innerHTML = `
+                    <span style="font-weight: 500;">${contact.name}</span>
+                    <div style="display: flex; gap: 0.25rem;">
+                        <button class="btn-mini" onclick="moveFavorite('${contact.id}', -1)" ${index === 0 ? 'disabled' : ''}>↑</button>
+                        <button class="btn-mini" onclick="moveFavorite('${contact.id}', 1)" ${index === contacts.length - 1 ? 'disabled' : ''}>↓</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            // Store current list in memory for reordering
+            window.currentFavorites = contacts;
+        }
+
+        window.moveFavorite = function (id, direction) {
+            if (!window.currentFavorites) return;
+
+            const index = window.currentFavorites.findIndex(c => c.id === id);
+            if (index === -1) return;
+
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= window.currentFavorites.length) return;
+
+            // Swap
+            const temp = window.currentFavorites[index];
+            window.currentFavorites[index] = window.currentFavorites[newIndex];
+            window.currentFavorites[newIndex] = temp;
+
+            // Optimistic update
+            renderFavorites(window.currentFavorites);
+
+            // Save new order (IDs only) to settings
+            const orderIds = window.currentFavorites.map(c => c.id);
+            saveSetting('favoritesOrder', orderIds);
+        };
 
         function showStatus(elementId, message, type) {
             const el = document.getElementById(elementId);

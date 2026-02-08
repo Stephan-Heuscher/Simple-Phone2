@@ -168,6 +168,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 ContactResolutionMaps(normalizedMap, suffixMap)
             }
             _contactResolutionMaps.value = newResolutionMaps
+            
+            // Upload favorites to cloud if enabled
+            val favorites = sortedContacts.filter { it.isFavorite }
+            withContext(Dispatchers.IO) {
+                settingsRepository.uploadFavorites(favorites)
+            }
 
             // Load Missed Calls
             // Load Missed Calls (only if permissions granted, or mock them if demo mode extended to calls)
