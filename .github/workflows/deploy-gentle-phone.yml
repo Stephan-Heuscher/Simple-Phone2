@@ -9,6 +9,9 @@ on:
       - 'fastlane/metadata/gentlephone/**'
       - '.github/workflows/deploy-gentle-phone.yml'
 
+permissions:
+  contents: write
+
 jobs:
   android_deploy:
     name: Android Deploy (Play Store)
@@ -17,6 +20,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          persist-credentials: true
 
       - name: set up JDK
         uses: actions/setup-java@v3
