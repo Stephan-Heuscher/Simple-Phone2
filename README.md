@@ -92,8 +92,8 @@ Designed specifically for users with:
 
 - **Language**: Kotlin
 - **UI Framework**: Jetpack Compose
-- **Minimum SDK**: 24 (Android 7.0)
-- **Target SDK**: 34 (Android 14)
+- **Minimum SDK**: 26 (Android 8.0)
+- **Target SDK**: 35 (Android 15)
 
 ## 📄 License
 

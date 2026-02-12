@@ -1,0 +1,57 @@
+Reusing configuration cache.
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preSimplephoneDebugBuild UP-TO-DATE
+> Task :app:mergeSimplephoneDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkSimplephoneDebugAarMetadata UP-TO-DATE
+> Task :app:processSimplephoneDebugNavigationResources UP-TO-DATE
+> Task :app:generateSimplephoneDebugResValues UP-TO-DATE
+> Task :app:createSimplephoneDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:javaPreCompileSimplephoneDebug UP-TO-DATE
+> Task :app:mergeSimplephoneDebugShaders UP-TO-DATE
+> Task :app:compileSimplephoneDebugShaders NO-SOURCE
+> Task :app:generateSimplephoneDebugAssets UP-TO-DATE
+> Task :app:generateSimplephoneDebugBuildConfig UP-TO-DATE
+> Task :app:mapSimplephoneDebugSourceSetPaths UP-TO-DATE
+> Task :app:compileSimplephoneDebugNavigationResources UP-TO-DATE
+> Task :app:checkSimplephoneDebugDuplicateClasses UP-TO-DATE
+> Task :app:generateSimplephoneDebugResources UP-TO-DATE
+> Task :app:extractDeepLinksSimplephoneDebug UP-TO-DATE
+> Task :app:mergeSimplephoneDebugAssets UP-TO-DATE
+> Task :app:validateSigningSimplephoneDebug UP-TO-DATE
+> Task :app:writeSimplephoneDebugSigningConfigVersions UP-TO-DATE
+> Task :app:mergeLibDexSimplephoneDebug UP-TO-DATE
+> Task :app:desugarSimplephoneDebugFileDependencies UP-TO-DATE
+> Task :app:mergeSimplephoneDebugJniLibFolders UP-TO-DATE
+> Task :app:writeSimplephoneDebugAppMetadata UP-TO-DATE
+> Task :app:compressSimplephoneDebugAssets UP-TO-DATE
+> Task :app:packageSimplephoneDebugResources UP-TO-DATE
+> Task :app:mergeExtDexSimplephoneDebug UP-TO-DATE
+> Task :app:parseSimplephoneDebugLocalResources UP-TO-DATE
+> Task :app:mergeSimplephoneDebugNativeLibs UP-TO-DATE
+> Task :app:stripSimplephoneDebugDebugSymbols UP-TO-DATE
+> Task :app:processSimplephoneDebugMainManifest UP-TO-DATE
+> Task :app:mergeSimplephoneDebugResources UP-TO-DATE
+> Task :app:processSimplephoneDebugManifest UP-TO-DATE
+> Task :app:processSimplephoneDebugManifestForPackage UP-TO-DATE
+> Task :app:processSimplephoneDebugResources UP-TO-DATE
+
+> Task :app:compileSimplephoneDebugKotlin FAILED
+e: file:///C:/Users/steph/Programme/Simple-Phone/app/src/main/java/ch/heuscher/simplephone/ui/screens/SettingsScreen.kt:389:60 Unresolved reference 'AlertRed'.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileSimplephoneDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 1s
+31 actionable tasks: 1 executed, 30 up-to-date
+Configuration cache entry reused.

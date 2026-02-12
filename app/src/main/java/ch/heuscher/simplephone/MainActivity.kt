@@ -381,7 +381,7 @@ class MainActivity : ComponentActivity() {
     @Deprecated("Deprecated in Java")
     override fun onRequestPermissionsResult(
         requestCode: Int,
-        permissions: Array<out String>,
+        permissions: Array<String>,
         grantResults: IntArray
     ) {
         @Suppress("DEPRECATION")
@@ -412,10 +412,10 @@ class MainActivity : ComponentActivity() {
             requestPermissionsIfNeeded()
         }
     }
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        intent?.let { handleIntent(it) }
+        handleIntent(intent)
     }
 
     private fun handleIntent(intent: Intent) {

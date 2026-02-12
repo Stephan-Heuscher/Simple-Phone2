@@ -18,21 +18,21 @@ class SettingsRepositoryTest {
 
     @Before
     fun setUp() {
-        context = mockk()
-        sharedPreferences = mockk()
+        context = mockk(relaxed = true)
+        sharedPreferences = mockk(relaxed = true)
         editor = mockk(relaxed = true)
 
         every { context.getSharedPreferences("simple_phone_prefs", Context.MODE_PRIVATE) } returns sharedPreferences
         every { sharedPreferences.edit() } returns editor
-        
-        settingsRepository = SettingsRepository(context)
-        
-        // Mock chaining
+
+        // Mock editor chaining (needed before constructor since loadSettings may trigger reads)
         every { editor.putInt(any(), any()) } returns editor
         every { editor.putBoolean(any(), any()) } returns editor
         every { editor.putString(any(), any()) } returns editor
         every { editor.putFloat(any(), any()) } returns editor
         every { editor.apply() } returns Unit
+
+        settingsRepository = SettingsRepository(context)
     }
 
     @Test

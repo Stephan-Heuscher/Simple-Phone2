@@ -316,139 +316,46 @@ class CallService : InCallService() {
     }
 
     /**
-     * Check if we should ring based on DND settings
-     * Returns true if we should ring, false if DND blocks it
+     * Check if we should ring based on DND settings.
+     * Delegates to DndRingPolicy for the actual decision logic (which is fully unit-tested).
+     * Returns true if we should ring, false if DND blocks it.
      */
     private fun shouldRingForCall(callerNumber: String?): Boolean {
-        // First check internal blocking setting
         val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(this)
-        if (settingsRepository.blockUnknownCallers) {
-             // Check if number is in contacts
-             val number = callerNumber?.replace(Regex("[^0-9+]"), "")
-             if (number.isNullOrEmpty()) {
-                 // Block private/hidden numbers
-                 Log.d(TAG, "Blocking call from empty number")
-                 return false // Will be rejected in onCallAdded
-             }
-             
-             val contactRepository = ContactRepository(this)
-             val contact = contactRepository.getContactByNumber(number)
-             
-             if (contact == null) {
-                 Log.d(TAG, "Blocking call from unknown number: $callerNumber")
-                 return false // Will be rejected
-             }
+        val contactRepository = ContactRepository(this)
+
+        val policy = DndRingPolicy(
+            blockUnknownCallers = settingsRepository.blockUnknownCallers,
+            contactLookup = { number -> contactRepository.getContactByNumber(number) },
+            recentCallers = recentCallers
+        )
+
+        // Build DND state from system
+        val dndState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val interruptionFilter = notificationManager.currentInterruptionFilter
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
+                interruptionFilter == NotificationManager.INTERRUPTION_FILTER_PRIORITY) {
+                val sysPolicy = notificationManager.notificationPolicy
+                DndRingPolicy.DndState(
+                    interruptionFilter = interruptionFilter,
+                    priorityCategoryCallsEnabled = sysPolicy.priorityCategories and
+                            NotificationManager.Policy.PRIORITY_CATEGORY_CALLS != 0,
+                    priorityCallSenders = sysPolicy.priorityCallSenders,
+                    priorityCategoryRepeatCallersEnabled = sysPolicy.priorityCategories and
+                            NotificationManager.Policy.PRIORITY_CATEGORY_REPEAT_CALLERS != 0
+                )
+            } else {
+                DndRingPolicy.DndState(interruptionFilter = interruptionFilter)
+            }
+        } else {
+            DndRingPolicy.DndState() // Pre-M: default to FILTER_ALL (ring)
         }
 
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        
-        // Check DND status
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val interruptionFilter = notificationManager.currentInterruptionFilter
-            Log.d(TAG, "DND Check: Filter=$interruptionFilter")
-            
-            // If DND is off (INTERRUPTION_FILTER_ALL), always ring
-            if (interruptionFilter == NotificationManager.INTERRUPTION_FILTER_ALL) {
-                Log.d(TAG, "DND Check: Allowed (Filter ALL)")
-                return true
-            }
-            
-            // If DND is on but allows alarms only or none, don't ring
-            if (interruptionFilter == NotificationManager.INTERRUPTION_FILTER_ALARMS ||
-                interruptionFilter == NotificationManager.INTERRUPTION_FILTER_NONE) {
-                Log.d(TAG, "DND Check: Blocked (Filter ALARMS/NONE)")
-                return false
-            }
-            
-            // INTERRUPTION_FILTER_PRIORITY - check if this is a repeat caller
-            if (interruptionFilter == NotificationManager.INTERRUPTION_FILTER_PRIORITY) {
-                // Check for repeat caller exception
-                if (callerNumber != null) {
-                    val normalizedNumber = callerNumber.replace(Regex("[^0-9+]"), "")
-                    val lastCallTime = recentCallers[normalizedNumber]
-                    val now = System.currentTimeMillis()
-                    
-                    if (lastCallTime != null && (now - lastCallTime) <= REPEAT_CALLER_WINDOW_MS) {
-                        // This is a repeat caller within 15 minutes - ring anyway
-                        Log.d(TAG, "Repeat caller detected, allowing ring despite DND")
-                        return true
-                    }
-                    
-                    // Record this call for repeat caller detection
-                    recentCallers[normalizedNumber] = now
-                    
-                    // Clean up old entries
-                    val cutoff = now - REPEAT_CALLER_WINDOW_MS
-                    val iterator = recentCallers.iterator()
-                    while (iterator.hasNext()) {
-                        if (iterator.next().value < cutoff) {
-                            iterator.remove()
-                        }
-                    }
-                }
-                
-                // DND is on and this is not a repeat caller - respect DND
-                // The system's DND policy will determine if we should ring
-                // We'll check if calls are allowed in priority mode
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    val policy = notificationManager.notificationPolicy
-                    Log.d(TAG, "DND Check: Policy Categories=${policy.priorityCategories}, Senders=${policy.priorityCallSenders}")
-                    
-                    if (policy.priorityCategories and NotificationManager.Policy.PRIORITY_CATEGORY_CALLS != 0) {
-                        // Calls are allowed, but we must check WHICH calls are allowed
-                        when (policy.priorityCallSenders) {
-                            NotificationManager.Policy.PRIORITY_SENDERS_ANY -> {
-                                Log.d(TAG, "DND Check: Allowed (Priority ANY)")
-                                return true
-                            }
-                            NotificationManager.Policy.PRIORITY_SENDERS_CONTACTS -> {
-                                // Check if number is in contacts
-                                val number = callerNumber?.replace(Regex("[^0-9+]"), "")
-                                if (number.isNullOrEmpty()) {
-                                    Log.d(TAG, "DND Check: Blocked (Priority CONTACTS, but no number)")
-                                    return false
-                                }
-                                
-                                val contactRepository = ContactRepository(this)
-                                val contact = contactRepository.getContactByNumber(number)
-                                Log.d(TAG, "DND Check: Contact found=${contact != null}")
-                                return contact != null
-                            }
-                            NotificationManager.Policy.PRIORITY_SENDERS_STARRED -> {
-                                // Check if number is starred
-                                val number = callerNumber?.replace(Regex("[^0-9+]"), "")
-                                if (number.isNullOrEmpty()) {
-                                    Log.d(TAG, "DND Check: Blocked (Priority STARRED, but no number)")
-                                    return false
-                                }
-                                
-                                val contactRepository = ContactRepository(this)
-                                val contact = contactRepository.getContactByNumber(number)
-                                Log.d(TAG, "DND Check: Contact favorite=${contact?.isFavorite}")
-                                return contact?.isFavorite == true
-                            }
-                            // Callers could be PRIORITY_SENDERS_NONE (0), although if CATEGORY_CALLS is set, 
-                            // it usually implies at least something. If generic logic fails, default to false.
-                            else -> {
-                                Log.d(TAG, "DND Check: Blocked (Priority fallback)")
-                                return false 
-                            }
-                        }
-                    }
-                    
-                    if (policy.priorityCategories and NotificationManager.Policy.PRIORITY_CATEGORY_REPEAT_CALLERS != 0) {
-                        // Repeat callers are allowed but this isn't one (already checked repeat logic above)
-                        Log.d(TAG, "DND Check: Blocked (Priority REPEAT_CALLERS set, but not a repeat caller)")
-                        return false
-                    }
-                }
-                Log.d(TAG, "DND Check: Blocked (Priority DEFAULT)")
-                return false
-            }
-        }
-        
-        Log.d(TAG, "DND Check: Allowed (Default/Pre-M)")
-        return true
+        val decision = policy.shouldRing(callerNumber, dndState)
+        Log.d(TAG, "DND Decision: shouldRing=${decision.shouldRing}, reason=${decision.reason}")
+        return decision.shouldRing
     }
 
     private fun startRinging(callerNumber: String?) {
