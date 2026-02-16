@@ -9,6 +9,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 
+import androidx.compose.ui.semantics.Role
+
 /**
  * Custom modifier to handle "press to click" behavior (trigger on ACTION_DOWN)
  * and track press state.
@@ -18,6 +20,7 @@ import androidx.compose.ui.composed
  */
 fun Modifier.pressClickEffect(
     enabled: Boolean = true,
+    role: Role? = null,
     onClick: () -> Unit = {},
     onPressedChange: (Boolean) -> Unit = {}
 ): Modifier = this.composed {
@@ -32,6 +35,7 @@ fun Modifier.pressClickEffect(
         interactionSource = interactionSource,
         indication = null, // Visual feedback is handled by the caller
         enabled = enabled,
+        role = role,
         onClick = onClick
     )
 }

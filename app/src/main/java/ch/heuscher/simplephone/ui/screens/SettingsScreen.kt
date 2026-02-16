@@ -188,18 +188,8 @@ fun SettingsScreen(
             .onGloballyPositioned { coords ->
                 listTopY = coords.localToRoot(Offset.Zero).y
             }
-            .pointerInput(activeDraggingId) {
-                if (activeDraggingId != null) {
-                    awaitPointerEventScope {
-                        while (true) {
-                            val event = awaitPointerEvent()
-                            val change = event.changes.firstOrNull()
-                            if (change != null) {
-                                draggingPointerY = change.position.y
-                            }
-                        }
-                    }
-                }
+            .onGloballyPositioned { coords ->
+                listTopY = coords.localToRoot(Offset.Zero).y
             }
     ) {
         // --- Pairing Code Section (Gentle Phone Only) ---

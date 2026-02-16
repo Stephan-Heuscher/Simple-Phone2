@@ -207,11 +207,12 @@ fun BigArrowButton(
             .background(backgroundColor)
             .semantics {
                 this.contentDescription = contentDescription
-                role = Role.Button
+                // role handled by pressClickEffect
             }
             .then(
                  if(enabled) {
                     Modifier.pressClickEffect(
+                        role = Role.Button,
                         onClick = onClick,
                         onPressedChange = { isPressed = it }
                     )
@@ -247,9 +248,10 @@ fun BigIconButton(
             .background(if (isPressed) HighContrastBlue.copy(alpha = 0.7f) else HighContrastBlue)
             .semantics {
                 this.contentDescription = contentDescription
-                role = Role.Button
+                // role handled by pressClickEffect
             }
             .pressClickEffect(
+                role = Role.Button,
                 onClick = onClick,
                 onPressedChange = { isPressed = it }
             ),
@@ -290,10 +292,11 @@ fun SettingsOptionButton(
             .clip(RoundedCornerShape(12.dp))
             .background(backgroundColor)
             .semantics {
-                role = Role.RadioButton
                 this.selected = isSelected
+                // role handled by pressClickEffect
             }
             .pressClickEffect(
+                role = Role.RadioButton,
                 onClick = onClick,
                 onPressedChange = { isPressed = it }
             ),
@@ -335,9 +338,10 @@ fun BigToggleButton(
             .background(backgroundColor)
             .semantics {
                 contentDescription = label
-                role = Role.Switch
+                // role handled by pressClickEffect
             }
             .pressClickEffect(
+                role = Role.Switch,
                 onClick = onToggle,
                 onPressedChange = { isPressed = it }
             ),
@@ -370,9 +374,10 @@ fun SettingsButton(
             .background(if (isPressed) HighContrastBlue.copy(alpha = 0.7f) else HighContrastBlue)
             .semantics {
                 contentDescription = text
-                role = Role.Button
+                // role handled by pressClickEffect
             }
             .pressClickEffect(
+                role = Role.Button,
                 onClick = onClick,
                 onPressedChange = { isPressed = it }
             ),
