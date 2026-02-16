@@ -131,6 +131,7 @@ platform :android do
     )
 
     # 5. Auto-Increment Version (Properties File)
+    git_pull
     new_version_name = increment_version_properties(
       file_path: "app/version.properties"
     )
@@ -299,6 +300,7 @@ platform :android do
     end
 
     # 4. Auto-Increment Version
+    git_pull
     new_version_name = increment_version_properties(
       file_path: "app/version.properties"
     )
@@ -429,6 +431,7 @@ platform :android do
     puts "✅ gentle phone deployed successfully!"
 
     # Version bump and commit
+    git_pull
     new_version_name = increment_version_properties(file_path: "app/version.properties")
     
     ENV['GIT_AUTHOR_NAME'] = 'Fastlane Deploy'
