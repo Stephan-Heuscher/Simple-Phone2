@@ -296,7 +296,7 @@ fun SettingsOptionButton(
                 // role handled by pressClickEffect
             }
             .pressClickEffect(
-                role = Role.RadioButton,
+                role = Role.Button,
                 onClick = onClick,
                 onPressedChange = { isPressed = it }
             ),
@@ -341,7 +341,7 @@ fun BigToggleButton(
                 // role handled by pressClickEffect
             }
             .pressClickEffect(
-                role = Role.Switch,
+                role = Role.Button,
                 onClick = onToggle,
                 onPressedChange = { isPressed = it }
             ),
