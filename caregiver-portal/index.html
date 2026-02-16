@@ -543,6 +543,10 @@
                             <input type="number" id="ringtoneTimeout" class="input-control" min="0" max="120"
                                 onchange="saveSetting('ringtoneTimeout', this.value)">
                             <button class="btn-control" onclick="adjustSetting('ringtoneTimeout', 1, 0, 120)">+</button>
+                            <button class="btn-control" style="width: auto; padding: 0 0.5rem; font-size: 0.9rem;"
+                                onclick="saveSetting('ringtoneTimeout', 0); document.getElementById('ringtoneTimeout').value = 0;">
+                                Never
+                            </button>
                         </div>
                     </div>
 
