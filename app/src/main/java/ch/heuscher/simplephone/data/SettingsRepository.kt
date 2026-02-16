@@ -101,6 +101,21 @@ class SettingsRepository(private val context: Context) {
         private const val REMOTE_KEY_FAVORITES_ORDER = "favoritesOrder"
     }
     
+    // Strong reference to listener to prevent garbage collection
+    private val preferenceChangeListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        refreshSettings()
+
+        // Special handling for Zoom changes to sync back to remote
+        if (key == KEY_ZOOM_COMPACT || key == KEY_ZOOM_MEDIUM || key == KEY_ZOOM_EXPANDED) {
+           // We only sync one "zoomFactor" to remote, assume Compact is the primary one for now 
+           // OR check which one changed. 
+           // For simplicity in this iteration, we might not sync LOCAL -> REMOTE for Zoom 
+           // if we consider Remote as "Source of Truth" for configuration.
+           // However, if user changes it on phone, it should update portal.
+           // Let's defer that specific logic to the setter.
+        }
+    }
+
     init {
         // Start listening for remote settings changes if enabled
         if (BuildConfig.REMOTE_SETTINGS_ENABLED) {
@@ -108,19 +123,7 @@ class SettingsRepository(private val context: Context) {
         }
         
         // Listen for local preference changes to update flow if changed elsewhere (unlikely but safe)
-        prefs.registerOnSharedPreferenceChangeListener { _, key ->
-            refreshSettings()
-            
-            // Special handling for Zoom changes to sync back to remote
-            if (key == KEY_ZOOM_COMPACT || key == KEY_ZOOM_MEDIUM || key == KEY_ZOOM_EXPANDED) {
-               // We only sync one "zoomFactor" to remote, assume Compact is the primary one for now 
-               // OR check which one changed. 
-               // For simplicity in this iteration, we might not sync LOCAL -> REMOTE for Zoom 
-               // if we consider Remote as "Source of Truth" for configuration.
-               // However, if user changes it on phone, it should update portal.
-               // Let's defer that specific logic to the setter.
-            }
-        }
+        prefs.registerOnSharedPreferenceChangeListener(preferenceChangeListener)
     }
     
     /**
