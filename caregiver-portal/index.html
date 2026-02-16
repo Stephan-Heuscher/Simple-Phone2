@@ -344,6 +344,49 @@
             color: var(--text-muted);
             font-size: 0.8rem;
         }
+
+        /* New Controls */
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-control {
+            width: 80px;
+            text-align: center;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        .btn-control {
+            width: 40px;
+            height: 40px;
+            background: var(--surface-hover);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            user-select: none;
+        }
+
+        .btn-control:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .btn-control:active {
+            transform: scale(0.95);
+        }
     </style>
 </head>
 
@@ -492,39 +535,31 @@
                     <div class="setting-row">
                         <div class="setting-label">
                             <h3>⏱️ Ringtone Timeout</h3>
-                            <p>Auto-silence after seconds</p>
+                            <p>Auto-silence seconds (0=Off)</p>
                         </div>
-                        <select class="setting-select" id="ringtoneTimeout"
-                            onchange="saveSetting('ringtoneTimeout', this.value)">
-                            <option value="0">Off</option>
-                            <option value="1">1 sec</option>
-                            <option value="2">2 sec</option>
-                            <option value="3">3 sec</option>
-                            <option value="5">5 sec</option>
-                            <option value="8">8 sec</option>
-                            <option value="10">10 sec</option>
-                            <option value="15">15 sec</option>
-                        </select>
+                        <div class="control-group">
+                            <button class="btn-control"
+                                onclick="adjustSetting('ringtoneTimeout', -1, 0, 120)">-</button>
+                            <input type="number" id="ringtoneTimeout" class="input-control" min="0" max="120"
+                                onchange="saveSetting('ringtoneTimeout', this.value)">
+                            <button class="btn-control" onclick="adjustSetting('ringtoneTimeout', 1, 0, 120)">+</button>
+                        </div>
                     </div>
 
                     <!-- Missed Calls Display -->
                     <div class="setting-row">
                         <div class="setting-label">
                             <h3>📞 Missed Calls</h3>
-                            <p>Show for recent hours</p>
+                            <p>Show hours (-1=Always)</p>
                         </div>
-                        <select class="setting-select" id="missedCallsHours"
-                            onchange="saveSetting('missedCallsHours', this.value)">
-                            <option value="0">0 (Immediate)</option>
-                            <option value="1">1 Hour</option>
-                            <option value="2">2 Hours</option>
-                            <option value="3">3 Hours</option>
-                            <option value="5">5 Hours</option>
-                            <option value="8">8 Hours</option>
-                            <option value="12">12 Hours</option>
-                            <option value="24">24 Hours</option>
-                            <option value="-1">Never Hide</option>
-                        </select>
+                        <div class="control-group">
+                            <button class="btn-control"
+                                onclick="adjustSetting('missedCallsHours', -1, -1, 72)">-</button>
+                            <input type="number" id="missedCallsHours" class="input-control" min="-1" max="72"
+                                onchange="saveSetting('missedCallsHours', this.value)">
+                            <button class="btn-control"
+                                onclick="adjustSetting('missedCallsHours', 1, -1, 72)">+</button>
+                        </div>
                     </div>
 
                     <!-- Zoom / Text Size -->
@@ -533,10 +568,17 @@
                             <h3>🔍 Zoom Level</h3>
                             <p>Interface scale</p>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <span id="zoomValueDisplay" style="font-weight: 600; min-width: 3ch;">1.0</span>x
-                            <input type="range" id="zoomFactor" min="0.5" max="2.0" step="0.05" value="1.0"
-                                oninput="document.getElementById('zoomValueDisplay').textContent = parseFloat(this.value).toFixed(2)"
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end;">
+                            <div class="control-group">
+                                <button class="btn-control"
+                                    onclick="adjustSetting('zoomFactor', -0.05, 0.5, 3.0)">-</button>
+                                <input type="number" id="zoomFactorInput" class="input-control" step="0.05" min="0.5"
+                                    max="3.0" value="1.0" onchange="syncZoom('input', this.value)">
+                                <button class="btn-control"
+                                    onclick="adjustSetting('zoomFactor', 0.05, 0.5, 3.0)">+</button>
+                            </div>
+                            <input type="range" id="zoomFactorSlider" min="0.5" max="3.0" step="0.05" value="1.0"
+                                style="width: 100%;" oninput="syncZoom('slider', this.value)"
                                 onchange="saveSetting('zoomFactor', parseFloat(this.value))">
                         </div>
                     </div>
@@ -717,7 +759,13 @@
             try {
                 const settingsRef = doc(db, 'devices', currentDeviceId, 'settings', 'current');
                 const updateData = {};
-                updateData[key] = typeof value === 'string' && !isNaN(value) ? parseInt(value) : value;
+
+                // Parse numbers if possible
+                let parsedValue = value;
+                if (typeof value === 'string' && !isNaN(value)) {
+                    parsedValue = value.includes('.') ? parseFloat(value) : parseInt(value);
+                }
+                updateData[key] = parsedValue;
 
                 // Add Managed By metadata
                 updateData['managedBy'] = currentUser.displayName;
@@ -731,6 +779,39 @@
             } catch (error) {
                 console.error('Save error:', error);
             }
+        };
+
+        window.adjustSetting = function (key, delta, min, max) {
+            const input = document.getElementById(key === 'zoomFactor' ? 'zoomFactorInput' : key);
+            if (!input) return;
+
+            let currentValue = parseFloat(input.value);
+            let newValue = currentValue + delta;
+
+            // Round to 2 decimal places to avoid float errors
+            newValue = Math.round(newValue * 100) / 100;
+
+            if (newValue >= min && newValue <= max) {
+                input.value = newValue;
+                // For zoom, we also need to sync the other control
+                if (key === 'zoomFactor') {
+                    syncZoom('input', newValue);
+                } else {
+                    saveSetting(key, newValue);
+                }
+            }
+        };
+
+        window.syncZoom = function (source, value) {
+            const numVal = parseFloat(value);
+            if (isNaN(numVal)) return;
+
+            if (source === 'input') {
+                document.getElementById('zoomFactorSlider').value = numVal;
+            } else {
+                document.getElementById('zoomFactorInput').value = numVal;
+            }
+            saveSetting('zoomFactor', numVal);
         };
 
         function loadSettings(settings) {
@@ -762,8 +843,8 @@
                 document.getElementById('missedCallsHours').value = settings.missedCallsHours;
             }
             if (settings.zoomFactor !== undefined) {
-                document.getElementById('zoomFactor').value = settings.zoomFactor;
-                document.getElementById('zoomValueDisplay').textContent = parseFloat(settings.zoomFactor).toFixed(2);
+                document.getElementById('zoomFactorInput').value = settings.zoomFactor;
+                document.getElementById('zoomFactorSlider').value = settings.zoomFactor;
             }
         }
 
