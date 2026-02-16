@@ -3,6 +3,7 @@ name: Android Deploy
 on:
   push:
     branches: [ master ]
+  workflow_dispatch:
     paths:
       - 'app/src/main/**'
       - 'app/src/simplephone/**'
