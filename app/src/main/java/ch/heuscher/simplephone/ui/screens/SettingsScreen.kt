@@ -188,13 +188,15 @@ fun SettingsScreen(
             .onGloballyPositioned { coords ->
                 listTopY = coords.localToRoot(Offset.Zero).y
             }
-            .pointerInput(Unit) {
-                awaitPointerEventScope {
-                    while (true) {
-                        val event = awaitPointerEvent()
-                        if (activeDraggingId != null) {
-                            val change = event.changes.first()
-                            draggingPointerY = change.position.y
+            .pointerInput(activeDraggingId) {
+                if (activeDraggingId != null) {
+                    awaitPointerEventScope {
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull()
+                            if (change != null) {
+                                draggingPointerY = change.position.y
+                            }
                         }
                     }
                 }
