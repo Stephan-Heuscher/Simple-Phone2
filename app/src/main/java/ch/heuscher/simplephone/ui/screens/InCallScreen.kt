@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.sp
 import ch.heuscher.simplephone.model.AudioOutput
 import ch.heuscher.simplephone.model.Contact
 import ch.heuscher.simplephone.ui.components.ContactAvatarLarge
+import ch.heuscher.simplephone.ui.components.isTabletLayout
 import ch.heuscher.simplephone.ui.theme.AccessibleWhite
 import ch.heuscher.simplephone.ui.theme.RedHangup
 import ch.heuscher.simplephone.ui.theme.SpeakerActive
@@ -67,8 +68,9 @@ import androidx.compose.ui.platform.LocalContext
 import ch.heuscher.simplephone.ui.utils.vibrate
 
 /**
- * In-call screen UI - ultra accessible with large buttons and high contrast
- * Shows only available audio outputs (speaker, bluetooth devices if connected)
+ * In-call screen UI - ultra accessible with large buttons and high contrast.
+ * On tablets/foldables: split layout with contact info (left) and controls (right).
+ * On phones: existing vertical stack layout.
  */
 @Composable
 fun InCallScreen(
@@ -91,101 +93,195 @@ fun InCallScreen(
     }
 
     var showKeypad by remember { mutableStateOf(false) }
+    val isTablet = isTabletLayout()
 
-    if (showKeypad) {
-        KeypadOverlay(
-            onDismiss = { showKeypad = false },
-            onKeyClick = { key ->
-                vibrate()
-                onDtmfClick(key)
+    if (isTablet) {
+        // ── Tablet / Foldable: Two-pane layout ──
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            // LEFT PANE: Contact info (always visible, even when keypad is open)
+            InCallContactPane(
+                contact = contact,
+                modifier = Modifier.weight(1f)
+            )
+
+            // Subtle divider between panes
+            androidx.compose.material3.VerticalDivider()
+
+            // RIGHT PANE: Controls or Keypad
+            if (showKeypad) {
+                InCallKeypadPane(
+                    onDismiss = { showKeypad = false },
+                    onKeyClick = { key -> vibrate(); onDtmfClick(key) },
+                    onHangup = { vibrate(); onHangup() },
+                    modifier = Modifier.weight(1f)
+                )
+            } else {
+                InCallControlPane(
+                    currentAudioOutput = currentAudioOutput,
+                    availableAudioOutputs = availableAudioOutputs,
+                    onAudioOutputChange = { vibrate(); onAudioOutputChange(it) },
+                    onShowKeypad = { vibrate(); showKeypad = true },
+                    onHangup = { vibrate(); onHangup() },
+                    modifier = Modifier.weight(1f)
+                )
             }
-        )
-    } else {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
-    ) {
-        // Top section: Contact info
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(top = 32.dp)
-        ) {
-            // Contact Avatar - Large
-            ContactAvatarLarge(contact = contact)
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Contact Name - Very large and bold
-            Text(
-                text = contact.name,
-                style = MaterialTheme.typography.displayMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
         }
-
-        // Middle section: Audio output options - always show since we have Phone + Speaker at minimum
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(
-                text = stringResource(R.string.audio_output_title),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.padding(bottom = 16.dp),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+    } else {
+        // ── Phone: Original vertical layout ──
+        if (showKeypad) {
+            KeypadOverlay(
+                onDismiss = { showKeypad = false },
+                onKeyClick = { key -> vibrate(); onDtmfClick(key) }
             )
-
-            // Audio output buttons in a row
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp)
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                items(availableAudioOutputs) { audioOutput ->
-                    AudioOutputButton(
-                        audioOutput = audioOutput,
-                        isSelected = audioOutput == currentAudioOutput,
-                        onClick = { vibrate(); onAudioOutputChange(audioOutput) }
+                // Top section: Contact info
+                InCallContactPane(contact = contact, modifier = Modifier)
+
+                // Middle section: Audio controls
+                InCallAudioSection(
+                    currentAudioOutput = currentAudioOutput,
+                    availableAudioOutputs = availableAudioOutputs,
+                    onAudioOutputChange = { vibrate(); onAudioOutputChange(it) },
+                    onShowKeypad = { vibrate(); showKeypad = true }
+                )
+
+                // Bottom section: Hangup button
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(bottom = 48.dp)
+                ) {
+                    HangupButton(onClick = { vibrate(); onHangup() })
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = stringResource(R.string.end_call),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = RedHangup,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // Keypad Button
-            androidx.compose.material3.Button(
-                onClick = { vibrate(); showKeypad = true },
-                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+        }
+    }
+}
+
+/**
+ * Left pane of the in-call screen: Large avatar + contact name.
+ * Used in both phone mode (as the top section) and tablet mode (as the left pane).
+ */
+@Composable
+fun InCallContactPane(contact: Contact, modifier: Modifier = Modifier) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = modifier.padding(32.dp)
+    ) {
+        ContactAvatarLarge(contact = contact)
+        Spacer(modifier = Modifier.height(24.dp))
+        Text(
+            text = contact.name,
+            style = MaterialTheme.typography.displayMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+/**
+ * Audio output buttons + keypad toggle.
+ * Shared between phone and tablet layouts (tablet embeds this in the control pane).
+ */
+@Composable
+fun InCallAudioSection(
+    currentAudioOutput: AudioOutput,
+    availableAudioOutputs: List<AudioOutput>,
+    onAudioOutputChange: (AudioOutput) -> Unit,
+    onShowKeypad: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(
+            text = stringResource(R.string.audio_output_title),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(bottom = 16.dp),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp)
+        ) {
+            items(availableAudioOutputs) { audioOutput ->
+                AudioOutputButton(
+                    audioOutput = audioOutput,
+                    isSelected = audioOutput == currentAudioOutput,
+                    onClick = { onAudioOutputChange(audioOutput) }
                 )
-            ) {
-                Icon(Icons.Default.Dialpad, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(stringResource(R.string.keypad))
             }
         }
-
-        // Bottom section: Hangup button
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(bottom = 48.dp)
+        Spacer(modifier = Modifier.height(24.dp))
+        androidx.compose.material3.Button(
+            onClick = onShowKeypad,
+            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+            )
         ) {
-            HangupButton(onClick = { vibrate(); onHangup() })
-            
+            Icon(Icons.Default.Dialpad, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(R.string.keypad))
+        }
+    }
+}
+
+/**
+ * Right pane for tablet mode: Audio controls + Hangup button all in one panel.
+ */
+@Composable
+fun InCallControlPane(
+    currentAudioOutput: AudioOutput,
+    availableAudioOutputs: List<AudioOutput>,
+    onAudioOutputChange: (AudioOutput) -> Unit,
+    onShowKeypad: () -> Unit,
+    onHangup: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceEvenly,
+        modifier = modifier.padding(24.dp)
+    ) {
+        InCallAudioSection(
+            currentAudioOutput = currentAudioOutput,
+            availableAudioOutputs = availableAudioOutputs,
+            onAudioOutputChange = onAudioOutputChange,
+            onShowKeypad = onShowKeypad
+        )
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            HangupButton(onClick = onHangup)
             Spacer(modifier = Modifier.height(16.dp))
-            
             Text(
                 text = stringResource(R.string.end_call),
                 style = MaterialTheme.typography.titleLarge,
@@ -196,6 +292,57 @@ fun InCallScreen(
             )
         }
     }
+}
+
+/**
+ * Tablet-mode keypad pane: DTMF keypad with dismiss and hangup at the bottom. 
+ * Replaces the right pane while keeping the contact visible on the left.
+ */
+@Composable
+fun InCallKeypadPane(
+    onDismiss: () -> Unit,
+    onKeyClick: (Char) -> Unit,
+    onHangup: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .background(MaterialTheme.colorScheme.background)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        val keys = listOf(
+            listOf('1', '2', '3'),
+            listOf('4', '5', '6'),
+            listOf('7', '8', '9'),
+            listOf('*', '0', '#')
+        )
+        keys.forEach { row ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                row.forEach { key ->
+                    KeypadButton(key = key, onClick = { onKeyClick(key) })
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Row: Back button + Hangup button
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            androidx.compose.material3.Button(onClick = onDismiss) {
+                Text(stringResource(R.string.hide_keypad))
+            }
+            HangupButton(onClick = onHangup)
+        }
     }
 }
 

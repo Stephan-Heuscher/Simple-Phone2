@@ -71,10 +71,13 @@ import ch.heuscher.simplephone.model.Contact
 import ch.heuscher.simplephone.ui.components.ContactAvatar
 import ch.heuscher.simplephone.ui.components.VerticalScrollbar
 import ch.heuscher.simplephone.ui.components.HorizontalScrollbar
+import ch.heuscher.simplephone.ui.components.isTabletLayout
 import ch.heuscher.simplephone.ui.theme.GreenCall
 import ch.heuscher.simplephone.ui.theme.LightGreenBackground
 import ch.heuscher.simplephone.ui.theme.LightBlueBackground
 import ch.heuscher.simplephone.ui.utils.vibrate
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.material3.VerticalDivider
 
 @Composable
 fun MainScreen(
@@ -171,289 +174,383 @@ fun MainScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().imePadding()) {
-        val listState = androidx.compose.foundation.lazy.rememberLazyListState()
-        
-        LazyColumn(modifier = Modifier.fillMaxSize(), state = listState) {
-            item {
-                // Search Bar Row
-                Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val cdOpenDialer = stringResource(R.string.cd_open_dialer)
+    val isTablet = isTabletLayout()
 
+    if (isTablet) {
+        // ── Tablet / Foldable: Two-pane side-by-side layout ──
+        Column(modifier = Modifier.fillMaxSize().imePadding()) {
+            // Search bar spans full width above both panes
+            SearchBarRow(
+                searchQuery = searchQuery,
+                onSearchQueryChange = { searchQuery = it },
+                onDialerClick = onDialerClick,
+                useHapticFeedback = useHapticFeedback,
+                context = context,
+                focusManager = focusManager
+            )
 
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.primaryContainer)
-                    .clickable(
-                        onClick = { 
-                            if (useHapticFeedback) vibrate(context)
-                            onDialerClick() 
-                        },
-                        role = Role.Button
-                    )
-                    .semantics { contentDescription = cdOpenDialer }
-            ) {
-                // High contrast buttons for better visibility
-                val buttonSize = 28.dp
-                val spacing = 5.dp
-                val startOffset = 5.dp
-                val buttonColor = MaterialTheme.colorScheme.primary
-                val textColor = MaterialTheme.colorScheme.onPrimary
-                val textStyle = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = textColor
+            // Default Dialer Warning Banner (full width)
+            if (!isDefaultDialer) {
+                DefaultDialerBanner(
+                    onSetDefaultDialer = onSetDefaultDialer,
+                    useHapticFeedback = useHapticFeedback,
+                    context = context
                 )
-                
-                // Button 1 (Top-Left)
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .offset(x = startOffset, y = startOffset)
-                        .size(buttonSize)
-                        .clip(CircleShape)
-                        .background(buttonColor),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("1", style = textStyle)
+            }
+
+            Row(modifier = Modifier.weight(1f)) {
+                // LEFT PANE: Missed calls + Favorites
+                Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                    val leftListState = androidx.compose.foundation.lazy.rememberLazyListState()
+                    LazyColumn(modifier = Modifier.fillMaxSize(), state = leftListState) {
+                        if (searchQuery.isBlank()) {
+                            // Missed Calls section
+                            item {
+                                MissedCallsHeader(onCallLogClick = onCallLogClick)
+                            }
+                            if (missedCalls.isEmpty()) {
+                                item(key = "no_missed_calls") {
+                                    NoMissedCallsBanner(
+                                        onCallLogClick = onCallLogClick,
+                                        useHugeText = useHugeText
+                                    )
+                                }
+                            } else {
+                                items(missedCallsWithContacts, key = { "missed_${it.first.id}" }) { (callEntry, contact) ->
+                                    Box(modifier = Modifier) {
+                                        MissedCallRow(
+                                            contact = contact,
+                                            timestamp = callEntry.timestamp,
+                                            onCallClick = {
+                                                if (useHapticFeedback) vibrate(context)
+                                                onCallClick(contact.number)
+                                            },
+                                            onOpenContact = { onOpenContact(contact.id) }
+                                        )
+                                    }
+                                    HorizontalDivider()
+                                }
+                            }
+
+                            // Favorites section
+                            item {
+                                SectionHeader(title = stringResource(R.string.favorites))
+                            }
+                            if (favorites.isEmpty()) {
+                                item(key = "no_favorites") {
+                                    Text(
+                                        stringResource(R.string.no_favorites),
+                                        modifier = Modifier.padding(16.dp),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            } else {
+                                if (useGridContactImages) {
+                                    items(favorites.chunked(2), key = { "fav_chunk_${it[0].id}" }) { chunk ->
+                                        Row(modifier = Modifier.fillMaxWidth()) {
+                                            chunk.forEach { contact ->
+                                                Box(modifier = Modifier.weight(1f)) {
+                                                    GridContactItem(
+                                                        contact = contact,
+                                                        onCallClick = {
+                                                            if (useHapticFeedback) vibrate(context)
+                                                            onCallClick(contact.number)
+                                                        },
+                                                        onOpenContact = { onOpenContact(contact.id) }
+                                                    )
+                                                }
+                                            }
+                                            if (chunk.size == 1) Spacer(modifier = Modifier.weight(1f))
+                                        }
+                                    }
+                                } else {
+                                    items(favorites, key = { "fav_${it.id}" }) { contact ->
+                                        if (useHugeContactPicture) {
+                                            HugeContactRow(
+                                                contact = contact,
+                                                onCallClick = {
+                                                    if (useHapticFeedback) vibrate(context)
+                                                    onCallClick(contact.number)
+                                                },
+                                                onOpenContact = { onOpenContact(contact.id) },
+                                                showFavoriteStar = true
+                                            )
+                                        } else {
+                                            ContactRow(
+                                                contact = contact,
+                                                onCallClick = {
+                                                    if (useHapticFeedback) vibrate(context)
+                                                    onCallClick(contact.number)
+                                                },
+                                                onOpenContact = { onOpenContact(contact.id) },
+                                                showFavoriteStar = true,
+                                                useHugeText = useHugeText
+                                            )
+                                        }
+                                        HorizontalDivider()
+                                    }
+                                }
+                            }
+                        } else {
+                            // When searching, left pane shows a message
+                            item {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.search_results),
+                                        style = MaterialTheme.typography.titleLarge,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    VerticalScrollbar(
+                        modifier = Modifier.align(Alignment.CenterEnd),
+                        listState = leftListState
+                    )
                 }
-                
-                // Button 2 (Top-Right)
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .offset(x = startOffset + buttonSize + spacing, y = startOffset)
-                        .size(buttonSize)
-                        .clip(CircleShape)
-                        .background(buttonColor),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("2", style = textStyle)
-                }
-                
-                // Button 4 (Bottom-Left)
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .offset(x = startOffset, y = startOffset + buttonSize + spacing)
-                        .size(buttonSize)
-                        .clip(CircleShape)
-                        .background(buttonColor),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("4", style = textStyle)
-                }
-                
-                // Button 5 (Bottom-Right)
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .offset(x = startOffset + buttonSize + spacing, y = startOffset + buttonSize + spacing)
-                        .size(buttonSize)
-                        .clip(CircleShape)
-                        .background(buttonColor),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("5", style = textStyle)
+
+                VerticalDivider()
+
+                // RIGHT PANE: Phone Book / Search Results
+                Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                    val rightListState = androidx.compose.foundation.lazy.rememberLazyListState()
+                    LazyColumn(modifier = Modifier.fillMaxSize(), state = rightListState) {
+                        item(key = "phone_book_header") {
+                            SectionHeader(
+                                title = if (searchQuery.isBlank()) stringResource(R.string.phone_book)
+                                        else stringResource(R.string.search_results)
+                            )
+                        }
+                        if (searchQuery.isNotBlank()) {
+                            item(key = "search_count") {
+                                Text(
+                                    text = stringResource(R.string.contacts_found, filteredContacts.size),
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                        if (useGridContactImages) {
+                            items(filteredContacts.chunked(2), key = { "chunk_${it[0].id}" }) { chunk ->
+                                Row(modifier = Modifier.fillMaxWidth()) {
+                                    chunk.forEach { contact ->
+                                        Box(modifier = Modifier.weight(1f)) {
+                                            GridContactItem(
+                                                contact = contact,
+                                                onCallClick = {
+                                                    if (useHapticFeedback) vibrate(context)
+                                                    onCallClick(contact.number)
+                                                },
+                                                onOpenContact = { onOpenContact(contact.id) }
+                                            )
+                                        }
+                                    }
+                                    if (chunk.size == 1) Spacer(modifier = Modifier.weight(1f))
+                                }
+                                HorizontalDivider()
+                            }
+                        } else {
+                            items(filteredContacts, key = { it.id }) { contact ->
+                                if (useHugeContactPicture) {
+                                    HugeContactRow(
+                                        contact = contact,
+                                        onCallClick = {
+                                            if (useHapticFeedback) vibrate(context)
+                                            onCallClick(contact.number)
+                                        },
+                                        onOpenContact = { onOpenContact(contact.id) },
+                                        showFavoriteStar = true
+                                    )
+                                } else {
+                                    ContactRow(
+                                        contact = contact,
+                                        onCallClick = {
+                                            if (useHapticFeedback) vibrate(context)
+                                            onCallClick(contact.number)
+                                        },
+                                        onOpenContact = { onOpenContact(contact.id) },
+                                        showFavoriteStar = true,
+                                        useHugeText = useHugeText
+                                    )
+                                }
+                                HorizontalDivider()
+                            }
+                        }
+                    }
+                    VerticalScrollbar(
+                        modifier = Modifier.align(Alignment.CenterEnd),
+                        listState = rightListState
+                    )
                 }
             }
-            
-            Spacer(modifier = Modifier.width(8.dp))
+        }
+    } else {
+        // ── Phone: Original single-column layout (unchanged) ──
+        Box(modifier = Modifier.fillMaxSize().imePadding()) {
+            val listState = androidx.compose.foundation.lazy.rememberLazyListState()
 
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                modifier = Modifier
-                    .weight(1f)
-                    .height(56.dp),
-                placeholder = { 
-                    Text(
-                        stringResource(R.string.search_placeholder),
-                        style = MaterialTheme.typography.bodyLarge
-                    ) 
-                },
-                leadingIcon = null,
-                trailingIcon = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { 
-                            if (useHapticFeedback) vibrate(context)
-                            searchQuery = ""
-                            focusManager.clearFocus()
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.Clear,
-                                contentDescription = stringResource(R.string.cd_clear_search),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            LazyColumn(modifier = Modifier.fillMaxSize(), state = listState) {
+                item {
+                    SearchBarRow(
+                        searchQuery = searchQuery,
+                        onSearchQueryChange = { searchQuery = it },
+                        onDialerClick = onDialerClick,
+                        useHapticFeedback = useHapticFeedback,
+                        context = context,
+                        focusManager = focusManager
+                    )
+                }
+
+                if (!isDefaultDialer) {
+                    item {
+                        DefaultDialerBanner(
+                            onSetDefaultDialer = onSetDefaultDialer,
+                            useHapticFeedback = useHapticFeedback,
+                            context = context
+                        )
+                    }
+                }
+
+                if (searchQuery.isBlank()) {
+                    item {
+                        MissedCallsHeader(onCallLogClick = onCallLogClick)
+                    }
+                    if (missedCalls.isEmpty()) {
+                        item(key = "no_missed_calls") {
+                            NoMissedCallsBanner(
+                                onCallLogClick = onCallLogClick,
+                                useHugeText = useHugeText
                             )
                         }
                     } else {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = stringResource(R.string.cd_search),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(28.dp),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(
-                    onSearch = { focusManager.clearFocus() }
-                )
-            )
-        }
-            }
-
-            // Continue with items directly
-
-            // --- Default Dialer Warning Banner ---
-            if (!isDefaultDialer) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFFFF6B00))
-                        .clickable { 
-                            if (useHapticFeedback) vibrate(context)
-                            onSetDefaultDialer() 
+                        items(missedCallsWithContacts, key = { "missed_${it.first.id}" }) { (callEntry, contact) ->
+                            Box(modifier = Modifier) {
+                                MissedCallRow(
+                                    contact = contact,
+                                    timestamp = callEntry.timestamp,
+                                    onCallClick = {
+                                        if (useHapticFeedback) vibrate(context)
+                                        onCallClick(contact.number)
+                                    },
+                                    onOpenContact = { onOpenContact(contact.id) }
+                                )
+                            }
+                            HorizontalDivider()
                         }
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = stringResource(R.string.default_app_warning),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                        Text(
-                            text = stringResource(R.string.default_app_enable),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Color.White
-                        )
                     }
                 }
-            }
-        }
 
-        // --- Missed Calls Section (only shown when not searching) ---
-        if (searchQuery.isBlank()) {
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        // Normal background used
-                        .clickable { onCallLogClick() }
-                        .padding(horizontal = 8.dp, vertical = 16.dp), // Height kept, width reduced
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                         text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.missed_calls),
-                         style = MaterialTheme.typography.titleLarge,
-                         fontWeight = FontWeight.Bold,
-                         color = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.show_all),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
+                if (searchQuery.isBlank()) {
+                    item {
+                        SectionHeader(title = stringResource(R.string.favorites))
+                    }
+                    if (favorites.isEmpty()) {
+                        item(key = "no_favorites") {
+                            Text(
+                                stringResource(R.string.no_favorites),
+                                modifier = Modifier.padding(16.dp),
+                                style = MaterialTheme.typography.bodyLarge,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    } else {
+                        if (useGridContactImages) {
+                            items(favorites.chunked(2), key = { "fav_chunk_${it[0].id}" }) { chunk ->
+                                Row(modifier = Modifier.fillMaxWidth()) {
+                                    chunk.forEach { contact ->
+                                        Box(modifier = Modifier.weight(1f)) {
+                                            GridContactItem(
+                                                contact = contact,
+                                                onCallClick = {
+                                                    if (useHapticFeedback) vibrate(context)
+                                                    onCallClick(contact.number)
+                                                },
+                                                onOpenContact = { onOpenContact(contact.id) }
+                                            )
+                                        }
+                                    }
+                                    if (chunk.size == 1) Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
+                        } else {
+                            items(favorites, key = { "fav_${it.id}" }) { contact ->
+                                if (useHugeContactPicture) {
+                                    HugeContactRow(
+                                        contact = contact,
+                                        onCallClick = {
+                                            if (useHapticFeedback) vibrate(context)
+                                            onCallClick(contact.number)
+                                        },
+                                        onOpenContact = { onOpenContact(contact.id) },
+                                        showFavoriteStar = true
+                                    )
+                                } else {
+                                    ContactRow(
+                                        contact = contact,
+                                        onCallClick = {
+                                            if (useHapticFeedback) vibrate(context)
+                                            onCallClick(contact.number)
+                                        },
+                                        onOpenContact = { onOpenContact(contact.id) },
+                                        showFavoriteStar = true,
+                                        useHugeText = useHugeText
+                                    )
+                                }
+                                HorizontalDivider()
+                            }
+                        }
+                    }
+                }
+
+                item(key = "phone_book_header") {
+                    SectionHeader(
+                        title = if (searchQuery.isBlank()) stringResource(R.string.phone_book)
+                                else stringResource(R.string.search_results)
                     )
                 }
-            }
-
-            if (missedCalls.isEmpty()) {
-                // Show green background with "No missed calls" message
-                item(key = "no_missed_calls") {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(LightGreenBackground) // Use consistent light green
-                            .clickable { onCallLogClick() }
-                            .padding(24.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
+                if (searchQuery.isNotBlank()) {
+                    item(key = "search_count") {
                         Text(
-                            text = stringResource(R.string.no_missed_calls),
-                            style = if (useHugeText) MaterialTheme.typography.displaySmall else MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = GreenCall,
+                            text = stringResource(R.string.contacts_found, filteredContacts.size),
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                     }
-                    HorizontalDivider(thickness = 2.dp)
                 }
-            } else {
-                items(missedCallsWithContacts, key = { "missed_${it.first.id}" }) { (callEntry, contact) ->
-                    // Wrap MissedCallRow in background (Removed for normal look)
-                    Box(modifier = Modifier) {
-                        MissedCallRow(
-                            contact = contact,
-                            timestamp = callEntry.timestamp,
-                            onCallClick = { 
-                                if (useHapticFeedback) vibrate(context)
-                                onCallClick(contact.number) 
-                            },
-                             // Single tap on row (text area) opens Call Log, double-tap is handled in MissedCallRow via onOpenContact
-                             // Wait, previously I only updated "No missed calls".
-                             // The user approved plan says: "With Missed Calls: ... Verify that tapping the row (text area) DOES NOT open the Call Log (preserves existing behavior)."
-                             // So I DO NOT pass onRowClick here.
-                            onOpenContact = { onOpenContact(contact.id) }
-                        )
-                    }
-                    HorizontalDivider()
-                }
-            }
-        }
-
-        // --- Favorites Section (only shown when not searching) ---
-        if (searchQuery.isBlank()) {
-            item {
-                SectionHeader(title = stringResource(R.string.favorites))
-            }
-
-            if (favorites.isEmpty()) {
-                item(key = "no_favorites") {
-                    Text(
-                        stringResource(R.string.no_favorites),
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.bodyLarge,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            } else {
                 if (useGridContactImages) {
-                    items(favorites.chunked(2), key = { "fav_chunk_${it[0].id}" }) { chunk ->
+                    items(filteredContacts.chunked(2), key = { "chunk_${it[0].id}" }) { chunk ->
                         Row(modifier = Modifier.fillMaxWidth()) {
                             chunk.forEach { contact ->
                                 Box(modifier = Modifier.weight(1f)) {
-                                     GridContactItem(
+                                    GridContactItem(
                                         contact = contact,
                                         onCallClick = {
                                             if (useHapticFeedback) vibrate(context)
                                             onCallClick(contact.number)
                                         },
                                         onOpenContact = { onOpenContact(contact.id) }
-                                     )
+                                    )
                                 }
                             }
-                            if (chunk.size == 1) {
-                                Spacer(modifier = Modifier.weight(1f))
-                            }
+                            if (chunk.size == 1) Spacer(modifier = Modifier.weight(1f))
                         }
+                        HorizontalDivider()
                     }
                 } else {
-                    items(favorites, key = { "fav_${it.id}" }) { contact ->
+                    items(filteredContacts, key = { it.id }) { contact ->
                         if (useHugeContactPicture) {
                             HugeContactRow(
                                 contact = contact,
@@ -480,85 +577,202 @@ fun MainScreen(
                     }
                 }
             }
-        }
 
-        // --- Phone Book Section (or Search Results) ---
-        item(key = "phone_book_header") {
-            SectionHeader(title = if (searchQuery.isBlank()) stringResource(R.string.phone_book) else stringResource(R.string.search_results))
+            VerticalScrollbar(
+                modifier = Modifier.align(Alignment.CenterEnd),
+                listState = listState
+            )
         }
-        
+    }
+}
 
-        // Show search results count if searching
-        if (searchQuery.isNotBlank()) {
-            item(key = "search_count") {
-                Text(
-                    text = stringResource(R.string.contacts_found, filteredContacts.size),
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+/**
+ * Search bar with dialer button — extracted for reuse in phone & tablet layouts.
+ */
+@Composable
+fun SearchBarRow(
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    onDialerClick: () -> Unit,
+    useHapticFeedback: Boolean,
+    context: android.content.Context,
+    focusManager: androidx.compose.ui.focus.FocusManager
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val cdOpenDialer = stringResource(R.string.cd_open_dialer)
+
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.primaryContainer)
+                .clickable(
+                    onClick = {
+                        if (useHapticFeedback) vibrate(context)
+                        onDialerClick()
+                    },
+                    role = Role.Button
                 )
-            }
+                .semantics { contentDescription = cdOpenDialer }
+        ) {
+            val buttonSize = 28.dp
+            val spacing = 5.dp
+            val startOffset = 5.dp
+            val buttonColor = MaterialTheme.colorScheme.primary
+            val textColor = MaterialTheme.colorScheme.onPrimary
+            val textStyle = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.Bold,
+                color = textColor
+            )
+            Box(
+                modifier = Modifier.align(Alignment.TopStart)
+                    .offset(x = startOffset, y = startOffset)
+                    .size(buttonSize).clip(CircleShape).background(buttonColor),
+                contentAlignment = Alignment.Center
+            ) { Text("1", style = textStyle) }
+            Box(
+                modifier = Modifier.align(Alignment.TopStart)
+                    .offset(x = startOffset + buttonSize + spacing, y = startOffset)
+                    .size(buttonSize).clip(CircleShape).background(buttonColor),
+                contentAlignment = Alignment.Center
+            ) { Text("2", style = textStyle) }
+            Box(
+                modifier = Modifier.align(Alignment.TopStart)
+                    .offset(x = startOffset, y = startOffset + buttonSize + spacing)
+                    .size(buttonSize).clip(CircleShape).background(buttonColor),
+                contentAlignment = Alignment.Center
+            ) { Text("4", style = textStyle) }
+            Box(
+                modifier = Modifier.align(Alignment.TopStart)
+                    .offset(x = startOffset + buttonSize + spacing, y = startOffset + buttonSize + spacing)
+                    .size(buttonSize).clip(CircleShape).background(buttonColor),
+                contentAlignment = Alignment.Center
+            ) { Text("5", style = textStyle) }
         }
 
-            if (useGridContactImages) {
-                 items(filteredContacts.chunked(2), key = { "chunk_${it[0].id}" }) { chunk ->
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        chunk.forEach { contact ->
-                            Box(modifier = Modifier.weight(1f)) {
-                                    GridContactItem(
-                                    contact = contact,
-                                    onCallClick = {
-                                        if (useHapticFeedback) vibrate(context)
-                                        onCallClick(contact.number)
-                                    },
-                                    onOpenContact = { onOpenContact(contact.id) }
-                                    )
-                            }
-                        }
-                        if (chunk.size == 1) {
-                            Spacer(modifier = Modifier.weight(1f))
-                        }
+        Spacer(modifier = Modifier.width(8.dp))
+
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = onSearchQueryChange,
+            modifier = Modifier.weight(1f).height(56.dp),
+            placeholder = {
+                Text(stringResource(R.string.search_placeholder), style = MaterialTheme.typography.bodyLarge)
+            },
+            leadingIcon = null,
+            trailingIcon = {
+                if (searchQuery.isNotEmpty()) {
+                    IconButton(onClick = {
+                        if (useHapticFeedback) vibrate(context)
+                        onSearchQueryChange("")
+                        focusManager.clearFocus()
+                    }) {
+                        Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.cd_clear_search), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    HorizontalDivider()
-                 }
-            } else {
-                items(filteredContacts, key = { it.id }) { contact ->
-                    if (useHugeContactPicture) {
-                        HugeContactRow(
-                            contact = contact,
-                            onCallClick = {
-                                if (useHapticFeedback) vibrate(context)
-                                onCallClick(contact.number)
-                            },
-                            onOpenContact = { onOpenContact(contact.id) },
-                            showFavoriteStar = true
-                        )
-                    } else {
-                        ContactRow(
-                            contact = contact,
-                            onCallClick = {
-                                if (useHapticFeedback) vibrate(context)
-                                onCallClick(contact.number)
-                            },
-                            onOpenContact = { onOpenContact(contact.id) },
-                            showFavoriteStar = true,
-                            useHugeText = useHugeText
-                        )
-                    }
-                    HorizontalDivider()
+                } else {
+                    Icon(Icons.Default.Search, contentDescription = stringResource(R.string.cd_search), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-            }
-        }
-        
-
-
-        VerticalScrollbar(
-            modifier = Modifier.align(Alignment.CenterEnd),
-            listState = listState
+            },
+            singleLine = true,
+            shape = RoundedCornerShape(28.dp),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
         )
     }
+}
+
+/**
+ * Orange warning banner shown when the app is not set as the default dialer.
+ */
+@Composable
+fun DefaultDialerBanner(
+    onSetDefaultDialer: () -> Unit,
+    useHapticFeedback: Boolean,
+    context: android.content.Context
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFFFF6B00))
+            .clickable {
+                if (useHapticFeedback) vibrate(context)
+                onSetDefaultDialer()
+            }
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = stringResource(R.string.default_app_warning),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            Text(
+                text = stringResource(R.string.default_app_enable),
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.White
+            )
+        }
+    }
+}
+
+/**
+ * Header row for the Missed Calls section.
+ */
+@Composable
+fun MissedCallsHeader(onCallLogClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCallLogClick() }
+            .padding(horizontal = 8.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = stringResource(R.string.missed_calls),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Text(
+            text = stringResource(R.string.show_all),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+/**
+ * Green "No missed calls" banner — reassuring feedback for the user.
+ */
+@Composable
+fun NoMissedCallsBanner(onCallLogClick: () -> Unit, useHugeText: Boolean) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(LightGreenBackground)
+            .clickable { onCallLogClick() }
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = stringResource(R.string.no_missed_calls),
+            style = if (useHugeText) MaterialTheme.typography.displaySmall else MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Medium,
+            color = GreenCall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+    HorizontalDivider(thickness = 2.dp)
 }
 
 /**
