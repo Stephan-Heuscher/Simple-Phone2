@@ -25,6 +25,10 @@ import android.telecom.CallAudioState
 import android.telecom.InCallService
 import android.util.Log
 import ch.heuscher.simplephone.data.ContactRepository
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
+import java.util.concurrent.TimeUnit
 
 /**
  * InCallService that handles incoming and outgoing calls.
@@ -698,6 +702,17 @@ class CallService : InCallService() {
         val notification = notificationBuilder.build()
             
         notificationManager.notify(notificationId, notification)
+
+        // Schedule automatic dismissal
+        val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(context)
+        val missedCallsHours = settingsRepository.missedCallsHours.toLong()
+        
+        val workRequest = OneTimeWorkRequestBuilder<ch.heuscher.simplephone.workers.MissedCallNotificationWorker>()
+            .setInitialDelay(missedCallsHours, TimeUnit.HOURS)
+            .setInputData(workDataOf("notification_id" to notificationId))
+            .build()
+            
+        WorkManager.getInstance(context).enqueue(workRequest)
     }
 
     private val ONGOING_NOTIFICATION_ID = 12345
