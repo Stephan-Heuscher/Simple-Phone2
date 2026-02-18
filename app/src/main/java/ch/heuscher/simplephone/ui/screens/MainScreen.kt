@@ -179,16 +179,6 @@ fun MainScreen(
     if (isTablet) {
         // ── Tablet / Foldable: Two-pane side-by-side layout ──
         Column(modifier = Modifier.fillMaxSize().imePadding()) {
-            // Search bar spans full width above both panes
-            SearchBarRow(
-                searchQuery = searchQuery,
-                onSearchQueryChange = { searchQuery = it },
-                onDialerClick = onDialerClick,
-                useHapticFeedback = useHapticFeedback,
-                context = context,
-                focusManager = focusManager
-            )
-
             // Default Dialer Warning Banner (full width)
             if (!isDefaultDialer) {
                 DefaultDialerBanner(
@@ -199,112 +189,96 @@ fun MainScreen(
             }
 
             Row(modifier = Modifier.weight(1f)) {
-                // LEFT PANE: Missed calls + Favorites
+                // LEFT PANE: Missed calls + Favorites (ALWAYS VISIBLE)
                 Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
                     val leftListState = androidx.compose.foundation.lazy.rememberLazyListState()
                     LazyColumn(modifier = Modifier.fillMaxSize(), state = leftListState) {
-                        if (searchQuery.isBlank()) {
-                            // Missed Calls section
-                            item {
-                                MissedCallsHeader(onCallLogClick = onCallLogClick)
+                        // Missed Calls section
+                        item {
+                            MissedCallsHeader(onCallLogClick = onCallLogClick)
+                        }
+                        if (missedCalls.isEmpty()) {
+                            item(key = "no_missed_calls") {
+                                NoMissedCallsBanner(
+                                    onCallLogClick = onCallLogClick,
+                                    useHugeText = useHugeText
+                                )
                             }
-                            if (missedCalls.isEmpty()) {
-                                item(key = "no_missed_calls") {
-                                    NoMissedCallsBanner(
-                                        onCallLogClick = onCallLogClick,
-                                        useHugeText = useHugeText
+                        } else {
+                            items(missedCallsWithContacts, key = { "missed_${it.first.id}" }) { (callEntry, contact) ->
+                                Box(modifier = Modifier) {
+                                    MissedCallRow(
+                                        contact = contact,
+                                        timestamp = callEntry.timestamp,
+                                        onCallClick = {
+                                            if (useHapticFeedback) vibrate(context)
+                                            onCallClick(contact.number)
+                                        },
+                                        onOpenContact = { onOpenContact(contact.id) }
                                     )
                                 }
+                                HorizontalDivider()
+                            }
+                        }
+
+                        // Favorites section
+                        item {
+                            SectionHeader(title = stringResource(R.string.favorites))
+                        }
+                        if (favorites.isEmpty()) {
+                            item(key = "no_favorites") {
+                                Text(
+                                    stringResource(R.string.no_favorites),
+                                    modifier = Modifier.padding(16.dp),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        } else {
+                            if (useGridContactImages) {
+                                items(favorites.chunked(2), key = { "fav_chunk_${it[0].id}" }) { chunk ->
+                                    Row(modifier = Modifier.fillMaxWidth()) {
+                                        chunk.forEach { contact ->
+                                            Box(modifier = Modifier.weight(1f)) {
+                                                GridContactItem(
+                                                    contact = contact,
+                                                    onCallClick = {
+                                                        if (useHapticFeedback) vibrate(context)
+                                                        onCallClick(contact.number)
+                                                    },
+                                                    onOpenContact = { onOpenContact(contact.id) }
+                                                )
+                                            }
+                                        }
+                                        if (chunk.size == 1) Spacer(modifier = Modifier.weight(1f))
+                                    }
+                                }
                             } else {
-                                items(missedCallsWithContacts, key = { "missed_${it.first.id}" }) { (callEntry, contact) ->
-                                    Box(modifier = Modifier) {
-                                        MissedCallRow(
+                                items(favorites, key = { "fav_${it.id}" }) { contact ->
+                                    if (useHugeContactPicture) {
+                                        HugeContactRow(
                                             contact = contact,
-                                            timestamp = callEntry.timestamp,
                                             onCallClick = {
                                                 if (useHapticFeedback) vibrate(context)
                                                 onCallClick(contact.number)
                                             },
-                                            onOpenContact = { onOpenContact(contact.id) }
+                                            onOpenContact = { onOpenContact(contact.id) },
+                                            showFavoriteStar = true
+                                        )
+                                    } else {
+                                        ContactRow(
+                                            contact = contact,
+                                            onCallClick = {
+                                                if (useHapticFeedback) vibrate(context)
+                                                onCallClick(contact.number)
+                                            },
+                                            onOpenContact = { onOpenContact(contact.id) },
+                                            showFavoriteStar = true,
+                                            useHugeText = useHugeText
                                         )
                                     }
                                     HorizontalDivider()
-                                }
-                            }
-
-                            // Favorites section
-                            item {
-                                SectionHeader(title = stringResource(R.string.favorites))
-                            }
-                            if (favorites.isEmpty()) {
-                                item(key = "no_favorites") {
-                                    Text(
-                                        stringResource(R.string.no_favorites),
-                                        modifier = Modifier.padding(16.dp),
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                            } else {
-                                if (useGridContactImages) {
-                                    items(favorites.chunked(2), key = { "fav_chunk_${it[0].id}" }) { chunk ->
-                                        Row(modifier = Modifier.fillMaxWidth()) {
-                                            chunk.forEach { contact ->
-                                                Box(modifier = Modifier.weight(1f)) {
-                                                    GridContactItem(
-                                                        contact = contact,
-                                                        onCallClick = {
-                                                            if (useHapticFeedback) vibrate(context)
-                                                            onCallClick(contact.number)
-                                                        },
-                                                        onOpenContact = { onOpenContact(contact.id) }
-                                                    )
-                                                }
-                                            }
-                                            if (chunk.size == 1) Spacer(modifier = Modifier.weight(1f))
-                                        }
-                                    }
-                                } else {
-                                    items(favorites, key = { "fav_${it.id}" }) { contact ->
-                                        if (useHugeContactPicture) {
-                                            HugeContactRow(
-                                                contact = contact,
-                                                onCallClick = {
-                                                    if (useHapticFeedback) vibrate(context)
-                                                    onCallClick(contact.number)
-                                                },
-                                                onOpenContact = { onOpenContact(contact.id) },
-                                                showFavoriteStar = true
-                                            )
-                                        } else {
-                                            ContactRow(
-                                                contact = contact,
-                                                onCallClick = {
-                                                    if (useHapticFeedback) vibrate(context)
-                                                    onCallClick(contact.number)
-                                                },
-                                                onOpenContact = { onOpenContact(contact.id) },
-                                                showFavoriteStar = true,
-                                                useHugeText = useHugeText
-                                            )
-                                        }
-                                        HorizontalDivider()
-                                    }
-                                }
-                            }
-                        } else {
-                            // When searching, left pane shows a message
-                            item {
-                                Box(
-                                    modifier = Modifier.fillMaxWidth().padding(32.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.search_results),
-                                        style = MaterialTheme.typography.titleLarge,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
                                 }
                             }
                         }
@@ -317,10 +291,22 @@ fun MainScreen(
 
                 VerticalDivider()
 
-                // RIGHT PANE: Phone Book / Search Results
+                // RIGHT PANE: Search Bar + Phone Book / Search Results
                 Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
                     val rightListState = androidx.compose.foundation.lazy.rememberLazyListState()
                     LazyColumn(modifier = Modifier.fillMaxSize(), state = rightListState) {
+                        // Search bar at the top of the right pane
+                        item {
+                            SearchBarRow(
+                                searchQuery = searchQuery,
+                                onSearchQueryChange = { searchQuery = it },
+                                onDialerClick = onDialerClick,
+                                useHapticFeedback = useHapticFeedback,
+                                context = context,
+                                focusManager = focusManager
+                            )
+                        }
+
                         item(key = "phone_book_header") {
                             SectionHeader(
                                 title = if (searchQuery.isBlank()) stringResource(R.string.phone_book)
