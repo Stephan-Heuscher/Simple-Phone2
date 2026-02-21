@@ -15,23 +15,31 @@ import androidx.compose.ui.unit.dp
 
 /**
  * Determines if the current screen configuration should use a two-pane layout.
- * Criteria: width > 600dp AND (landscape orientation OR near-square aspect ratio >= 0.9).
- * This covers:
- * - Standard tablets in landscape
- * - Samsung Fold 6 inner display (nearly 1:1) in either orientation
- * - Avoids false triggers on tall portrait phones
+ *
+ * Uses PHYSICAL pixel width (not dp!) to avoid issues with high accessibility
+ * DPI settings. Seniors often increase display size for readability, which
+ * reduces screenWidthDp and would prevent the two-pane layout from activating.
+ *
+ * Criteria: physical width > 1200px AND (landscape OR near-square aspect ratio >= 0.9).
+ * - 1200px threshold: Fold 6 inner display is ~2176px wide (easily exceeds)
+ *   while folded outer display is ~1080px (correctly excluded)
+ *   Normal phones are typically 1080px or less (correctly excluded)
+ * - Aspect ratio check prevents false triggers on tall portrait screens
  */
 @Composable
 fun isTabletLayout(): Boolean {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val displayMetrics = context.resources.displayMetrics
+    val physicalWidthPx = displayMetrics.widthPixels
+    val physicalHeightPx = displayMetrics.heightPixels
+
     val configuration = LocalConfiguration.current
-    val screenWidthDp = configuration.screenWidthDp
-    val screenHeightDp = configuration.screenHeightDp
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    val aspectRatio = if (screenHeightDp > 0) {
-        screenWidthDp.toFloat() / screenHeightDp.toFloat()
+    val aspectRatio = if (physicalHeightPx > 0) {
+        physicalWidthPx.toFloat() / physicalHeightPx.toFloat()
     } else 0f
 
-    return screenWidthDp > 600 && (isLandscape || aspectRatio >= 0.9f)
+    return physicalWidthPx > 1200 && (isLandscape || aspectRatio >= 0.9f)
 }
 
 /**
