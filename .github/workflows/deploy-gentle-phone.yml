@@ -4,6 +4,7 @@ on:
   push:
     branches: [ master ]
     paths:
+      - 'app/src/main/**'
       - 'app/src/gentlephone/**'
       - 'caregiver-portal/**'
       - 'fastlane/metadata/gentlephone/**'
