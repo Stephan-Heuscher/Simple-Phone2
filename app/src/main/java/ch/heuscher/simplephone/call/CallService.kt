@@ -41,11 +41,15 @@ class CallService : InCallService() {
     private var isVibrating = false
     private var wakeLock: android.os.PowerManager.WakeLock? = null
     
-    // Proximity Sensor for Aggressive Speaker Switch
+    // Sensors for Speaker Switch and Raise to Ear
     private var sensorManager: android.hardware.SensorManager? = null
     private var proximitySensor: android.hardware.Sensor? = null
+    private var accelerometerSensor: android.hardware.Sensor? = null
     private var isProximitySensorRegistered = false
+    private var isAccelerometerRegistered = false
     private var isPhoneAtEar = false // Track proximity state for logic updates
+    private var isPhoneVertical = false // Track if phone is held upright
+    private var lastSignificantMovementTime: Long = 0 // Track movement for "raise to ear"
     
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
     private var silenceRunnable: Runnable? = null
@@ -171,7 +175,21 @@ class CallService : InCallService() {
         override fun onSensorChanged(event: android.hardware.SensorEvent?) {
             event ?: return
             
-            if (event.sensor.type == android.hardware.Sensor.TYPE_PROXIMITY) {
+            if (event.sensor.type == android.hardware.Sensor.TYPE_ACCELEROMETER) {
+                val x = event.values[0]
+                val y = event.values[1]
+                val z = event.values[2]
+                
+                // Detect movement (magnitude significantly higher or lower than 1G = ~9.81 m/s^2)
+                val magnitude = Math.sqrt((x * x + y * y + z * z).toDouble()).toFloat()
+                if (Math.abs(magnitude - 9.81f) > 2.0f) { // 2.0 m/s^2 threshold for movement
+                    lastSignificantMovementTime = System.currentTimeMillis()
+                }
+                
+                // Check if held relatively upright (Y > 5.0m/s^2 implies angle > 30 degrees from vertical)
+                isPhoneVertical = y > 5.0f
+                checkRaiseToEarToAnswer()
+            } else if (event.sensor.type == android.hardware.Sensor.TYPE_PROXIMITY) {
                 val distance = event.values[0]
                 val maxRange = event.sensor.maximumRange
                 // Some sensors report 0 for near, and maxRange for far. 
@@ -182,6 +200,7 @@ class CallService : InCallService() {
                 isPhoneAtEar = isNear
                 
                 updateSpeakerHighlightState()
+                checkRaiseToEarToAnswer()
             }
         }
 
@@ -230,6 +249,23 @@ class CallService : InCallService() {
         }
     }
                 
+    private fun checkRaiseToEarToAnswer() {
+        if (CallService.callState != Call.STATE_RINGING) return
+        
+        val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(this)
+        if (!settingsRepository.raiseToEarToAnswer) return
+        
+        if (isPhoneAtEar && isPhoneVertical) {
+            val timeSinceMovement = System.currentTimeMillis() - lastSignificantMovementTime
+            // If movement happened within the last 2000ms, consider it a deliberate raise
+            if (timeSinceMovement < 2000) {
+                Log.d(TAG, "Raise to ear detected! Answering call.")
+                // Prevent multiple triggers
+                lastSignificantMovementTime = 0
+                CallService.answerCall()
+            }
+        }
+    }
 
 
     fun connectBluetoothDevice(device: android.bluetooth.BluetoothDevice) {
@@ -309,7 +345,7 @@ class CallService : InCallService() {
         if (proximitySensor == null) {
             Log.w(TAG, "No proximity sensor found!")
         }
-
+        accelerometerSensor = sensorManager?.getDefaultSensor(android.hardware.Sensor.TYPE_ACCELEROMETER)
     }
 
     override fun onDestroy() {
@@ -836,13 +872,19 @@ class CallService : InCallService() {
             isProximitySensorRegistered = true
             Log.d(TAG, "Proximity sensor registered")
         }
+        if (!isAccelerometerRegistered && accelerometerSensor != null) {
+            sensorManager?.registerListener(sensorEventListener, accelerometerSensor, android.hardware.SensorManager.SENSOR_DELAY_NORMAL)
+            isAccelerometerRegistered = true
+            Log.d(TAG, "Accelerometer registered")
+        }
     }
     
     private fun stopProximitySensor() {
-        if (isProximitySensorRegistered) {
+        if (isProximitySensorRegistered || isAccelerometerRegistered) {
             sensorManager?.unregisterListener(sensorEventListener)
             isProximitySensorRegistered = false
-            Log.d(TAG, "Proximity sensor unregistered")
+            isAccelerometerRegistered = false
+            Log.d(TAG, "Sensors unregistered")
         }
     }
 

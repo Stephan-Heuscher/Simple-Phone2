@@ -205,5 +205,9 @@
     <string name="cd_decrease_seconds">Decrease seconds</string>
     <string name="cd_increase_seconds">Increase seconds</string>
 
+    <!-- Raise to Ear to Answer -->
+    <string name="settings_raise_to_ear_title">Raise to ear to answer</string>
+    <string name="settings_raise_to_ear_desc">Automatically answer incoming calls when you lift the phone and hold it to your ear (only upright).</string>
+
 
 </resources>

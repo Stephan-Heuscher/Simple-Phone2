@@ -713,6 +713,8 @@ fun SimplePhoneApp(
                         onSilenceCallOnTouchChange = { settingsRepository.silenceCallOnTouch = it },
                         ringtoneSilenceTimeout = settings.ringtoneSilenceTimeout,
                         onRingtoneSilenceTimeoutChange = { settingsRepository.ringtoneSilenceTimeout = it },
+                        raiseToEarToAnswer = settings.raiseToEarToAnswer,
+                        onRaiseToEarToAnswerChange = { settingsRepository.raiseToEarToAnswer = it },
                         // Gentle Phone Specific
                         pairingCode = settingsRepository.getPairingCode(),
                         showPairingCode = settingsRepository.isRemoteSettingsEnabled()

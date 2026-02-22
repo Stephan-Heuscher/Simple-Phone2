@@ -192,5 +192,9 @@
     <string name="cd_decrease_seconds">Sekunden verringern</string>
     <string name="cd_increase_seconds">Sekunden erhöhen</string>
 
+    <!-- Raise to Ear to Answer -->
+    <string name="settings_raise_to_ear_title">Ans Ohr halten zum Annehmen</string>
+    <string name="settings_raise_to_ear_desc">Nimmt eingehende Anrufe automatisch an, wenn Sie das Telefon ans Ohr halten (nur aufrecht).</string>
+
 
 </resources>

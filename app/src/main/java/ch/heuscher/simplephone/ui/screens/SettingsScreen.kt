@@ -113,6 +113,8 @@ fun SettingsScreen(
     onSilenceCallOnTouchChange: (Boolean) -> Unit = {},
     ringtoneSilenceTimeout: Int = 0,
     onRingtoneSilenceTimeoutChange: (Int) -> Unit = {},
+    raiseToEarToAnswer: Boolean = false,
+    onRaiseToEarToAnswerChange: (Boolean) -> Unit = {},
     // Gentle Phone Specific
     pairingCode: String? = null,
     showPairingCode: Boolean = false
@@ -828,6 +830,36 @@ fun SettingsScreen(
         }
 
 
+
+        // --- Raise to Ear to Answer Section ---
+        item {
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_raise_to_ear_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_raise_to_ear_desc),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                BigToggleButton(
+                    isEnabled = raiseToEarToAnswer,
+                    onToggle = { vibrate(); onRaiseToEarToAnswerChange(!raiseToEarToAnswer) },
+                    label = if (raiseToEarToAnswer) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
+                )
+            }
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+        }
 
         // --- Call Confirmation Section ---
         item {

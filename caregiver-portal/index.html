@@ -531,6 +531,19 @@
                         </label>
                     </div>
 
+                    <!-- Raise to Ear -->
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <h3>🤳 Raise to Ear</h3>
+                            <p>Answer call by lifting to ear</p>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="raiseToEarToAnswer"
+                                onchange="saveSetting('raiseToEarToAnswer', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
                     <!-- Ringtone Timeout -->
                     <div class="setting-row">
                         <div class="setting-label">
@@ -839,6 +852,9 @@
             }
             if (settings.silenceOnTouch !== undefined) {
                 document.getElementById('silenceOnTouch').checked = settings.silenceOnTouch;
+            }
+            if (settings.raiseToEarToAnswer !== undefined) {
+                document.getElementById('raiseToEarToAnswer').checked = settings.raiseToEarToAnswer;
             }
             if (settings.ringtoneTimeout !== undefined) {
                 document.getElementById('ringtoneTimeout').value = settings.ringtoneTimeout;

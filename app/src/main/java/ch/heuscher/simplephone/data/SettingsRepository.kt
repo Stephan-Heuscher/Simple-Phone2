@@ -25,7 +25,8 @@ data class AppSettings(
     val ringtoneSilenceTimeout: Int,
     val isDemoMode: Boolean,
     val onboardingCompleted: Boolean,
-    val lastBlockedNumber: String?
+    val lastBlockedNumber: String?,
+    val raiseToEarToAnswer: Boolean
 )
 
 /**
@@ -65,6 +66,7 @@ class SettingsRepository(private val context: Context) {
         private const val KEY_LAST_BLOCKED_NUMBER = "last_blocked_number"
         private const val KEY_SIMPLIFIED_CONTACT_CALL_SCREEN = "simplified_contact_call_screen"
         private const val KEY_RINGTONE_SILENCE_TIMEOUT = "ringtone_silence_timeout"
+        private const val KEY_RAISE_TO_EAR_TO_ANSWER = "raise_to_ear_to_answer"
         
         // Zoom factors per screen size
         // Zoom factors per screen size
@@ -99,6 +101,7 @@ class SettingsRepository(private val context: Context) {
         private const val REMOTE_KEY_MISSED_CALLS_HOURS = "missedCallsHours"
         private const val REMOTE_KEY_ZOOM_FACTOR = "zoomFactor"
         private const val REMOTE_KEY_FAVORITES_ORDER = "favoritesOrder"
+        private const val REMOTE_KEY_RAISE_TO_EAR = "raiseToEarToAnswer"
     }
     
     // Strong reference to listener to prevent garbage collection
@@ -202,7 +205,8 @@ class SettingsRepository(private val context: Context) {
             ringtoneSilenceTimeout = getRemoteInt(REMOTE_KEY_RINGTONE_TIMEOUT) ?: prefs.getInt(KEY_RINGTONE_SILENCE_TIMEOUT, 0),
             isDemoMode = prefs.getBoolean(KEY_IS_DEMO_MODE, false),
             onboardingCompleted = prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false),
-            lastBlockedNumber = prefs.getString(KEY_LAST_BLOCKED_NUMBER, null)
+            lastBlockedNumber = prefs.getString(KEY_LAST_BLOCKED_NUMBER, null),
+            raiseToEarToAnswer = getRemoteBool(REMOTE_KEY_RAISE_TO_EAR) ?: prefs.getBoolean(KEY_RAISE_TO_EAR_TO_ANSWER, false)
         )
     }
     
@@ -324,6 +328,13 @@ class SettingsRepository(private val context: Context) {
         set(value) {
             prefs.edit().putInt(KEY_RINGTONE_SILENCE_TIMEOUT, value).apply()
             updateRemote(REMOTE_KEY_RINGTONE_TIMEOUT, value)
+        }
+
+    var raiseToEarToAnswer: Boolean
+        get() = settings.value.raiseToEarToAnswer
+        set(value) {
+            prefs.edit().putBoolean(KEY_RAISE_TO_EAR_TO_ANSWER, value).apply()
+            updateRemote(REMOTE_KEY_RAISE_TO_EAR, value)
         }
 
     // Derived properties for backward compatibility / ease of use
