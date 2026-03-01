@@ -128,6 +128,9 @@ dependencies {
     "gentlephoneImplementation"(platform("com.google.firebase:firebase-bom:33.7.0"))
     "gentlephoneImplementation"("com.google.firebase:firebase-firestore-ktx")
     
+    // Core Zxing for QR Code generation
+    implementation("com.google.zxing:core:3.5.3")
+    
     // Coroutines for async remote settings sync
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.9.0")

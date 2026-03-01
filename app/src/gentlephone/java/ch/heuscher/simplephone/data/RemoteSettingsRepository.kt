@@ -47,6 +47,28 @@ class RemoteSettingsRepository(private val context: Context) {
     fun getPairingCode(): String = deviceId
     
     /**
+     * Generates a short-lived (10 mins) temporary pairing code for secure sharing.
+     */
+    suspend fun generateTemporaryPairingCode(): String {
+        val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        val tempCode = (1..6).map { chars.random() }.joinToString("")
+        try {
+            val data = mapOf(
+                "deviceId" to deviceId,
+                "expiresAt" to System.currentTimeMillis() + 10 * 60 * 1000 // 10 minutes from now
+            )
+            firestore
+                .collection("pairing_codes")
+                .document(tempCode)
+                .set(data)
+                .await()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return tempCode
+    }
+    
+    /**
      * Fetch remote settings from Firestore.
      * Returns null if no remote settings exist or on error.
      */

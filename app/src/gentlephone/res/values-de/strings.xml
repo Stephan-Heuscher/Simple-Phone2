@@ -1,18 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Gentle Phone Deutsche Strings -->
-    <string name="gentle_phone_pairing_title">Betreuer-Kopplung</string>
-    <string name="gentle_phone_pairing_desc">Teilen Sie diesen Code mit Ihrem Betreuer, damit er die Telefoneinstellungen aus der Ferne anpassen kann:</string>
+    <string name="gentle_phone_pairing_title">Vertraute Person Koppelung</string>
+    <string name="gentle_phone_pairing_desc">Teilen Sie diesen Link mit Ihrer Vertrauensperson, damit diese Ihre Telefoneinstellungen aus der Ferne anpassen kann:</string>
     <string name="gentle_phone_pairing_code">Kopplungscode</string>
+    <string name="gentle_phone_generating">Wird generiert...</string>
+    <string name="gentle_phone_valid_10_mins">Gültig für 10 Minuten</string>
+    <string name="gentle_phone_qr_code">QR-Code</string>
     <string name="gentle_phone_web_portal">Web-Portal</string>
     <string name="gentle_phone_remote_settings">Ferneinstellungen</string>
-    <string name="gentle_phone_remote_settings_desc">Einstellungen können von Ihrem Betreuer geändert werden</string>
-    <string name="gentle_phone_settings_synced">Einstellungen vom Betreuer synchronisiert</string>
+    <string name="gentle_phone_remote_settings_desc">Einstellungen können von Ihrer Vertrauensperson geändert werden</string>
+    <string name="gentle_phone_settings_synced">Einstellungen von Vertrauensperson synchronisiert</string>
     <string name="gentle_phone_settings_local">Lokale Einstellungen verwenden</string>
     
     <!-- Onboarding Override -->
     <string name="onboarding_welcome_title">Willkommen bei gentle phone</string>
-    <string name="onboarding_welcome_desc">gentle phone ist für einfache Bedienung konzipiert. Ein Betreuer kann Einstellungen aus der Ferne anpassen.</string>
+    <string name="onboarding_welcome_desc">gentle phone ist für einfache Bedienung konzipiert. Eine Vertrauensperson kann aus der Ferne anpassen helfen.</string>
     
     <!-- Feedback Override -->
     <string name="feedback_subject">gentle phone Feedback</string>

@@ -14,6 +14,11 @@ class RemoteSettingsRepository(context: Context) {
     fun getPairingCode(): String = ""
     
     /**
+     * No temporary pairing code for Simple Phone
+     */
+    suspend fun generateTemporaryPairingCode(): String = ""
+    
+    /**
      * No remote settings for Simple Phone
      */
     suspend fun fetchRemoteSettings(): Map<String, Any>? = null

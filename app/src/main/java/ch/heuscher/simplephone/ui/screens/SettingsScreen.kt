@@ -11,6 +11,12 @@ import android.net.Uri
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.graphics.Bitmap
+import android.graphics.Color as AndroidColor
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.qrcode.QRCodeWriter
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.scrollBy
@@ -59,6 +65,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -117,7 +126,8 @@ fun SettingsScreen(
     onRaiseToEarToAnswerChange: (Boolean) -> Unit = {},
     // Gentle Phone Specific
     pairingCode: String? = null,
-    showPairingCode: Boolean = false
+    showPairingCode: Boolean = false,
+    onGeneratePairingCode: suspend () -> String = { "" }
 ) {
     // Remember favorites order for reordering
     val mutableFavorites = remember { mutableStateListOf<Contact>() }
@@ -193,8 +203,34 @@ fun SettingsScreen(
             }
     ) {
         // --- Pairing Code Section (Gentle Phone Only) ---
-        if (showPairingCode && pairingCode != null) {
+        if (showPairingCode) {
             item {
+                var tempCode by remember { mutableStateOf<String?>(null) }
+                var qrBitmap by remember { mutableStateOf<Bitmap?>(null) }
+                val coroutineScope = rememberCoroutineScope()
+                
+                LaunchedEffect(Unit) {
+                    tempCode = onGeneratePairingCode()
+                    tempCode?.let {
+                        val url = "https://gentlephone.web.app/?code=$it"
+                        try {
+                            val size = 512
+                            val bitMatrix = QRCodeWriter().encode(url, BarcodeFormat.QR_CODE, size, size)
+                            val width = bitMatrix.width
+                            val height = bitMatrix.height
+                            val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
+                            for (x in 0 until width) {
+                                for (y in 0 until height) {
+                                    bmp.setPixel(x, y, if (bitMatrix.get(x, y)) AndroidColor.BLACK else AndroidColor.WHITE)
+                                }
+                            }
+                            qrBitmap = bmp
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+                
                 Text(
                     text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.gentle_phone_pairing_title),
                     style = MaterialTheme.typography.headlineLarge,
@@ -216,48 +252,75 @@ fun SettingsScreen(
                         .padding(vertical = 16.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(MaterialTheme.colorScheme.secondaryContainer)
-                        .clickable {
-                            clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(pairingCode))
-                            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
-                                // Android 13+ automatically shows a toast for clipboard copy
-                                android.widget.Toast.makeText(context, R.string.toast_copied_to_clipboard, android.widget.Toast.LENGTH_SHORT).show()
-                            }
-                        }
                         .padding(24.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    if (tempCode == null) {
                         Text(
-                            text = pairingCode,
-                            style = MaterialTheme.typography.displayMedium,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 4.sp,
+                            text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.gentle_phone_generating),
+                            style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                           text = stringResource(R.string.click_to_copy),
-                           style = MaterialTheme.typography.labelMedium,
-                           color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
-                        )
-                    }
-                    
-                    // Share Button
-                    androidx.compose.material3.IconButton(
-                        onClick = {
-                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_TEXT, context.getString(R.string.share_pairing_code_message, pairingCode))
+                    } else {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            qrBitmap?.let { bmp ->
+                                Image(
+                                    bitmap = bmp.asImageBitmap(),
+                                    contentDescription = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.gentle_phone_qr_code),
+                                    modifier = Modifier.size(200.dp).padding(bottom = 16.dp)
+                                )
                             }
-                            context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_pairing_code_title)))
-                        },
-                        modifier = Modifier.align(Alignment.TopEnd).offset(x = 12.dp, y = (-12).dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Share,
-                            contentDescription = stringResource(R.string.share_pairing_code_title),
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
+                        
+                            val shareUrl = "https://gentlephone.web.app/?code=$tempCode"
+
+                            Box(modifier = Modifier.clickable {
+                                clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(shareUrl))
+                                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+                                    android.widget.Toast.makeText(context, R.string.toast_copied_to_clipboard, android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            }) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = tempCode!!,
+                                        style = MaterialTheme.typography.displayMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = 4.sp,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.gentle_phone_valid_10_mins),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                       text = stringResource(R.string.click_to_copy),
+                                       style = MaterialTheme.typography.labelSmall,
+                                       color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
+                        }
+                    
+                        // Share Button
+                        androidx.compose.material3.IconButton(
+                            onClick = {
+                                val shareUrl = "https://gentlephone.web.app/?code=$tempCode"
+                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_TEXT, context.getString(R.string.share_pairing_code_message, shareUrl))
+                                }
+                                context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_pairing_code_title)))
+                            },
+                            modifier = Modifier.align(Alignment.TopEnd).offset(x = 12.dp, y = (-12).dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = stringResource(R.string.share_pairing_code_title),
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
                     }
                 }
                 

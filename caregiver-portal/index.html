@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>gentle phone - Caregiver Portal</title>
+    <title>gentle phone - Confidant Portal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -394,7 +394,7 @@
     <div class="container">
         <div class="header">
             <h1>🌿 gentle phone</h1>
-            <p>Caregiver Settings Portal</p>
+            <p>Confidant Settings Portal</p>
             <div id="user-display" class="user-profile" style="display: none;">
                 <!-- Filled by JS -->
             </div>
@@ -402,7 +402,7 @@
 
         <!-- Login Section -->
         <div class="card" id="login-section">
-            <h2 style="margin-bottom: 1rem; font-size: 1.1rem; text-align: center;">Welcome, Caregiver</h2>
+            <h2 style="margin-bottom: 1rem; font-size: 1.1rem; text-align: center;">Welcome, Confidant</h2>
             <p style="margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.9rem; text-align: center;">
                 Please sign in with Google to manage gentle phone settings.
             </p>
@@ -701,37 +701,66 @@
         // Initialize on load
         window.addEventListener('DOMContentLoaded', () => {
             // Auth listener handles flow
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code')?.trim();
+            if (code) {
+                document.getElementById('pairing-code').value = code;
+            }
         });
 
         window.connectToDevice = async function (existingId) {
-            const inputCode = existingId || document.getElementById('pairing-code').value.trim();
+            let inputCode = existingId || document.getElementById('pairing-code').value.trim();
+            if (!inputCode) {
+                const urlParams = new URLSearchParams(window.location.search);
+                inputCode = urlParams.get('code')?.trim();
+            }
+
             if (!inputCode || inputCode.length < 6) {
                 showStatus('pairing-status', 'Please enter a valid pairing code', 'error');
                 return;
             }
 
             try {
-                // Try finding the device with the exact code, then upper, then lower to be robust
                 let validDeviceId = null;
                 let deviceDoc = null;
 
-                // Order of preference: Uppercase (Standard), Exact Input, Lowercase (Legacy)
-                const candidates = [inputCode.toUpperCase(), inputCode, inputCode.toLowerCase()];
-                // Deduplicate
-                const uniqueCandidates = [...new Set(candidates)];
+                // 1. Check if the code is a 10-minute temporary code in pairing_codes collection
+                const tempCodeRef = doc(db, 'pairing_codes', inputCode);
+                const tempCodeSnap = await getDoc(tempCodeRef);
+                if (tempCodeSnap.exists()) {
+                    const tempCodeData = tempCodeSnap.data();
+                    if (Date.now() < tempCodeData.expiresAt) {
+                        validDeviceId = tempCodeData.deviceId;
+                        deviceDoc = await getDoc(doc(db, 'devices', validDeviceId));
+                    } else {
+                        showStatus('pairing-status', 'Pairing code expired.', 'error');
+                        return;
+                    }
+                } else {
+                    // 2. Legacy fallback: check devices collection directly
+                    const candidates = [inputCode.toUpperCase(), inputCode, inputCode.toLowerCase()];
+                    const uniqueCandidates = [...new Set(candidates)];
 
-                for (const code of uniqueCandidates) {
-                    const docSnap = await getDoc(doc(db, 'devices', code));
-                    if (docSnap.exists()) {
-                        validDeviceId = code;
-                        deviceDoc = docSnap;
-                        break;
+                    for (const code of uniqueCandidates) {
+                        const docSnap = await getDoc(doc(db, 'devices', code));
+                        if (docSnap.exists()) {
+                            validDeviceId = code;
+                            deviceDoc = docSnap;
+                            break;
+                        }
                     }
                 }
 
-                if (!validDeviceId) {
+                if (!validDeviceId || !deviceDoc?.exists()) {
                     showStatus('pairing-status', 'Device not found. Check the code.', 'error');
                     return;
+                }
+
+                // Clear the URL parameter so it doesn't stay if the user refreshes
+                if (window.history.replaceState) {
+                    const url = new URL(window.location);
+                    url.searchParams.delete('code');
+                    window.history.replaceState(null, '', url.pathname + url.search);
                 }
 
                 const deviceId = validDeviceId;

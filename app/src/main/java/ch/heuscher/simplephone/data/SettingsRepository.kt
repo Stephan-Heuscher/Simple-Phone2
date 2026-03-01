@@ -216,6 +216,17 @@ class SettingsRepository(private val context: Context) {
     fun getPairingCode(): String = remoteSettings.getPairingCode()
     
     /**
+     * Generates a temporary pairing code (only works for Gentle Phone).
+     */
+    suspend fun generateTemporaryPairingCode(): String {
+        return if (isRemoteSettingsEnabled()) {
+            remoteSettings.generateTemporaryPairingCode()
+        } else {
+            ""
+        }
+    }
+    
+    /**
      * Check if remote settings are enabled for this build.
      */
     fun isRemoteSettingsEnabled(): Boolean = BuildConfig.REMOTE_SETTINGS_ENABLED

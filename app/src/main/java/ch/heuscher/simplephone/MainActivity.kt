@@ -717,7 +717,8 @@ fun SimplePhoneApp(
                         onRaiseToEarToAnswerChange = { settingsRepository.raiseToEarToAnswer = it },
                         // Gentle Phone Specific
                         pairingCode = settingsRepository.getPairingCode(),
-                        showPairingCode = settingsRepository.isRemoteSettingsEnabled()
+                        showPairingCode = settingsRepository.isRemoteSettingsEnabled(),
+                        onGeneratePairingCode = { settingsRepository.generateTemporaryPairingCode() }
                     )
                 }
             }
