@@ -6,6 +6,7 @@ on:
     paths:
       - 'app/src/main/**'
       - 'app/src/gentlephone/**'
+      - 'watch/**'
       - 'caregiver-portal/**'
       - 'fastlane/metadata/gentlephone/**'
       - '.github/workflows/deploy-gentle-phone.yml'

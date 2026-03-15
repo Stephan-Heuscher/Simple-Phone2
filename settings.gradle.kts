@@ -23,3 +23,4 @@ plugins {
 
 rootProject.name = "Simple Phone"
 include(":app")
+include(":watch")
