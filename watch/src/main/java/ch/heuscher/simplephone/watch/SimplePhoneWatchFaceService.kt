@@ -80,22 +80,21 @@ class SimplePhoneWatchFaceService : WatchFaceService() {
             color = Color.BLACK
         }
 
-        private val timePaint = Paint().apply {
+        private val favoritesPaint = Paint().apply {
             color = Color.WHITE
-            textSize = 100f
+            textSize = 50f
             isAntiAlias = true
             textAlign = Paint.Align.CENTER
             isFakeBoldText = true
         }
         
-        private val instructionPaint = Paint().apply {
-            color = Color.GREEN
-            textSize = 30f
+        private val sosPaint = Paint().apply {
+            color = Color.RED
+            textSize = 50f
             isAntiAlias = true
             textAlign = Paint.Align.CENTER
+            isFakeBoldText = true
         }
-
-        private val formatter = DateTimeFormatter.ofPattern("HH:mm")
 
         override fun render(
             canvas: Canvas,
@@ -105,16 +104,18 @@ class SimplePhoneWatchFaceService : WatchFaceService() {
         ) {
             canvas.drawColor(Color.BLACK)
 
-            val timeText = zonedDateTime.format(formatter)
             val centerX = bounds.exactCenterX()
             val centerY = bounds.exactCenterY()
-
-            // Draw Time
-            canvas.drawText(timeText, centerX, centerY, timePaint)
             
-            // Draw instruction in interactive mode
+            val offset = 60f
+
+            // Draw "Favoriten" and "Notruf" directly on the watch face
+            canvas.drawText("Favoriten", centerX, centerY - offset / 2, favoritesPaint)
+            
             if (renderParameters.drawMode == androidx.wear.watchface.DrawMode.INTERACTIVE) {
-                 canvas.drawText("Tippen für Telefon", centerX, centerY + 80f, instructionPaint)
+                 canvas.drawText("Notruf", centerX, centerY + offset, sosPaint)
+            } else {
+                 canvas.drawText("Notruf", centerX, centerY + offset, favoritesPaint) // less bright in ambient
             }
         }
 

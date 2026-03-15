@@ -1,5 +1,8 @@
 package ch.heuscher.simplephone.watch
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,62 +20,48 @@ import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
-import java.text.SimpleDateFormat
-import java.util.*
-import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme {
-                SimplePhoneWatchApp()
+                SimplePhoneWatchApp(this)
             }
         }
     }
 }
 
 @Composable
-fun SimplePhoneWatchApp() {
-    var timeText by remember { mutableStateOf(getCurrentTime()) }
-
-    LaunchedEffect(Unit) {
-        while (true) {
-            delay(1000)
-            timeText = getCurrentTime()
-        }
-    }
-
+fun SimplePhoneWatchApp(context: Context) {
     ScalingLazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        item { Spacer(modifier = Modifier.height(24.dp)) }
         item {
-            Text(
-                text = timeText,
-                fontSize = 48.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                modifier = Modifier.padding(bottom = 16.dp, top = 24.dp)
-            )
-        }
-        item {
-            ActionButton(text = "Kontakte", color = Color(0xFF1E88E5)) {
-                // TODO: Open contacts
+            ActionButton(text = "Sarah", color = Color(0xFF1E88E5)) {
+                makeCall(context, "0791234567")
             }
         }
         item {
-            ActionButton(text = "Wählen", color = Color(0xFF43A047)) {
-                // TODO: Open dialer
+            ActionButton(text = "Tom", color = Color(0xFF1E88E5)) {
+                makeCall(context, "0791234568")
+            }
+        }
+        item {
+            ActionButton(text = "Doktor", color = Color(0xFF1E88E5)) {
+                makeCall(context, "0441234569")
             }
         }
         item {
             ActionButton(text = "Notruf", color = Color(0xFFE53935)) {
-                // TODO: SOS Action
+                makeCall(context, "112")
             }
         }
+        item { Spacer(modifier = Modifier.height(24.dp)) }
     }
 }
 
@@ -95,7 +84,11 @@ fun ActionButton(text: String, color: Color, onClick: () -> Unit) {
     }
 }
 
-private fun getCurrentTime(): String {
-    val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
-    return sdf.format(Date())
+private fun makeCall(context: Context, phoneNumber: String) {
+    val intent = Intent(Intent.ACTION_DIAL).apply {
+        data = Uri.parse("tel:$phoneNumber")
+        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+    }
+    context.startActivity(intent)
 }
+
