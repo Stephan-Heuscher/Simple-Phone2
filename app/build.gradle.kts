@@ -70,7 +70,7 @@ android {
         create("simplephone") {
             dimension = "version"
             applicationId = "ch.heuscher.simplephone"
-            resValue("string", "app_name", "Simple Phone")
+            resValue("string", "app_name", "simple phone")
             buildConfigField("Boolean", "REMOTE_SETTINGS_ENABLED", "false")
         }
         create("gentlephone") {

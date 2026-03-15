@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Simple Phone</string>
+    <string name="app_name">simple phone</string>
     <string name="widget_description">अपने पसंदीदा लोगों को तुरंत कॉल करें। कॉल करने के लिए फोटो या हरे बटन पर टैप करें।</string>
     
     <!-- Main Screen -->
@@ -79,8 +79,8 @@
     <string name="calls">कॉल्स</string>
 
     <!-- Onboarding -->
-    <string name="onboarding_welcome_title">Simple Phone में आपका स्वागत है</string>
-    <string name="onboarding_welcome_desc">Simple Phone का उपयोग करना आसान है। इसमें बड़े बटन और स्पष्ट टेक्स्ट है।</string>
+    <string name="onboarding_welcome_title">simple phone में आपका स्वागत है</string>
+    <string name="onboarding_welcome_desc">simple phone का उपयोग करना आसान है। इसमें बड़े बटन और स्पष्ट टेक्स्ट है।</string>
     <string name="onboarding_favorites_title">पसंदीदा तक त्वरित पहुंच</string>
     <string name="onboarding_favorites_desc">आपके पसंदीदा संपर्क एक-टैप कॉलिंग के लिए शीर्ष पर दिखाई देते हैं। कॉल करने के लिए फोटो या हरे बटन पर टैप करें।</string>
     <string name="onboarding_search_title">आसान संपर्क खोज</string>
@@ -92,7 +92,7 @@
     <string name="onboarding_settings_title">अनुकूलन योग्य सेटिंग्स</string>
     <string name="onboarding_settings_desc">टेक्स्ट आकार समायोजित करें, डार्क मोड, कॉल पुष्टि, कंपन और आवाज़ घोषणाओं को सेटिंग्स में सक्षम करें।</string>
     <string name="onboarding_default_title">अनुमतियाँ और डिफ़ॉल्ट</string>
-    <string name="onboarding_default_desc">Simple Phone को कॉल तक पहुंच की आवश्यकता है। आपको इसे अपने डिफ़ॉल्ट फोन ऐप के रूप में सेट करने के लिए कहा जाएगा।</string>
+    <string name="onboarding_default_desc">simple phone को कॉल तक पहुंच की आवश्यकता है। आपको इसे अपने डिफ़ॉल्ट फोन ऐप के रूप में सेट करने के लिए कहा जाएगा।</string>
     <string name="skip">छोड़ें</string>
     <string name="next">आगे</string>
     <string name="get_started">शुरू करें</string>
@@ -167,8 +167,8 @@
     <string name="privacy_policy">गोपनीयता नीति</string>
     <string name="terms_of_service">सेवा की शर्तें</string>
     <string name="send_feedback">प्रतिक्रिया भेजें</string>
-    <string name="feedback_subject">Simple Phone प्रतिक्रिया</string>
-    <string name="feedback_body">\n\n\n---\nडिवाइस की जानकारी (इससे हमें बहुत मदद मिलती है!)\nचूंकि Simple Phone कोई डेटा एकत्र नहीं करता है, इसलिए आपकी प्रतिक्रिया ही मुद्दों और सुधारों के बारे में जानने का हमारा एकमात्र तरीका है। यदि आप चाहें तो इसे हटा सकते हैं।\n\nऐप संस्करण: %1$s (%2$d)\nएंड्रॉइड संस्करण: %3$s (API %4$d)\nडिवाइस: %5$s %6$s\nभाषा: %7$s\n---</string>
+    <string name="feedback_subject">simple phone प्रतिक्रिया</string>
+    <string name="feedback_body">\n\n\n---\nडिवाइस की जानकारी (इससे हमें बहुत मदद मिलती है!)\nचूंकि simple phone कोई डेटा एकत्र नहीं करता है, इसलिए आपकी प्रतिक्रिया ही मुद्दों और सुधारों के बारे में जानने का हमारा एकमात्र तरीका है। यदि आप चाहें तो इसे हटा सकते हैं।\n\nऐप संस्करण: %1$s (%2$d)\nएंड्रॉइड संस्करण: %3$s (API %4$d)\nडिवाइस: %5$s %6$s\nभाषा: %7$s\n---</string>
     <string name="how_to_use">उपयोग कैसे करें / ट्यूटोरियल</string>
     <string name="toast_open_contact_error">संपर्क विवरण नहीं खोला जा सकता</string>
     <string name="toast_open_contact_exception">संपर्क ऐप खोलने में त्रुटि</string>

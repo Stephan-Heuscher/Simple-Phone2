@@ -31,8 +31,8 @@ data class AppSettings(
 
 /**
  * Manages app settings and preferences.
- * For Gentle Phone: Remote settings from caregiver override local settings and changes are synced back.
- * For Simple Phone: Only local SharedPreferences are used.
+ * For gentle phone: Remote settings from caregiver override local settings and changes are synced back.
+ * For simple phone: Only local SharedPreferences are used.
  */
 class SettingsRepository(private val context: Context) {
     
@@ -211,12 +211,12 @@ class SettingsRepository(private val context: Context) {
     }
     
     /**
-     * Get pairing code for caregiver linking (only works for Gentle Phone).
+     * Get pairing code for caregiver linking (only works for gentle phone).
      */
     fun getPairingCode(): String = remoteSettings.getPairingCode()
     
     /**
-     * Generates a temporary pairing code (only works for Gentle Phone).
+     * Generates a temporary pairing code (only works for gentle phone).
      */
     suspend fun generateTemporaryPairingCode(): String {
         return if (isRemoteSettingsEnabled()) {

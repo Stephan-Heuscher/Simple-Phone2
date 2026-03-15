@@ -100,7 +100,7 @@ class MainActivity : ComponentActivity() {
         settingsRepository = SettingsRepository(this)
         contactRepository = ContactRepository(this) // Kept for Activity usage if any, but VM handles data
         
-        // Trigger initial sync to ensure device is registered in Firestore (Gentle Phone)
+        // ensure device is registered in Firestore (gentle phone)
         lifecycleScope.launch {
             settingsRepository.syncRemoteSettings()
         }
@@ -631,7 +631,7 @@ fun SimplePhoneApp(
         AppScaffold(
             navController = navController, 
             currentScreenTitle = currentTitle,
-            onTitleClick = { if (currentTitle == "Simple Phone") onTitleClick() }
+            onTitleClick = { if (currentTitle == "simple phone") onTitleClick() }
         ) {
             NavHost(navController = navController, startDestination = Screen.Home.route) {
                 composable(Screen.Home.route) {
@@ -715,7 +715,7 @@ fun SimplePhoneApp(
                         onRingtoneSilenceTimeoutChange = { settingsRepository.ringtoneSilenceTimeout = it },
                         raiseToEarToAnswer = settings.raiseToEarToAnswer,
                         onRaiseToEarToAnswerChange = { settingsRepository.raiseToEarToAnswer = it },
-                        // Gentle Phone Specific
+                        // gentle phone specific
                         pairingCode = settingsRepository.getPairingCode(),
                         showPairingCode = settingsRepository.isRemoteSettingsEnabled(),
                         onGeneratePairingCode = { settingsRepository.generateTemporaryPairingCode() }

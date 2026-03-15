@@ -124,7 +124,7 @@ fun SettingsScreen(
     onRingtoneSilenceTimeoutChange: (Int) -> Unit = {},
     raiseToEarToAnswer: Boolean = false,
     onRaiseToEarToAnswerChange: (Boolean) -> Unit = {},
-    // Gentle Phone Specific
+    // gentle phone specific
     pairingCode: String? = null,
     showPairingCode: Boolean = false,
     onGeneratePairingCode: suspend () -> String = { "" }
@@ -202,7 +202,7 @@ fun SettingsScreen(
                 listTopY = coords.localToRoot(Offset.Zero).y
             }
     ) {
-        // --- Pairing Code Section (Gentle Phone Only) ---
+        // --- Pairing Code Section (gentle phone only) ---
         if (showPairingCode) {
             item {
                 var tempCode by remember { mutableStateOf<String?>(null) }

@@ -8,7 +8,7 @@ import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
 /**
- * Manages remote settings from Firebase Firestore for Gentle Phone.
+ * Manages remote settings from Firebase Firestore for gentle phone.
  * Allows caregivers to remotely configure the phone settings via a web portal.
  */
 class RemoteSettingsRepository(private val context: Context) {

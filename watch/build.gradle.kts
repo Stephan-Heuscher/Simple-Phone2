@@ -99,4 +99,8 @@ dependencies {
 
     // Wear OS support
     implementation("androidx.wear:wear:1.3.0")
+    
+    // Watch Face
+    implementation("androidx.wear.watchface:watchface:1.2.1")
+    implementation("androidx.wear.watchface:watchface-complications-data-source-ktx:1.2.1")
 }

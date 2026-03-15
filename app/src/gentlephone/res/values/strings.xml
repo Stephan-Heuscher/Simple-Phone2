@@ -3,7 +3,7 @@
     <!-- Note: app_name is set via resValue in build.gradle.kts -->
     
     <!-- Gentle Phone Specific Strings -->
-    <string name="gentle_phone_pairing_title">Confidant Pairing</string>
+    <string name="gentle_phone_pairing_title">confidant pairing</string>
     <string name="gentle_phone_pairing_desc">Share this code with your confidant so they can adjust your phone settings remotely:</string>
     <string name="gentle_phone_pairing_code">Pairing Code</string>
     <string name="gentle_phone_generating">Generating...</string>
@@ -21,5 +21,5 @@
     <string name="onboarding_welcome_desc">gentle phone is designed for easy use. A confidant can help adjust settings remotely.</string>
     
     <!-- Feedback Override -->
-    <string name="feedback_subject">gentle phone Feedback</string>
+    <string name="feedback_subject">gentle phone feedback</string>
 </resources>

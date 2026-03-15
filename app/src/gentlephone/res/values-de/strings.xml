@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Gentle Phone Deutsche Strings -->
-    <string name="gentle_phone_pairing_title">Vertraute Person Koppelung</string>
+    <string name="gentle_phone_pairing_title">vertraute person koppelung</string>
     <string name="gentle_phone_pairing_desc">Teilen Sie diesen Link mit Ihrer Vertrauensperson, damit diese Ihre Telefoneinstellungen aus der Ferne anpassen kann:</string>
     <string name="gentle_phone_pairing_code">Kopplungscode</string>
     <string name="gentle_phone_generating">Wird generiert...</string>
@@ -18,5 +18,5 @@
     <string name="onboarding_welcome_desc">gentle phone ist für einfache Bedienung konzipiert. Eine Vertrauensperson kann aus der Ferne anpassen helfen.</string>
     
     <!-- Feedback Override -->
-    <string name="feedback_subject">gentle phone Feedback</string>
+    <string name="feedback_subject">gentle phone feedback</string>
 </resources>
