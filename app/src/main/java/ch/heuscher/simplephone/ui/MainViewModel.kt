@@ -23,6 +23,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val contactRepository = ContactRepository(application)
     private val settingsRepository = SettingsRepository(application)
+    private val wearSyncManager = ch.heuscher.simplephone.data.WearSyncManager(application)
 
     data class ContactResolutionMaps(
         val normalized: Map<String, Contact>,
@@ -173,6 +174,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val favorites = sortedContacts.filter { it.isFavorite }
             withContext(Dispatchers.IO) {
                 settingsRepository.uploadFavorites(favorites)
+                wearSyncManager.syncContacts(favorites)
             }
 
             // Load Missed Calls

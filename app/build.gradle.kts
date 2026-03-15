@@ -137,6 +137,9 @@ dependencies {
 
     // WorkManager for background tasks (Missed Call Auto-Dismissal)
     implementation("androidx.work:work-runtime-ktx:2.10.0")
+    
+    // Wear OS Data Layer
+    implementation("com.google.android.gms:play-services-wearable:19.0.0")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("io.mockk:mockk:1.13.13")
