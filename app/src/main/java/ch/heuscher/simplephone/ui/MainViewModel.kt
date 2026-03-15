@@ -176,6 +176,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 settingsRepository.uploadFavorites(favorites)
                 wearSyncManager.syncContacts(favorites)
             }
+            
+            // Notify widget to update
+            ch.heuscher.simplephone.widget.FavoritesWidget.sendRefreshBroadcast(getApplication<Application>())
 
             // Load Missed Calls
             // Load Missed Calls (only if permissions granted, or mock them if demo mode extended to calls)

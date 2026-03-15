@@ -59,15 +59,17 @@ class FavoritesWidget : AppWidgetProvider() {
         }
 
         fun sendRefreshBroadcast(context: Context) {
-            val intent = Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
-            intent.component = android.content.ComponentName(context, FavoritesWidget::class.java)
-            context.sendBroadcast(intent)
-            
-            // Also notify the collection view to refresh
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val appWidgetIds = appWidgetManager.getAppWidgetIds(
                 android.content.ComponentName(context, FavoritesWidget::class.java)
             )
+            
+            val intent = Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
+            intent.component = android.content.ComponentName(context, FavoritesWidget::class.java)
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
+            context.sendBroadcast(intent)
+            
+            // Also notify the collection view to refresh
             appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.widget_list)
         }
     }
