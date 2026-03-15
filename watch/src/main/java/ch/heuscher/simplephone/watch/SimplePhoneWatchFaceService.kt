@@ -80,21 +80,22 @@ class SimplePhoneWatchFaceService : WatchFaceService() {
             color = Color.BLACK
         }
 
-        private val favoritesPaint = Paint().apply {
+        private val timePaint = Paint().apply {
             color = Color.WHITE
-            textSize = 50f
+            textSize = 100f
             isAntiAlias = true
             textAlign = Paint.Align.CENTER
             isFakeBoldText = true
         }
-        
-        private val sosPaint = Paint().apply {
-            color = Color.RED
-            textSize = 50f
+
+        private val instructionPaint = Paint().apply {
+            color = Color.GREEN
+            textSize = 30f
             isAntiAlias = true
             textAlign = Paint.Align.CENTER
-            isFakeBoldText = true
         }
+
+        private val formatter = DateTimeFormatter.ofPattern("HH:mm")
 
         override fun render(
             canvas: Canvas,
@@ -106,19 +107,17 @@ class SimplePhoneWatchFaceService : WatchFaceService() {
 
             val centerX = bounds.exactCenterX()
             val centerY = bounds.exactCenterY()
-            
-            val offset = 60f
 
-            // Draw "Favoriten" and "Notruf" directly on the watch face
-            canvas.drawText("Favoriten", centerX, centerY - offset / 2, favoritesPaint)
-            
-            if (renderParameters.drawMode == androidx.wear.watchface.DrawMode.INTERACTIVE) {
-                 canvas.drawText("Notruf", centerX, centerY + offset, sosPaint)
+            if (renderParameters.drawMode == androidx.wear.watchface.DrawMode.AMBIENT) {
+                // Standby mode: Show time
+                val timeText = zonedDateTime.format(formatter)
+                canvas.drawText(timeText, centerX, centerY, timePaint)
             } else {
-                 canvas.drawText("Notruf", centerX, centerY + offset, favoritesPaint) // less bright in ambient
+                // Interactive mode: Prompt to open app
+                canvas.drawText("Tippen für", centerX, centerY - 20f, instructionPaint)
+                canvas.drawText("Telefon", centerX, centerY + 20f, instructionPaint)
             }
         }
-
         override fun renderHighlightLayer(
             canvas: Canvas,
             bounds: Rect,
