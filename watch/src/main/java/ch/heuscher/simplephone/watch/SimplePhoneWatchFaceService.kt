@@ -9,7 +9,6 @@ import android.graphics.Rect
 import android.graphics.drawable.VectorDrawable
 import android.view.SurfaceHolder
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.toBitmap
 import androidx.wear.watchface.CanvasComplicationFactory
 import androidx.wear.watchface.CanvasType
 import androidx.wear.watchface.ComplicationSlotsManager
@@ -21,7 +20,9 @@ import androidx.wear.watchface.WatchFaceType
 import androidx.wear.watchface.WatchState
 import androidx.wear.watchface.style.CurrentUserStyleRepository
 import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class SimplePhoneWatchFaceService : WatchFaceService() {
 
@@ -42,6 +43,17 @@ class SimplePhoneWatchFaceService : WatchFaceService() {
             canvasType = CanvasType.HARDWARE
         )
 
+        CoroutineScope(Dispatchers.Main.immediate).launch {
+            watchState.isAmbient.collect { isAmbient ->
+                if (isAmbient == false) {
+                    val intent = Intent(applicationContext, MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
+                    startActivity(intent)
+                }
+            }
+        }
+
         return WatchFace(
             watchFaceType = WatchFaceType.DIGITAL,
             renderer = renderer
@@ -53,7 +65,7 @@ class SimplePhoneWatchFaceService : WatchFaceService() {
                     complicationSlot: androidx.wear.watchface.ComplicationSlot?
                 ) {
                     if (tapType == androidx.wear.watchface.TapType.UP) {
-                        // Launch the Simple Phone App on Tap
+                        // Launch the Simple Phone App on Tap (Fallback)
                         val intent = Intent(applicationContext, MainActivity::class.java).apply {
                             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                         }
@@ -81,10 +93,6 @@ class SimplePhoneWatchFaceService : WatchFaceService() {
         private var phoneIcon: Bitmap? = null
 
         override suspend fun createSharedAssets(): SimpleSharedAssets = SimpleSharedAssets()
-
-        private val backgroundPaint = Paint().apply {
-            color = Color.BLACK
-        }
 
         override fun render(
             canvas: Canvas,
@@ -114,7 +122,7 @@ class SimplePhoneWatchFaceService : WatchFaceService() {
                 val iconTop = centerY - (icon.height / 2f)
 
                 if (renderParameters.drawMode == androidx.wear.watchface.DrawMode.AMBIENT) {
-                    // Standby mode: Draw dimmed or outline phone icon
+                    // Standby mode: Draw dimmed phone icon
                     val ambientPaint = Paint().apply {
                         alpha = 100 // Dimmed
                     }
