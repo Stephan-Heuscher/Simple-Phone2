@@ -63,19 +63,23 @@ class WearSyncManager(private val context: Context) {
     private fun createAssetFromUri(uriString: String): Asset? {
         try {
             val uri = Uri.parse(uriString)
+            // Use contentResolver to open the contact photo URI
             val inputStream = context.contentResolver.openInputStream(uri)
             val bitmap = BitmapFactory.decodeStream(inputStream)
             inputStream?.close()
 
             if (bitmap != null) {
-                // Resize bitmap to save space (e.g., max 150x150 for watch)
-                val resizedBitmap = Bitmap.createScaledBitmap(bitmap, 150, 150, true)
+                // Keep image relatively large but not huge to ensure it transmits, but good quality
+                val resizedBitmap = Bitmap.createScaledBitmap(bitmap, 200, 200, true)
                 val byteStream = ByteArrayOutputStream()
-                resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, byteStream)
+                // Use high quality PNG instead of JPEG to preserve transparency if any, although JPEG is fine. Let's use PNG.
+                resizedBitmap.compress(Bitmap.CompressFormat.PNG, 100, byteStream)
                 return Asset.createFromBytes(byteStream.toByteArray())
+            } else {
+                Log.w("WearSyncManager", "BitmapFactory returned null for $uriString")
             }
         } catch (e: Exception) {
-            Log.e("WearSyncManager", "Failed to load image for sync", e)
+            Log.e("WearSyncManager", "Failed to load image for sync: $uriString", e)
         }
         return null
     }
