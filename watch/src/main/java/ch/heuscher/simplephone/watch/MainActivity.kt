@@ -175,12 +175,12 @@ fun ContactButton(contact: SyncedContact, onClick: () -> Unit) {
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF1E88E5)),
         modifier = Modifier
-            .fillMaxWidth(0.9f)
-            .padding(vertical = 6.dp)
-            .height(64.dp)
+            .fillMaxWidth(1f) // Use full width
+            .padding(vertical = 8.dp)
+            .height(84.dp) // Drastically increase height
     ) {
         Row(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start
         ) {
@@ -190,14 +190,14 @@ fun ContactButton(contact: SyncedContact, onClick: () -> Unit) {
                     contentDescription = "Contact photo",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(68.dp) // Much larger photo
                         .clip(CircleShape)
                 )
             } else {
                 // Fallback Avatar
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(68.dp)
                         .clip(CircleShape)
                         .background(Color.DarkGray),
                     contentAlignment = Alignment.Center
@@ -205,20 +205,20 @@ fun ContactButton(contact: SyncedContact, onClick: () -> Unit) {
                     Text(
                         text = contact.name.take(1).uppercase(),
                         color = Color.White,
-                        fontSize = 20.sp,
+                        fontSize = 28.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(16.dp))
 
             Text(
                 text = contact.name,
                 color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1
+                fontSize = 20.sp, // Readable text size
+                fontWeight = FontWeight.Bold
+                // Removed maxLines to let it wrap freely if needed
             )
         }
     }
@@ -230,14 +230,14 @@ fun ActionButton(text: String, color: Color, onClick: () -> Unit) {
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(backgroundColor = color),
         modifier = Modifier
-            .fillMaxWidth(0.9f)
-            .padding(vertical = 6.dp)
-            .height(64.dp)
+            .fillMaxWidth(1f) // Use full width
+            .padding(vertical = 8.dp)
+            .height(84.dp) // Match height
     ) {
         Text(
             text = text,
             color = Color.White,
-            fontSize = 20.sp,
+            fontSize = 22.sp,
             fontWeight = FontWeight.Bold
         )
     }

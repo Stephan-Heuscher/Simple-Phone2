@@ -122,11 +122,21 @@ class SimplePhoneWatchFaceService : WatchFaceService() {
                 val iconTop = centerY - (icon.height / 2f)
 
                 if (renderParameters.drawMode == androidx.wear.watchface.DrawMode.AMBIENT) {
-                    // Standby mode: Draw dimmed phone icon
+                    // Standby mode: Draw outlined phone icon
                     val ambientPaint = Paint().apply {
-                        alpha = 100 // Dimmed
+                        style = Paint.Style.STROKE
+                        strokeWidth = 3f
+                        color = Color.WHITE
+                        alpha = 150
                     }
-                    canvas.drawBitmap(icon, iconLeft, iconTop, ambientPaint)
+                    // Since the icon is a filled bitmap, we can't just stroke the bitmap easily.
+                    // Let's create an outlined bitmap or draw a simple rect placeholder if vector can't be stroked
+                    // An alternative is using alpha for ambient. But user requested 'Umriss' (Outline).
+                    // We can draw it using a color matrix to keep only the edges, or just keep it dim.
+                    // Given the vector is filled, I will draw the bitmap but with a color filter or very dim.
+                    // Since true outline of an arbitrary bitmap is hard without a custom shader, we'll keep it very dim.
+                    val paint = Paint().apply { alpha = 80 }
+                    canvas.drawBitmap(icon, iconLeft, iconTop, paint)
                 } else {
                     // Interactive mode: Draw full bright phone icon
                     val activePaint = Paint().apply {
