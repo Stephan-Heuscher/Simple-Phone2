@@ -2,17 +2,25 @@ package ch.heuscher.simplephone.watch
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -22,12 +30,18 @@ import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
+import com.google.android.gms.tasks.Tasks
+import com.google.android.gms.wearable.Asset
 import com.google.android.gms.wearable.DataClient
 import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.Wearable
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-data class SyncedContact(val id: String, val name: String, val number: String)
+data class SyncedContact(val id: String, val name: String, val number: String, val photoBitmap: Bitmap? = null)
 
 class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
 
@@ -73,26 +87,50 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
     }
 
     private fun updateContactsFromDataItem(dataItem: com.google.android.gms.wearable.DataItem) {
-        try {
-            val dataMap = DataMapItem.fromDataItem(dataItem).dataMap
-            val favoritesArray = dataMap.getDataMapArrayList("favorites")
-            
-            val newContacts = favoritesArray?.mapNotNull { map ->
-                val id = map.getString("id")
-                val name = map.getString("name")
-                val number = map.getString("number")
-                if (id != null && name != null && number != null) {
-                    SyncedContact(id, name, number)
-                } else null
-            } ?: emptyList()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val dataMap = DataMapItem.fromDataItem(dataItem).dataMap
+                val favoritesArray = dataMap.getDataMapArrayList("favorites")
 
-            runOnUiThread {
-                contactsState.clear()
-                contactsState.addAll(newContacts)
+                val newContacts = favoritesArray?.mapNotNull { map ->
+                    val id = map.getString("id")
+                    val name = map.getString("name")
+                    val number = map.getString("number")
+                    val asset = map.getAsset("photo")
+
+                    var bitmap: Bitmap? = null
+                    if (asset != null) {
+                        bitmap = loadBitmapFromAsset(asset)
+                    }
+
+                    if (id != null && name != null && number != null) {
+                        SyncedContact(id, name, number, bitmap)
+                    } else null
+                } ?: emptyList()
+
+                withContext(Dispatchers.Main) {
+                    contactsState.clear()
+                    contactsState.addAll(newContacts)
+                }
+            } catch (e: Exception) {
+                Log.e("WatchMainActivity", "Failed to parse contacts", e)
             }
-        } catch (e: Exception) {
-            Log.e("WatchMainActivity", "Failed to parse contacts", e)
         }
+    }
+
+    private fun loadBitmapFromAsset(asset: Asset): Bitmap? {
+        if (asset.fd == null) {
+            // Need to fetch it blocking
+            try {
+                val assetInputStream = Tasks.await(dataClient.getFdForAsset(asset)).inputStream
+                if (assetInputStream != null) {
+                    return BitmapFactory.decodeStream(assetInputStream)
+                }
+            } catch (e: Exception) {
+                Log.e("WatchMainActivity", "Error fetching asset blocking", e)
+            }
+        }
+        return null
     }
 }
 
@@ -104,8 +142,8 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>) {
             .background(Color.Black),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        item { Spacer(modifier = Modifier.height(24.dp)) }
-        
+        item { Spacer(modifier = Modifier.height(32.dp)) }
+
         if (contacts.isEmpty()) {
             item {
                 Text(
@@ -116,7 +154,7 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>) {
             }
         } else {
             items(contacts) { contact ->
-                ActionButton(text = contact.name, color = Color(0xFF1E88E5)) {
+                ContactButton(contact = contact) {
                     makeCall(context, contact.number)
                 }
             }
@@ -127,7 +165,62 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>) {
                 makeCall(context, "112")
             }
         }
-        item { Spacer(modifier = Modifier.height(24.dp)) }
+        item { Spacer(modifier = Modifier.height(32.dp)) }
+    }
+}
+
+@Composable
+fun ContactButton(contact: SyncedContact, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF1E88E5)),
+        modifier = Modifier
+            .fillMaxWidth(0.9f)
+            .padding(vertical = 6.dp)
+            .height(64.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            if (contact.photoBitmap != null) {
+                Image(
+                    bitmap = contact.photoBitmap.asImageBitmap(),
+                    contentDescription = "Contact photo",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                )
+            } else {
+                // Fallback Avatar
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(Color.DarkGray),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = contact.name.take(1).uppercase(),
+                        color = Color.White,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Text(
+                text = contact.name,
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1
+            )
+        }
     }
 }
 
@@ -142,9 +235,9 @@ fun ActionButton(text: String, color: Color, onClick: () -> Unit) {
             .height(64.dp)
     ) {
         Text(
-            text = text, 
-            color = Color.White, 
-            fontSize = 20.sp, 
+            text = text,
+            color = Color.White,
+            fontSize = 20.sp,
             fontWeight = FontWeight.Bold
         )
     }
@@ -157,4 +250,3 @@ private fun makeCall(context: Context, phoneNumber: String) {
     }
     context.startActivity(intent)
 }
-

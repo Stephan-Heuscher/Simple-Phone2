@@ -1,11 +1,15 @@
 package ch.heuscher.simplephone.watch
 
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
+import android.graphics.drawable.VectorDrawable
 import android.view.SurfaceHolder
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import androidx.wear.watchface.CanvasComplicationFactory
 import androidx.wear.watchface.CanvasType
 import androidx.wear.watchface.ComplicationSlotsManager
@@ -74,28 +78,13 @@ class SimplePhoneWatchFaceService : WatchFaceService() {
         clearWithBackgroundTintBeforeRenderingHighlightLayer = true
     ) {
 
+        private var phoneIcon: Bitmap? = null
+
         override suspend fun createSharedAssets(): SimpleSharedAssets = SimpleSharedAssets()
 
         private val backgroundPaint = Paint().apply {
             color = Color.BLACK
         }
-
-        private val timePaint = Paint().apply {
-            color = Color.WHITE
-            textSize = 100f
-            isAntiAlias = true
-            textAlign = Paint.Align.CENTER
-            isFakeBoldText = true
-        }
-
-        private val instructionPaint = Paint().apply {
-            color = Color.GREEN
-            textSize = 30f
-            isAntiAlias = true
-            textAlign = Paint.Align.CENTER
-        }
-
-        private val formatter = DateTimeFormatter.ofPattern("HH:mm")
 
         override fun render(
             canvas: Canvas,
@@ -108,14 +97,35 @@ class SimplePhoneWatchFaceService : WatchFaceService() {
             val centerX = bounds.exactCenterX()
             val centerY = bounds.exactCenterY()
 
-            if (renderParameters.drawMode == androidx.wear.watchface.DrawMode.AMBIENT) {
-                // Standby mode: Show time
-                val timeText = zonedDateTime.format(formatter)
-                canvas.drawText(timeText, centerX, centerY, timePaint)
-            } else {
-                // Interactive mode: Prompt to open app
-                canvas.drawText("Tippen für", centerX, centerY - 20f, instructionPaint)
-                canvas.drawText("Telefon", centerX, centerY + 20f, instructionPaint)
+            if (phoneIcon == null) {
+                val drawable = ContextCompat.getDrawable(applicationContext, R.drawable.ic_call_24) as? VectorDrawable
+                drawable?.let {
+                    val iconSize = (bounds.width() * 0.4f).toInt()
+                    it.setBounds(0, 0, iconSize, iconSize)
+                    val bitmap = Bitmap.createBitmap(iconSize, iconSize, Bitmap.Config.ARGB_8888)
+                    val canvasForIcon = Canvas(bitmap)
+                    it.draw(canvasForIcon)
+                    phoneIcon = bitmap
+                }
+            }
+
+            phoneIcon?.let { icon ->
+                val iconLeft = centerX - (icon.width / 2f)
+                val iconTop = centerY - (icon.height / 2f)
+
+                if (renderParameters.drawMode == androidx.wear.watchface.DrawMode.AMBIENT) {
+                    // Standby mode: Draw dimmed or outline phone icon
+                    val ambientPaint = Paint().apply {
+                        alpha = 100 // Dimmed
+                    }
+                    canvas.drawBitmap(icon, iconLeft, iconTop, ambientPaint)
+                } else {
+                    // Interactive mode: Draw full bright phone icon
+                    val activePaint = Paint().apply {
+                        alpha = 255 // Full brightness
+                    }
+                    canvas.drawBitmap(icon, iconLeft, iconTop, activePaint)
+                }
             }
         }
         override fun renderHighlightLayer(
