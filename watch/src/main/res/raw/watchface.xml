@@ -1,8 +1,8 @@
 <WatchFace width="450" height="450" shape="CIRCLE">
-    <!-- WatchFace Format requires a background -->
     <Scene backgroundColor="#000000">
+        
         <!-- We use an invisible complication or simple tap target to launch the app.
-             However, since we want to launch the app on wake anyway, 
+             Since we want to launch the app on wake anyway, 
              and just show a phone icon, we define it here -->
         
         <!-- Condition to show filled vs outlined icon based on ambient mode -->
@@ -12,9 +12,10 @@
             </Expression>
             
             <!-- Ambient Mode (Standby): Show dimmed/outlined version -->
-            <!-- Since WFF doesn't easily outline vectors on the fly, we just show a dimmed image -->
+            <!-- Since WFF doesn't easily outline vectors on the fly without a custom image, 
+                 we just show a dimmed image (alpha 150) -->
             <Compare expression="ambient">
-                <PartImage x="135" y="135" width="180" height="180" alpha="150">
+                <PartImage x="135" y="135" width="180" height="180" alpha="100">
                     <Image resource="ic_call_24" />
                 </PartImage>
             </Compare>
@@ -30,7 +31,7 @@
         <!-- Tap Target to launch our main activity -->
         <ListConfiguration id="1">
             <BoundingBox x="0" y="0" width="450" height="450" />
-            <!-- Open the app when tapping the screen -->
+            <Launch action="android.intent.action.MAIN" targetPackage="ch.heuscher.simplephone.watch" targetClass="ch.heuscher.simplephone.watch.MainActivity"/>
         </ListConfiguration>
     </Scene>
 </WatchFace>
