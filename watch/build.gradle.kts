@@ -32,7 +32,9 @@ android {
         val minor = versionProps.getProperty("VERSION_MINOR", "0")
         val patch = versionProps.getProperty("VERSION_PATCH", "0")
         
-        versionCode = code
+        // Wear OS requires a distinct version code from the phone app if they share the package name.
+        // We add an offset to ensure it's unique while still tracking the base version.
+        versionCode = code + 100000
         versionName = "$major.$minor.$patch"
     }
 
