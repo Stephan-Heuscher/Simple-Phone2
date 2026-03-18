@@ -126,7 +126,7 @@ platform :android do
     upload_to_play_store(
       track: 'internal',
       package_name: 'ch.heuscher.simplephone',
-      aabs: [
+      aab_paths: [
         File.join(root_dir, "app/build/outputs/bundle/simplephoneRelease/app-simplephone-release.aab"),
         File.join(root_dir, "watch/build/outputs/bundle/simplephoneRelease/watch-simplephone-release.aab")
       ]
@@ -269,7 +269,7 @@ platform :android do
     upload_to_play_store(
       track: 'internal',
       package_name: 'ch.heuscher.simplephone',
-      aabs: [aab_path, watch_aab_path]
+      aab_paths: [aab_path, watch_aab_path]
     )
     deployed_track = 'internal'
     puts "✅ Successfully deployed to INTERNAL!"
@@ -430,7 +430,7 @@ platform :android do
     upload_to_play_store(
       track: 'internal',
       package_name: gentlephone_package,
-      aabs: [aab_path, watch_aab_path],
+      aab_paths: [aab_path, watch_aab_path],
       metadata_path: File.expand_path("metadata/gentlephone", File.dirname(__FILE__))
     )
     puts "✅ gentle phone deployed successfully!"
