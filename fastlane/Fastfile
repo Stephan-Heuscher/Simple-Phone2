@@ -126,11 +126,12 @@ platform :android do
     upload_to_play_store(
       track: 'internal',
       package_name: 'ch.heuscher.simplephone',
-      aab_paths: [
-        File.join(root_dir, "app/build/outputs/bundle/simplephoneRelease/app-simplephone-release.aab"),
-        File.join(root_dir, "watch/build/outputs/bundle/simplephoneRelease/watch-simplephone-release.aab")
-      ]
-      # json_key_data is picked up from SUPPLY_JSON_KEY_DATA environment variable
+      aab: File.join(root_dir, "app/build/outputs/bundle/simplephoneRelease/app-simplephone-release.aab")
+    )
+    upload_to_play_store(
+      track: 'wear:internal',
+      package_name: 'ch.heuscher.simplephone',
+      aab: File.join(root_dir, "watch/build/outputs/bundle/simplephoneRelease/watch-simplephone-release.aab")
     )
 
     # 5. Auto-Increment Version (Properties File)
@@ -269,7 +270,12 @@ platform :android do
     upload_to_play_store(
       track: 'internal',
       package_name: 'ch.heuscher.simplephone',
-      aab_paths: [aab_path, watch_aab_path]
+      aab: aab_path
+    )
+    upload_to_play_store(
+      track: 'wear:internal',
+      package_name: 'ch.heuscher.simplephone',
+      aab: watch_aab_path
     )
     deployed_track = 'internal'
     puts "✅ Successfully deployed to INTERNAL!"
@@ -290,6 +296,16 @@ platform :android do
         skip_upload_aab: true,
         skip_upload_apk: true,
         version_code: build_number,
+        changes_not_sent_for_review: true,
+        rescue_changes_not_sent_for_review: false,
+        package_name: 'ch.heuscher.simplephone'
+      )
+      upload_to_play_store(
+        track: 'wear:internal',
+        track_promote_to: 'wear:production',
+        skip_upload_aab: true,
+        skip_upload_apk: true,
+        version_code: build_number + 100000,
         changes_not_sent_for_review: true,
         rescue_changes_not_sent_for_review: false,
         package_name: 'ch.heuscher.simplephone'
@@ -430,7 +446,13 @@ platform :android do
     upload_to_play_store(
       track: 'internal',
       package_name: gentlephone_package,
-      aab_paths: [aab_path, watch_aab_path],
+      aab: aab_path,
+      metadata_path: File.expand_path("metadata/gentlephone", File.dirname(__FILE__))
+    )
+    upload_to_play_store(
+      track: 'wear:internal',
+      package_name: gentlephone_package,
+      aab: watch_aab_path,
       metadata_path: File.expand_path("metadata/gentlephone", File.dirname(__FILE__))
     )
     puts "✅ gentle phone deployed successfully!"
