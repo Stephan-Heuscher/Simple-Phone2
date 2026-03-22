@@ -28,6 +28,9 @@ import ch.heuscher.simplephone.data.ContactRepository
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 /**
@@ -289,6 +292,9 @@ class CallService : InCallService() {
             } else {
                 if (state == Call.STATE_ACTIVE || state == Call.STATE_DIALING) {
                     showOngoingCallNotification(call)
+                    
+                    // Inform watch that the call is now active
+                    sendWearMessage("/call_answered", "")
                 }
                 CallService.notifyCallStateChanged()
                 updateSpeakerHighlightState() // Re-evaluate glow when call state changes (e.g. Ringing -> Active)
@@ -304,6 +310,8 @@ class CallService : InCallService() {
                 CallService.callerNumber = null
                 CallService.callerName = null
                 stopRinging()
+                // Inform watch that the call ended
+                sendWearMessage("/call_ended", "")
             }
         }
         
@@ -578,6 +586,26 @@ class CallService : InCallService() {
             putExtra("is_incoming", call.state == Call.STATE_RINGING)
         }
         startActivity(intent)
+
+        // Inform Watch of incoming call
+        if (call.state == Call.STATE_RINGING) {
+            sendWearMessage("/incoming_call", "${CallService.callerName ?: CallService.callerNumber ?: "Unbekannt"}")
+        }
+    }
+
+    private fun sendWearMessage(path: String, payload: String) {
+        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val nodeClient = com.google.android.gms.wearable.Wearable.getNodeClient(this@CallService)
+                val nodes = com.google.android.gms.tasks.Tasks.await(nodeClient.connectedNodes)
+                val messageClient = com.google.android.gms.wearable.Wearable.getMessageClient(this@CallService)
+                for (node in nodes) {
+                    messageClient.sendMessage(node.id, path, payload.toByteArray())
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to send wear message", e)
+            }
+        }
     }
 
     override fun onCallRemoved(call: Call) {

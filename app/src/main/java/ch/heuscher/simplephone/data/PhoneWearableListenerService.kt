@@ -10,6 +10,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.util.Log
+import ch.heuscher.simplephone.call.CallService
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
 import kotlinx.coroutines.CoroutineScope
@@ -25,8 +26,16 @@ class PhoneWearableListenerService : WearableListenerService() {
         super.onMessageReceived(messageEvent)
         Log.d("PhoneWearableListener", "Received message: ${messageEvent.path}")
         
-        if (messageEvent.path == "/find_my_phone") {
-            startRingingAndVibrating()
+        when (messageEvent.path) {
+            "/find_my_phone" -> startRingingAndVibrating()
+            "/answer_call" -> {
+                Log.d("PhoneWearableListener", "Watch requested to answer call")
+                CallService.answerCall()
+            }
+            "/reject_call" -> {
+                Log.d("PhoneWearableListener", "Watch requested to reject call")
+                CallService.rejectCall()
+            }
         }
     }
 
