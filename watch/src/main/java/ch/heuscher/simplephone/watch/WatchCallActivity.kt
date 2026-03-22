@@ -60,6 +60,9 @@ class WatchCallActivity : ComponentActivity() {
                         _isAnswered.value = true
                         sendMessageToPhone("/answer_call")
                     },
+                    onSilence = {
+                        sendMessageToPhone("/silence_ringer")
+                    },
                     onReject = {
                         sendMessageToPhone("/reject_call")
                         finish()
@@ -92,40 +95,29 @@ class WatchCallActivity : ComponentActivity() {
 }
 
 @Composable
-fun WatchCallScreen(callerName: String, isAnswered: Boolean, onAccept: () -> Unit, onReject: () -> Unit) {
+fun WatchCallScreen(callerName: String, isAnswered: Boolean, onAccept: () -> Unit, onSilence: () -> Unit, onReject: () -> Unit) {
     Column(modifier = Modifier.fillMaxSize()) {
-        // Top Half (or Full Screen if answered): Red (Reject/End Call)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .background(Color(0xFFE53935))
-                .clickable {
-                    onReject()
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                if (isAnswered) {
-                     Text(
-                        text = callerName,
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Normal,
-                        textAlign = TextAlign.Center
-                    )
-                }
+        if (!isAnswered) {
+            // Top Half: Blue (Silence Ringtone)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .background(Color(0xFF1E88E5))
+                    .clickable {
+                        onSilence()
+                    },
+                contentAlignment = Alignment.Center
+            ) {
                 Text(
-                    text = "Auflegen",
+                    text = "Kein Ton",
                     color = Color.White,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
-        }
 
-        // Bottom Half: Green (Accept) - only show if not answered yet
-        if (!isAnswered) {
+            // Bottom Half: Green (Accept)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -146,6 +138,34 @@ fun WatchCallScreen(callerName: String, isAnswered: Boolean, onAccept: () -> Uni
                     )
                     Text(
                         text = "Annehmen",
+                        color = Color.White,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        } else {
+            // Full Screen: Red (Reject/End Call)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .background(Color(0xFFE53935))
+                    .clickable {
+                        onReject()
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = callerName,
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Normal,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = "Auflegen",
                         color = Color.White,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold

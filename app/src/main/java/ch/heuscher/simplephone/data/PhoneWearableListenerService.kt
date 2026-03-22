@@ -36,6 +36,10 @@ class PhoneWearableListenerService : WearableListenerService() {
                 Log.d("PhoneWearableListener", "Watch requested to reject call")
                 CallService.rejectCall()
             }
+            "/silence_ringer" -> {
+                Log.d("PhoneWearableListener", "Watch requested to silence ringer")
+                CallService.silenceRinger()
+            }
         }
     }
 
