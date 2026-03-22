@@ -1,0 +1,13 @@
+# Pass incoming mail through Rspamd and rewrite headers
+:0fw
+| /usr/bin/rspamc --mime
+
+# If the Spam Score is 8.0 or higher (8, 9, or any two-digit number like 10-15) -> real_spam
+:0:
+* ^X-Spam-Score: *(8|9|[1-9][0-9]+)\.
+spam/real_spam
+
+# If Rspamd took action (add header, reject, rewrite subject, greylist) but it's under 8 -> quarantine
+:0:
+* ^X-Spam-Action: *(add header|reject|rewrite subject|greylist)
+spam/quarantine

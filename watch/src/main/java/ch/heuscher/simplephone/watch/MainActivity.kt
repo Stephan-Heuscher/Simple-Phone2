@@ -165,7 +165,29 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>) {
                 makeCall(context, "112")
             }
         }
+        
+        item {
+            ActionButton(text = "Handy suchen", color = Color(0xFFFB8C00)) {
+                findMyPhone(context)
+            }
+        }
+        
         item { Spacer(modifier = Modifier.height(32.dp)) }
+    }
+}
+
+private fun findMyPhone(context: Context) {
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val nodeClient = Wearable.getNodeClient(context)
+            val nodes = Tasks.await(nodeClient.connectedNodes)
+            val messageClient = Wearable.getMessageClient(context)
+            for (node in nodes) {
+                messageClient.sendMessage(node.id, "/find_my_phone", ByteArray(0))
+            }
+        } catch (e: Exception) {
+            Log.e("WatchMainActivity", "Failed to send find phone message", e)
+        }
     }
 }
 
