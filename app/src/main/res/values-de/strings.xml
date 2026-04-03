@@ -153,6 +153,12 @@
     <string name="notification_blocked_call_content">Blockierte Nummer: %s</string>
     <string name="settings_last_blocked">(Zuletzt blockiert: %s)</string>
 
+    <!-- Notifications -->
+    <string name="notification_missed_call_title">Verpasster Anruf</string>
+    <string name="notification_missed_call_action_callback">Zurückrufen</string>
+    <string name="notification_missed_call_action_ignore">Ignorieren</string>
+    <string name="notification_ongoing_call_title">Aktiver Anruf</string>
+
     <!-- Zoom Factor -->
     <string name="settings_zoom_factor">UI Skalierung / Zoom</string>
     <string name="zoom_factor_current_screen">Aktueller Bildschirm (%s)</string>

@@ -1335,7 +1335,7 @@ fun DtmfKeypadOverlay(
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             ) {
-                Text("Hide Keypad", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.hide_keypad), style = MaterialTheme.typography.titleMedium)
             }
         }
     }

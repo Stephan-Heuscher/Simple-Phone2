@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
@@ -45,7 +46,7 @@ class WatchCallActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        val callerName = intent.getStringExtra("CALLER_NAME") ?: "Anruf"
+        val callerName = intent.getStringExtra("CALLER_NAME") ?: getString(R.string.watch_call_label)
 
         // Register receivers
         registerReceiver(endCallReceiver, IntentFilter("ch.heuscher.simplephone.watch.CALL_ENDED"), RECEIVER_NOT_EXPORTED)
@@ -110,7 +111,7 @@ fun WatchCallScreen(callerName: String, isAnswered: Boolean, onAccept: () -> Uni
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Kein Ton",
+                    text = stringResource(R.string.watch_silence),
                     color = Color.White,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
@@ -137,7 +138,7 @@ fun WatchCallScreen(callerName: String, isAnswered: Boolean, onAccept: () -> Uni
                         textAlign = TextAlign.Center
                     )
                     Text(
-                        text = "Annehmen",
+                        text = stringResource(R.string.watch_accept),
                         color = Color.White,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
@@ -165,7 +166,7 @@ fun WatchCallScreen(callerName: String, isAnswered: Boolean, onAccept: () -> Uni
                         textAlign = TextAlign.Center
                     )
                     Text(
-                        text = "Auflegen",
+                        text = stringResource(R.string.watch_hangup),
                         color = Color.White,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold

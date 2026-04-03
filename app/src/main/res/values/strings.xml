@@ -166,6 +166,12 @@
     <string name="notification_blocked_call_content">Blocked number: %s</string>
     <string name="settings_last_blocked">(Last blocked: %s)</string>
 
+    <!-- Notifications -->
+    <string name="notification_missed_call_title">Missed Call</string>
+    <string name="notification_missed_call_action_callback">Call Back</string>
+    <string name="notification_missed_call_action_ignore">Ignore</string>
+    <string name="notification_ongoing_call_title">Ongoing Call</string>
+
     <!-- Zoom Factor -->
     <string name="settings_zoom_factor">UI Scale / Zoom</string>
     <string name="zoom_factor_current_screen">Current Screen (%s)</string>

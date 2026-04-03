@@ -24,6 +24,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.material.Button
@@ -147,7 +148,7 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>) {
         if (contacts.isEmpty()) {
             item {
                 Text(
-                    text = "Keine Favoriten",
+                    text = stringResource(R.string.watch_no_favorites),
                     color = Color.Gray,
                     modifier = Modifier.padding(16.dp)
                 )
@@ -161,13 +162,13 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>) {
         }
 
         item {
-            ActionButton(text = "Notruf", color = Color(0xFFE53935)) {
-                makeCall(context, "112")
+            ActionButton(text = stringResource(R.string.watch_emergency_call), color = Color(0xFFE53935)) {
+                makeCall(context, context.getString(R.string.watch_emergency_number))
             }
         }
         
         item {
-            ActionButton(text = "Handy suchen", color = Color(0xFFFB8C00)) {
+            ActionButton(text = stringResource(R.string.watch_find_phone), color = Color(0xFFFB8C00)) {
                 findMyPhone(context)
             }
         }
@@ -239,8 +240,9 @@ fun ContactButton(contact: SyncedContact, onClick: () -> Unit) {
                 text = contact.name,
                 color = Color.White,
                 fontSize = 20.sp, // Readable text size
-                fontWeight = FontWeight.Bold
-                // Removed maxLines to let it wrap freely if needed
+                fontWeight = FontWeight.Bold,
+                maxLines = 2,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
         }
     }

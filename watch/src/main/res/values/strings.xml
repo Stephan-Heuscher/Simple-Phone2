@@ -1,4 +1,19 @@
 <resources>
     <string name="app_name">Simple Phone Watch</string>
-    <string name="welcome_message">Welcome to Simple Phone Wear OS interface</string>
+
+    <!-- Main Screen -->
+    <string name="watch_no_favorites">No favorites</string>
+    <string name="watch_emergency_call">Emergency</string>
+    <string name="watch_emergency_number">112</string>
+    <string name="watch_find_phone">Find Phone</string>
+
+    <!-- Call Screen -->
+    <string name="watch_silence">Silence</string>
+    <string name="watch_accept">Accept</string>
+    <string name="watch_hangup">Hang up</string>
+    <string name="watch_call_label">Call</string>
+
+    <!-- Complication -->
+    <string name="watch_complication_open">Open Simple Phone</string>
+    <string name="watch_complication_label">Phone</string>
 </resources>

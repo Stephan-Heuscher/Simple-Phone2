@@ -135,28 +135,7 @@ class SettingsRepository(private val context: Context) {
     private fun startRemoteSettingsSync() {
         remoteSettings.listenForSettingsChanges { settings ->
             remoteCache = settings
-            
-            // Apply Zoom from Remote if present
-            getRemoteFloat(REMOTE_KEY_ZOOM_FACTOR)?.let { zoom ->
-                // Apply to all screen sizes for consistency when set remotely
-                prefs.edit()
-                    .putFloat(KEY_ZOOM_COMPACT, zoom)
-                    .putFloat(KEY_ZOOM_MEDIUM, zoom)
-                    .putFloat(KEY_ZOOM_EXPANDED, zoom)
-                    .apply()
-            }
-
-            // Apply Favorites Order from Remote if present
-            // The remote list is a list of Strings (IDs)
-            val remoteOrder = remoteCache?.get(REMOTE_KEY_FAVORITES_ORDER) as? List<*>
-            if (remoteOrder != null) {
-                // Safely cast to List<String>
-                val idList = remoteOrder.filterIsInstance<String>()
-                if (idList.isNotEmpty()) {
-                    saveFavoritesOrder(idList)
-                }
-            }
-
+            applyRemoteOverrides()
             refreshSettings()
         }
     }
@@ -167,23 +146,32 @@ class SettingsRepository(private val context: Context) {
     suspend fun syncRemoteSettings() {
         if (BuildConfig.REMOTE_SETTINGS_ENABLED) {
             remoteCache = remoteSettings.fetchRemoteSettings()
-            // Apply Zoom logic here too... (duplicated for now, could be refactored)
-             getRemoteFloat(REMOTE_KEY_ZOOM_FACTOR)?.let { zoom ->
-                prefs.edit()
-                    .putFloat(KEY_ZOOM_COMPACT, zoom)
-                    .putFloat(KEY_ZOOM_MEDIUM, zoom)
-                    .putFloat(KEY_ZOOM_EXPANDED, zoom)
-                    .apply()
-            }
-            // Apply Favorites Order logic here too...
-            val remoteOrder = remoteCache?.get(REMOTE_KEY_FAVORITES_ORDER) as? List<*>
-            if (remoteOrder != null) {
-                val idList = remoteOrder.filterIsInstance<String>()
-                if (idList.isNotEmpty()) {
-                    saveFavoritesOrder(idList)
-                }
-            }
+            applyRemoteOverrides()
             refreshSettings()
+        }
+    }
+    
+    /**
+     * Apply remote overrides for zoom and favorites order to local SharedPreferences.
+     * Shared logic used by both the real-time listener and the manual sync path.
+     */
+    private fun applyRemoteOverrides() {
+        // Apply Zoom from Remote if present
+        getRemoteFloat(REMOTE_KEY_ZOOM_FACTOR)?.let { zoom ->
+            prefs.edit()
+                .putFloat(KEY_ZOOM_COMPACT, zoom)
+                .putFloat(KEY_ZOOM_MEDIUM, zoom)
+                .putFloat(KEY_ZOOM_EXPANDED, zoom)
+                .apply()
+        }
+
+        // Apply Favorites Order from Remote if present
+        val remoteOrder = remoteCache?.get(REMOTE_KEY_FAVORITES_ORDER) as? List<*>
+        if (remoteOrder != null) {
+            val idList = remoteOrder.filterIsInstance<String>()
+            if (idList.isNotEmpty()) {
+                saveFavoritesOrder(idList)
+            }
         }
     }
     

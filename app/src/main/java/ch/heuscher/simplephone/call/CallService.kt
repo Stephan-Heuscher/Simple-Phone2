@@ -24,13 +24,16 @@ import android.telecom.Call
 import android.telecom.CallAudioState
 import android.telecom.InCallService
 import android.util.Log
+import ch.heuscher.simplephone.R
 import ch.heuscher.simplephone.data.ContactRepository
+import ch.heuscher.simplephone.data.SettingsRepository
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 
 /**
@@ -62,30 +65,23 @@ class CallService : InCallService() {
         private val recentCallers = mutableMapOf<String, Long>()
         private const val REPEAT_CALLER_WINDOW_MS = 15 * 60 * 1000L // 15 minutes
         private const val TAG = "CallService"
-        private var instance: CallService? = null
+        @Volatile private var instance: CallService? = null
         
-        // Singleton to track current call state
-        var currentCall: Call? = null
+        // Singleton to track current call state — @Volatile for cross-thread visibility
+        @Volatile var currentCall: Call? = null
         
-        var callState: Int = Call.STATE_DISCONNECTED
+        @Volatile var callState: Int = Call.STATE_DISCONNECTED
             
-        var callerNumber: String? = null
+        @Volatile var callerNumber: String? = null
             
-        var callerName: String? = null
+        @Volatile var callerName: String? = null
 
-        var currentAudioState: CallAudioState? = null
-            
-        // Rename to shouldHighlightSpeaker for clarity, though we can keep the variable name if we want minimal diff, 
-        // but user requested "remove all other changes" which implies a cleaner implementation.
-        // Let's use the existing variable name 'shouldSuggestSpeaker' but change semantics to 'shouldHighlightSpeaker' to avoid massive rename across files immediately?
-        // No, let's do it right. Rename to shouldHighlightSpeaker.
+        @Volatile var currentAudioState: CallAudioState? = null
         
-        var shouldHighlightSpeaker: Boolean = false
-        
-        // Removed userDeclinedSpeakerSuggestion as it's no longer needed (passive glow)
+        @Volatile var shouldHighlightSpeaker: Boolean = false
             
-        // Listeners for call state changes
-        private val callStateListeners = mutableListOf<CallStateListener>()
+        // Thread-safe listener list (accessed from main thread + IO coroutines)
+        private val callStateListeners = CopyOnWriteArrayList<CallStateListener>()
         
         fun addCallStateListener(listener: CallStateListener) {
             callStateListeners.add(listener)
@@ -255,7 +251,6 @@ class CallService : InCallService() {
     private fun checkRaiseToEarToAnswer() {
         if (CallService.callState != Call.STATE_RINGING) return
         
-        val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(this)
         if (!settingsRepository.raiseToEarToAnswer) return
         
         if (isPhoneAtEar && isPhoneVertical) {
@@ -323,9 +318,15 @@ class CallService : InCallService() {
     
 
 
+    // Reusable repositories — avoids creating new instances (with Firestore listeners) per event
+    private lateinit var settingsRepository: SettingsRepository
+    private lateinit var contactRepository: ContactRepository
+
     override fun onCreate() {
         super.onCreate()
         instance = this
+        settingsRepository = SettingsRepository(this)
+        contactRepository = ContactRepository(this)
         // Initialize vibrator
         vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
@@ -343,9 +344,6 @@ class CallService : InCallService() {
                 "SimplePhone:ServiceProximityWakeLock"
             )
         }
-        
-
-
         
         // Initialize Sensor Manager
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as android.hardware.SensorManager
@@ -369,9 +367,6 @@ class CallService : InCallService() {
      * Returns true if we should ring, false if DND blocks it.
      */
     private fun shouldRingForCall(callerNumber: String?): Boolean {
-        val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(this)
-        val contactRepository = ContactRepository(this)
-
         val policy = DndRingPolicy(
             blockUnknownCallers = settingsRepository.blockUnknownCallers,
             contactLookup = { number -> contactRepository.getContactByNumber(number) },
@@ -429,7 +424,6 @@ class CallService : InCallService() {
             ringtone?.play()
             
             // Schedule automatic silence if timeout is set
-            val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(this)
             val timeoutSeconds = settingsRepository.ringtoneSilenceTimeout
             if (timeoutSeconds > 0) {
                 Log.d(TAG, "Scheduling automatic silence after $timeoutSeconds seconds")
@@ -535,14 +529,12 @@ class CallService : InCallService() {
                  // If shouldRing returns false, it might be DND or our Blocking.
                  // We should check if it's our blocking specifically to reject.
                  // Re-checking blocking logic to be precise
-                 val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(this)
                  var isBlocked = false
                  if (settingsRepository.blockUnknownCallers) {
                      val number = CallService.callerNumber?.replace(Regex("[^0-9+]"), "")
                      if (number.isNullOrEmpty()) {
                          isBlocked = true
                      } else {
-                         val contactRepository = ContactRepository(this)
                          val contact = contactRepository.getContactByNumber(number)
                          if (contact == null) isBlocked = true
                      }
@@ -589,7 +581,7 @@ class CallService : InCallService() {
 
         // Inform Watch of incoming call
         if (call.state == Call.STATE_RINGING) {
-            sendWearMessage("/incoming_call", "${CallService.callerName ?: CallService.callerNumber ?: "Unbekannt"}")
+            sendWearMessage("/incoming_call", "${CallService.callerName ?: CallService.callerNumber ?: getString(R.string.unknown_contact)}")
         }
     }
 
@@ -612,13 +604,6 @@ class CallService : InCallService() {
         Log.d(TAG, "Call removed")
         call.unregisterCallback(callCallback)
         stopRinging()
-        
-        // Release wake lock
-        if (wakeLock?.isHeld == true) {
-            wakeLock?.release()
-        }
-        
-
         
         // Release wake lock
         if (wakeLock?.isHeld == true) {
@@ -702,7 +687,6 @@ class CallService : InCallService() {
         }
         
         // Try to get contact photo
-        val contactRepository = ContactRepository(context)
         val contact = contactRepository.getContactByNumber(number)
         
         // Load contact photo bitmap
@@ -750,13 +734,13 @@ class CallService : InCallService() {
         
         val notificationBuilder = androidx.core.app.NotificationCompat.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.sym_call_missed)
-            .setContentTitle("Missed Call")
+            .setContentTitle(getString(R.string.notification_missed_call_title))
             .setContentText(displayName)
             .setPriority(androidx.core.app.NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
-            .addAction(android.R.drawable.sym_action_call, "Call Back", callBackPendingIntent)
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Ignore", ignorePendingIntent)
+            .addAction(android.R.drawable.sym_action_call, getString(R.string.notification_missed_call_action_callback), callBackPendingIntent)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.notification_missed_call_action_ignore), ignorePendingIntent)
         
         // Add large icon (contact photo) if available
         if (contactBitmap != null) {
@@ -768,7 +752,6 @@ class CallService : InCallService() {
         notificationManager.notify(notificationId, notification)
 
         // Schedule automatic dismissal
-        val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(context)
         val missedCallsHours = settingsRepository.missedCallsHours.toLong()
         
         val workRequest = OneTimeWorkRequestBuilder<ch.heuscher.simplephone.workers.MissedCallNotificationWorker>()
@@ -807,8 +790,8 @@ class CallService : InCallService() {
         
         val notification = androidx.core.app.NotificationCompat.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.sym_call_outgoing)
-            .setContentTitle("Ongoing Call")
-            .setContentText(callerName ?: ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(callerNumber ?: "Unknown"))
+            .setContentTitle(getString(R.string.notification_ongoing_call_title))
+            .setContentText(callerName ?: ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.format(callerNumber ?: getString(R.string.unknown_contact)))
             .setPriority(androidx.core.app.NotificationCompat.PRIORITY_LOW)
             .setContentIntent(pendingIntent)
             .setOngoing(true)

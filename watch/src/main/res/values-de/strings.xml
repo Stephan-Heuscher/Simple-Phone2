@@ -1,0 +1,17 @@
+<resources>
+    <!-- Main Screen -->
+    <string name="watch_no_favorites">Keine Favoriten</string>
+    <string name="watch_emergency_call">Notruf</string>
+    <string name="watch_emergency_number">112</string>
+    <string name="watch_find_phone">Handy suchen</string>
+
+    <!-- Call Screen -->
+    <string name="watch_silence">Kein Ton</string>
+    <string name="watch_accept">Annehmen</string>
+    <string name="watch_hangup">Auflegen</string>
+    <string name="watch_call_label">Anruf</string>
+
+    <!-- Complication -->
+    <string name="watch_complication_open">Simple Phone öffnen</string>
+    <string name="watch_complication_label">Telefon</string>
+</resources>

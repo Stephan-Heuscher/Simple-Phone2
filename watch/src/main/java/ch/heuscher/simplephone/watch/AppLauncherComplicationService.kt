@@ -47,7 +47,7 @@ class AppLauncherComplicationService : SuspendingComplicationDataSourceService()
                         image = icon,
                         type = SmallImageType.ICON
                     ).build(),
-                    contentDescription = PlainComplicationText.Builder("Simple Phone öffnen").build()
+                    contentDescription = PlainComplicationText.Builder(getString(R.string.watch_complication_open)).build()
                 )
                 .setTapAction(pendingIntent)
                 .build()
@@ -55,8 +55,8 @@ class AppLauncherComplicationService : SuspendingComplicationDataSourceService()
             ComplicationType.SHORT_TEXT -> {
                 // Some watch faces prefer SHORT_TEXT even for icons, so we provide text + icon
                 ShortTextComplicationData.Builder(
-                    text = PlainComplicationText.Builder("Telefon").build(),
-                    contentDescription = PlainComplicationText.Builder("Simple Phone öffnen").build()
+                    text = PlainComplicationText.Builder(getString(R.string.watch_complication_label)).build(),
+                    contentDescription = PlainComplicationText.Builder(getString(R.string.watch_complication_open)).build()
                 )
                 .setMonochromaticImage(
                     MonochromaticImage.Builder(icon).build()
