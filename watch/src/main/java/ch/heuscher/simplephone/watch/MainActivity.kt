@@ -48,12 +48,13 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
 
     private val dataClient by lazy { Wearable.getDataClient(this) }
     private var contactsState = mutableStateListOf<SyncedContact>()
+    private var isContactsLoading = mutableStateOf(true)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme {
-                SimplePhoneWatchApp(this, contactsState)
+                SimplePhoneWatchApp(this, contactsState, isContactsLoading.value)
             }
         }
         loadInitialContacts()
@@ -71,11 +72,18 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
 
     private fun loadInitialContacts() {
         dataClient.dataItems.addOnSuccessListener { items ->
+            var found = false
             for (item in items) {
                 if (item.uri.path == "/contacts") {
+                    found = true
                     updateContactsFromDataItem(item)
                 }
             }
+            if (!found) {
+                isContactsLoading.value = false
+            }
+        }.addOnFailureListener {
+            isContactsLoading.value = false
         }
     }
 
@@ -89,45 +97,57 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
 
     private fun updateContactsFromDataItem(dataItem: com.google.android.gms.wearable.DataItem) {
         try {
-            // Extract the DataMap synchronously before the buffer closes
             val dataMap = DataMapItem.fromDataItem(dataItem).dataMap
             
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     val favoritesArray = dataMap.getDataMapArrayList("favorites")
 
+                    // FIRST PASS: Load names and numbers instantly so the UI can draw right away
                     val newContacts = favoritesArray?.mapNotNull { map ->
                         val id = map.getString("id")
                         val name = map.getString("name")
                         val number = map.getString("number")
                         val asset = map.getAsset("photo")
 
-                        var bitmap: Bitmap? = null
-                        if (asset != null) {
-                            bitmap = loadBitmapFromAsset(asset)
-                        }
-
                         if (id != null && name != null && number != null) {
-                            SyncedContact(id, name, number, bitmap)
+                            Pair(SyncedContact(id, name, number, null), asset)
                         } else null
                     } ?: emptyList()
 
                     withContext(Dispatchers.Main) {
                         contactsState.clear()
-                        contactsState.addAll(newContacts)
+                        contactsState.addAll(newContacts.map { it.first })
+                        isContactsLoading.value = false
+                    }
+
+                    // SECOND PASS: Download high-res photos asynchronously without blocking the UI
+                    newContacts.forEachIndexed { index, pair ->
+                        val asset = pair.second
+                        if (asset != null) {
+                            val bitmap = loadBitmapFromAsset(asset)
+                            if (bitmap != null) {
+                                withContext(Dispatchers.Main) {
+                                    if (index < contactsState.size) {
+                                        contactsState[index] = contactsState[index].copy(photoBitmap = bitmap)
+                                    }
+                                }
+                            }
+                        }
                     }
                 } catch (e: Exception) {
                     Log.e("WatchMainActivity", "Failed to parse contacts inside coroutine", e)
+                    withContext(Dispatchers.Main) { isContactsLoading.value = false }
                 }
             }
         } catch (e: Exception) {
             Log.e("WatchMainActivity", "Failed to get DataMap from DataItem", e)
+            isContactsLoading.value = false
         }
     }
 
     private fun loadBitmapFromAsset(asset: Asset): Bitmap? {
         if (asset.fd == null) {
-            // Need to fetch it blocking
             try {
                 val assetInputStream = Tasks.await(dataClient.getFdForAsset(asset)).inputStream
                 if (assetInputStream != null) {
@@ -142,22 +162,34 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
 }
 
 @Composable
-fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>) {
+fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoading: Boolean) {
     ScalingLazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        contentPadding = PaddingValues(bottom = 32.dp),
+        // Use negative spacing so they underlap slightly
+        verticalArrangement = Arrangement.spacedBy((-16).dp)
     ) {
         item { Spacer(modifier = Modifier.height(32.dp)) }
 
         if (contacts.isEmpty()) {
-            item {
-                Text(
-                    text = stringResource(R.string.watch_no_favorites),
-                    color = Color.Gray,
-                    modifier = Modifier.padding(16.dp)
-                )
+            if (isLoading) {
+                item {
+                    androidx.wear.compose.material.CircularProgressIndicator(
+                        modifier = Modifier.padding(16.dp),
+                        indicatorColor = Color(0xFF1E88E5)
+                    )
+                }
+            } else {
+                item {
+                    Text(
+                        text = stringResource(R.string.watch_no_favorites),
+                        color = Color.Gray,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
             }
         } else {
             items(contacts) { contact ->
@@ -166,6 +198,8 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>) {
                 }
             }
         }
+
+        item { Spacer(modifier = Modifier.height(16.dp)) }
 
         item {
             ActionButton(text = stringResource(R.string.watch_emergency_call), color = Color(0xFFE53935)) {
@@ -178,8 +212,6 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>) {
                 findMyPhone(context)
             }
         }
-        
-        item { Spacer(modifier = Modifier.height(32.dp)) }
     }
 }
 
@@ -200,55 +232,64 @@ private fun findMyPhone(context: Context) {
 
 @Composable
 fun ContactButton(contact: SyncedContact, onClick: () -> Unit) {
-    Button(
+    // Massive full-width card that shows a big image
+    androidx.wear.compose.material.Card(
         onClick = onClick,
-        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF1E88E5)),
         modifier = Modifier
-            .fillMaxWidth(1f) // Use full width
-            .padding(vertical = 8.dp)
-            .height(84.dp) // Drastically increase height
+            .fillMaxWidth()
+            .height(140.dp) // Huge height
+            .padding(horizontal = 0.dp), // Edge to edge
+        contentPadding = PaddingValues(0.dp),
+        backgroundPainter = androidx.wear.compose.material.CardDefaults.cardBackgroundPainter(
+            startBackgroundColor = Color(0xFF1E88E5),
+            endBackgroundColor = Color(0xFF1565C0)
+        )
     ) {
-        Row(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
             if (contact.photoBitmap != null) {
                 Image(
                     bitmap = contact.photoBitmap.asImageBitmap(),
                     contentDescription = "Contact photo",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(68.dp) // Much larger photo
-                        .clip(CircleShape)
+                    contentScale = ContentScale.Crop, // Crop to use whole width & height
+                    modifier = Modifier.fillMaxSize()
                 )
             } else {
-                // Fallback Avatar
                 Box(
-                    modifier = Modifier
-                        .size(68.dp)
-                        .clip(CircleShape)
-                        .background(Color.DarkGray),
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = contact.name.take(1).uppercase(),
-                        color = Color.White,
-                        fontSize = 28.sp,
+                        color = Color.White.copy(alpha = 0.5f),
+                        fontSize = 64.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            // Dark gradient overlay so the text is extremely readable
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.9f)),
+                            startY = 50f
+                        )
+                    )
+            )
 
+            // Huge text overlapping the massive image
             Text(
                 text = contact.name,
                 color = Color.White,
-                fontSize = 20.sp, // Readable text size
+                fontSize = 28.sp, // Bigger text
                 fontWeight = FontWeight.Bold,
-                maxLines = 2,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 16.dp, start = 8.dp, end = 8.dp)
             )
         }
     }
