@@ -361,7 +361,7 @@ fun ContactButton(contact: SyncedContact, onClick: () -> Unit) {
                     bitmap = contact.photoBitmap.asImageBitmap(),
                     contentDescription = "Contact photo",
                     contentScale = ContentScale.Crop, // Crop to use whole width & height
-                    alignment = androidx.compose.ui.BiasAlignment(0f, -1.0f), // Moved up entirely to the top
+                    alignment = androidx.compose.ui.BiasAlignment(0f, 1.0f), // Shifted crop focus proportionally downwards
                     modifier = Modifier.fillMaxSize()
                 )
             } else {
