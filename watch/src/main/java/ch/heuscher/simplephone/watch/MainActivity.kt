@@ -346,9 +346,9 @@ fun ContactButton(contact: SyncedContact, onClick: () -> Unit) {
     androidx.wear.compose.material.Card(
         onClick = onClick,
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxWidth(0.85f) // A bit less wide
             .height(140.dp) // Huge height
-            .padding(horizontal = 0.dp), // Edge to edge
+            .padding(horizontal = 0.dp),
         contentPadding = PaddingValues(0.dp),
         backgroundPainter = androidx.wear.compose.material.CardDefaults.cardBackgroundPainter(
             startBackgroundColor = Color(0xFF1E88E5),
@@ -361,6 +361,7 @@ fun ContactButton(contact: SyncedContact, onClick: () -> Unit) {
                     bitmap = contact.photoBitmap.asImageBitmap(),
                     contentDescription = "Contact photo",
                     contentScale = ContentScale.Crop, // Crop to use whole width & height
+                    alignment = androidx.compose.ui.BiasAlignment(0f, -0.4f), // Move displayed proportion up by 20%
                     modifier = Modifier.fillMaxSize()
                 )
             } else {
