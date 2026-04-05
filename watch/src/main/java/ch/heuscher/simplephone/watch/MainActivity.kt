@@ -51,16 +51,26 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
     private var isContactsLoading = mutableStateOf(true)
 
     private fun saveContactsToPrefs(contacts: List<SyncedContact>) {
-        val prefs = getSharedPreferences("simple_phone_watch", Context.MODE_PRIVATE)
-        val jsonArray = org.json.JSONArray()
-        for (contact in contacts) {
-            val jsonObject = org.json.JSONObject()
-            jsonObject.put("id", contact.id)
-            jsonObject.put("name", contact.name)
-            jsonObject.put("number", contact.number)
-            jsonArray.put(jsonObject)
+        CoroutineScope(Dispatchers.IO).launch {
+            val prefs = getSharedPreferences("simple_phone_watch", Context.MODE_PRIVATE)
+            val jsonArray = org.json.JSONArray()
+            for (contact in contacts) {
+                val jsonObject = org.json.JSONObject()
+                jsonObject.put("id", contact.id)
+                jsonObject.put("name", contact.name)
+                jsonObject.put("number", contact.number)
+                
+                if (contact.photoBitmap != null) {
+                    val outputStream = java.io.ByteArrayOutputStream()
+                    contact.photoBitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+                    val base64String = android.util.Base64.encodeToString(outputStream.toByteArray(), android.util.Base64.DEFAULT)
+                    jsonObject.put("photoBase64", base64String)
+                }
+                
+                jsonArray.put(jsonObject)
+            }
+            prefs.edit().putString("cached_contacts", jsonArray.toString()).apply()
         }
-        prefs.edit().putString("cached_contacts", jsonArray.toString()).apply()
     }
 
     private fun loadContactsFromPrefs(): Boolean {
@@ -71,12 +81,24 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
             val cachedContacts = mutableListOf<SyncedContact>()
             for (i in 0 until jsonArray.length()) {
                 val jsonObject = jsonArray.getJSONObject(i)
+                
+                var photoBitmap: Bitmap? = null
+                if (jsonObject.has("photoBase64")) {
+                    try {
+                        val base64String = jsonObject.getString("photoBase64")
+                        val decodedBytes = android.util.Base64.decode(base64String, android.util.Base64.DEFAULT)
+                        photoBitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+                    } catch (e: Exception) {
+                        Log.e("WatchMainActivity", "Failed to decode base64 bitmap", e)
+                    }
+                }
+
                 cachedContacts.add(
                     SyncedContact(
                         jsonObject.getString("id"),
                         jsonObject.getString("name"),
                         jsonObject.getString("number"),
-                        null
+                        photoBitmap
                     )
                 )
             }
@@ -160,28 +182,41 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
                     } ?: emptyList()
 
                     val parsedContacts = newContacts.map { it.first }
-                    saveContactsToPrefs(parsedContacts)
-
+                    
                     withContext(Dispatchers.Main) {
-                        contactsState.clear()
-                        contactsState.addAll(parsedContacts)
-                        isContactsLoading.value = false
+                        // Only clear out and recreate if there are actual updates.
+                        // We avoid flickering the screen if it's already populated by cache.
+                        if (contactsState.isEmpty()) {
+                            contactsState.addAll(parsedContacts)
+                            isContactsLoading.value = false
+                        }
                     }
 
                     // SECOND PASS: Download high-res photos asynchronously without blocking the UI
+                    val updatedContacts = parsedContacts.toMutableList()
+                    var anyUpdates = false
+                    
                     newContacts.forEachIndexed { index, pair ->
                         val asset = pair.second
                         if (asset != null) {
                             val bitmap = loadBitmapFromAsset(asset)
                             if (bitmap != null) {
+                                updatedContacts[index] = updatedContacts[index].copy(photoBitmap = bitmap)
+                                anyUpdates = true
                                 withContext(Dispatchers.Main) {
                                     if (index < contactsState.size) {
                                         contactsState[index] = contactsState[index].copy(photoBitmap = bitmap)
+                                    } else {
+                                        contactsState.add(updatedContacts[index])
                                     }
                                 }
                             }
                         }
                     }
+                    
+                    // Save to preferences whether or not there were photo updates, to keep it in sync.
+                    saveContactsToPrefs(updatedContacts)
+                    
                 } catch (e: Exception) {
                     Log.e("WatchMainActivity", "Failed to parse contacts inside coroutine", e)
                     withContext(Dispatchers.Main) { if(contactsState.isEmpty()) isContactsLoading.value = false }
