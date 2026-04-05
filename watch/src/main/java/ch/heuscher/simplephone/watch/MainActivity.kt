@@ -245,6 +245,34 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
 
 @Composable
 fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoading: Boolean) {
+    var pendingCallNumber by remember { mutableStateOf<String?>(null) }
+    
+    val callPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted && pendingCallNumber != null) {
+            val intent = Intent(Intent.ACTION_CALL).apply {
+                data = Uri.parse("tel:$pendingCallNumber")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.startActivity(intent)
+            pendingCallNumber = null
+        }
+    }
+
+    fun attemptCall(number: String) {
+        if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CALL_PHONE) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            val intent = Intent(Intent.ACTION_CALL).apply {
+                data = Uri.parse("tel:$number")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.startActivity(intent)
+        } else {
+            pendingCallNumber = number
+            callPermissionLauncher.launch(android.Manifest.permission.CALL_PHONE)
+        }
+    }
+
     ScalingLazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -276,7 +304,7 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoadi
         } else {
             items(contacts) { contact ->
                 ContactButton(contact = contact) {
-                    makeCall(context, contact.number)
+                    attemptCall(contact.number)
                 }
             }
         }
@@ -285,7 +313,7 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoadi
 
         item {
             ActionButton(text = stringResource(R.string.watch_emergency_call), color = Color(0xFFE53935)) {
-                makeCall(context, context.getString(R.string.watch_emergency_number))
+                attemptCall(context.getString(R.string.watch_emergency_number))
             }
         }
         
@@ -396,10 +424,3 @@ fun ActionButton(text: String, color: Color, onClick: () -> Unit) {
     }
 }
 
-private fun makeCall(context: Context, phoneNumber: String) {
-    val intent = Intent(Intent.ACTION_DIAL).apply {
-        data = Uri.parse("tel:$phoneNumber")
-        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-    }
-    context.startActivity(intent)
-}
