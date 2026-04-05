@@ -88,34 +88,40 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
     }
 
     private fun updateContactsFromDataItem(dataItem: com.google.android.gms.wearable.DataItem) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val dataMap = DataMapItem.fromDataItem(dataItem).dataMap
-                val favoritesArray = dataMap.getDataMapArrayList("favorites")
+        try {
+            // Extract the DataMap synchronously before the buffer closes
+            val dataMap = DataMapItem.fromDataItem(dataItem).dataMap
+            
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val favoritesArray = dataMap.getDataMapArrayList("favorites")
 
-                val newContacts = favoritesArray?.mapNotNull { map ->
-                    val id = map.getString("id")
-                    val name = map.getString("name")
-                    val number = map.getString("number")
-                    val asset = map.getAsset("photo")
+                    val newContacts = favoritesArray?.mapNotNull { map ->
+                        val id = map.getString("id")
+                        val name = map.getString("name")
+                        val number = map.getString("number")
+                        val asset = map.getAsset("photo")
 
-                    var bitmap: Bitmap? = null
-                    if (asset != null) {
-                        bitmap = loadBitmapFromAsset(asset)
+                        var bitmap: Bitmap? = null
+                        if (asset != null) {
+                            bitmap = loadBitmapFromAsset(asset)
+                        }
+
+                        if (id != null && name != null && number != null) {
+                            SyncedContact(id, name, number, bitmap)
+                        } else null
+                    } ?: emptyList()
+
+                    withContext(Dispatchers.Main) {
+                        contactsState.clear()
+                        contactsState.addAll(newContacts)
                     }
-
-                    if (id != null && name != null && number != null) {
-                        SyncedContact(id, name, number, bitmap)
-                    } else null
-                } ?: emptyList()
-
-                withContext(Dispatchers.Main) {
-                    contactsState.clear()
-                    contactsState.addAll(newContacts)
+                } catch (e: Exception) {
+                    Log.e("WatchMainActivity", "Failed to parse contacts inside coroutine", e)
                 }
-            } catch (e: Exception) {
-                Log.e("WatchMainActivity", "Failed to parse contacts", e)
             }
+        } catch (e: Exception) {
+            Log.e("WatchMainActivity", "Failed to get DataMap from DataItem", e)
         }
     }
 

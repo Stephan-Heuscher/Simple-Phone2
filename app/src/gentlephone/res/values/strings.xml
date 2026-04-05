@@ -10,7 +10,7 @@
     <string name="gentle_phone_valid_10_mins">Valid for 10 minutes</string>
     <string name="gentle_phone_qr_code">QR Code</string>
     <string name="gentle_phone_web_portal">Web Portal</string>
-    <string name="gentle_phone_web_portal_url">gentlephone.web.app</string>
+    <string name="gentle_phone_web_portal_url">gentle-phone.web.app</string>
     <string name="gentle_phone_remote_settings">Remote Settings</string>
     <string name="gentle_phone_remote_settings_desc">Settings can be changed by your confidant</string>
     <string name="gentle_phone_settings_synced">Settings synced from confidant</string>

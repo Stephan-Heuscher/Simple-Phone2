@@ -212,7 +212,7 @@ fun SettingsScreen(
                 LaunchedEffect(Unit) {
                     tempCode = onGeneratePairingCode()
                     tempCode?.let {
-                        val url = "https://gentlephone.web.app/?code=$it"
+                        val url = "https://gentle-phone.web.app/?code=$it"
                         try {
                             val size = 512
                             val bitMatrix = QRCodeWriter().encode(url, BarcodeFormat.QR_CODE, size, size)
@@ -224,7 +224,7 @@ fun SettingsScreen(
                                     bmp.setPixel(x, y, if (bitMatrix.get(x, y)) AndroidColor.BLACK else AndroidColor.WHITE)
                                 }
                             }
-                            qrBitmap = bmp
+                        qrBitmap = bmp
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
@@ -271,7 +271,7 @@ fun SettingsScreen(
                                 )
                             }
                         
-                            val shareUrl = "https://gentlephone.web.app/?code=$tempCode"
+                            val shareUrl = "https://gentle-phone.web.app/?code=$tempCode"
 
                             Box(modifier = Modifier.clickable {
                                 clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(shareUrl))
@@ -306,7 +306,7 @@ fun SettingsScreen(
                         // Share Button
                         androidx.compose.material3.IconButton(
                             onClick = {
-                                val shareUrl = "https://gentlephone.web.app/?code=$tempCode"
+                                val shareUrl = "https://gentle-phone.web.app/?code=$tempCode"
                                 val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                     type = "text/plain"
                                     putExtra(Intent.EXTRA_TEXT, context.getString(R.string.share_pairing_code_message, shareUrl))
@@ -333,12 +333,22 @@ fun SettingsScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    Text(
-                        text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.gentle_phone_web_portal_url),
+                     val portalUrl = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.gentle_phone_web_portal_url)
+                     Text(
+                        text = portalUrl,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(vertical = 4.dp)
+                        modifier = Modifier
+                            .padding(vertical = 4.dp)
+                            .clickable {
+                                try {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://$portalUrl"))
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            }
                     )
                 }
 
