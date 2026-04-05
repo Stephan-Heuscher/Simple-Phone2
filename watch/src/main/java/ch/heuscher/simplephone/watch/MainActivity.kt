@@ -50,8 +50,50 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
     private var contactsState = mutableStateListOf<SyncedContact>()
     private var isContactsLoading = mutableStateOf(true)
 
+    private fun saveContactsToPrefs(contacts: List<SyncedContact>) {
+        val prefs = getSharedPreferences("simple_phone_watch", Context.MODE_PRIVATE)
+        val jsonArray = org.json.JSONArray()
+        for (contact in contacts) {
+            val jsonObject = org.json.JSONObject()
+            jsonObject.put("id", contact.id)
+            jsonObject.put("name", contact.name)
+            jsonObject.put("number", contact.number)
+            jsonArray.put(jsonObject)
+        }
+        prefs.edit().putString("cached_contacts", jsonArray.toString()).apply()
+    }
+
+    private fun loadContactsFromPrefs(): Boolean {
+        val prefs = getSharedPreferences("simple_phone_watch", Context.MODE_PRIVATE)
+        val jsonString = prefs.getString("cached_contacts", null) ?: return false
+        try {
+            val jsonArray = org.json.JSONArray(jsonString)
+            val cachedContacts = mutableListOf<SyncedContact>()
+            for (i in 0 until jsonArray.length()) {
+                val jsonObject = jsonArray.getJSONObject(i)
+                cachedContacts.add(
+                    SyncedContact(
+                        jsonObject.getString("id"),
+                        jsonObject.getString("name"),
+                        jsonObject.getString("number"),
+                        null
+                    )
+                )
+            }
+            contactsState.clear()
+            contactsState.addAll(cachedContacts)
+            return true
+        } catch (e: Exception) {
+            Log.e("WatchMainActivity", "Failed to load cached contacts", e)
+        }
+        return false
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (loadContactsFromPrefs()) {
+            isContactsLoading.value = false
+        }
         setContent {
             MaterialTheme {
                 SimplePhoneWatchApp(this, contactsState, isContactsLoading.value)
@@ -79,11 +121,13 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
                     updateContactsFromDataItem(item)
                 }
             }
-            if (!found) {
+            if (!found && contactsState.isEmpty()) {
                 isContactsLoading.value = false
             }
         }.addOnFailureListener {
-            isContactsLoading.value = false
+            if (contactsState.isEmpty()) {
+                isContactsLoading.value = false
+            }
         }
     }
 
@@ -115,9 +159,12 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
                         } else null
                     } ?: emptyList()
 
+                    val parsedContacts = newContacts.map { it.first }
+                    saveContactsToPrefs(parsedContacts)
+
                     withContext(Dispatchers.Main) {
                         contactsState.clear()
-                        contactsState.addAll(newContacts.map { it.first })
+                        contactsState.addAll(parsedContacts)
                         isContactsLoading.value = false
                     }
 
@@ -137,12 +184,12 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
                     }
                 } catch (e: Exception) {
                     Log.e("WatchMainActivity", "Failed to parse contacts inside coroutine", e)
-                    withContext(Dispatchers.Main) { isContactsLoading.value = false }
+                    withContext(Dispatchers.Main) { if(contactsState.isEmpty()) isContactsLoading.value = false }
                 }
             }
         } catch (e: Exception) {
             Log.e("WatchMainActivity", "Failed to get DataMap from DataItem", e)
-            isContactsLoading.value = false
+            if(contactsState.isEmpty()) isContactsLoading.value = false
         }
     }
 
