@@ -49,11 +49,21 @@ class PhoneWearableListenerService : WearableListenerService() {
                 Log.d("PhoneWearableListener", "Watch requested to initiate call to $number")
                 if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.CALL_PHONE) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
                     CallService.watchInitiated = true
-                    val intent = android.content.Intent(android.content.Intent.ACTION_CALL).apply {
-                        data = android.net.Uri.parse("tel:$number")
-                        flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                    
+                    val uri = android.net.Uri.parse("tel:$number")
+                    
+                    try {
+                        @Suppress("MissingPermission")
+                        val telecomManager = getSystemService(Context.TELECOM_SERVICE) as android.telecom.TelecomManager
+                        telecomManager.placeCall(uri, null)
+                    } catch (e: Exception) {
+                        Log.e("PhoneWearableListener", "Error placing call via TelecomManager, falling back to intent", e)
+                        val intent = android.content.Intent(android.content.Intent.ACTION_CALL).apply {
+                            data = uri
+                            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        startActivity(intent)
                     }
-                    startActivity(intent)
                 } else {
                     Log.e("PhoneWearableListener", "Missing CALL_PHONE permission")
                 }
