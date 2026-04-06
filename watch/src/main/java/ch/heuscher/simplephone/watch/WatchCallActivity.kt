@@ -4,21 +4,32 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.wear.compose.material.Button
+import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import com.google.android.gms.tasks.Tasks
@@ -56,10 +67,34 @@ class WatchCallActivity : ComponentActivity() {
         registerReceiver(endCallReceiver, IntentFilter("ch.heuscher.simplephone.watch.CALL_ENDED"), RECEIVER_NOT_EXPORTED)
         registerReceiver(answerCallReceiver, IntentFilter("ch.heuscher.simplephone.watch.CALL_ANSWERED"), RECEIVER_NOT_EXPORTED)
 
+        // Try to find contact photo
+        val prefs = getSharedPreferences("simple_phone_watch", Context.MODE_PRIVATE)
+        val cachedJson = prefs.getString("contacts_cache", null)
+        var contactPhoto: Bitmap? = null
+        if (cachedJson != null) {
+            try {
+                val array = org.json.JSONArray(cachedJson)
+                for (i in 0 until array.length()) {
+                    val obj = array.getJSONObject(i)
+                    if (obj.getString("name") == callerName) {
+                        val base64 = obj.optString("photo_base64", "")
+                        if (base64.isNotEmpty()) {
+                            val bytes = android.util.Base64.decode(base64, android.util.Base64.DEFAULT)
+                            contactPhoto = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                        }
+                        break
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("WatchCallActivity", "Failed to parse cache for photo", e)
+            }
+        }
+
         setContent {
             MaterialTheme {
                 WatchCallScreen(
                     callerName = callerName,
+                    contactPhoto = contactPhoto,
                     isAnswered = _isAnswered.value,
                     onAccept = {
                         _isAnswered.value = true
@@ -71,10 +106,24 @@ class WatchCallActivity : ComponentActivity() {
                     onReject = {
                         sendMessageToPhone("/reject_call")
                         finish()
+                    },
+                    onHangup = {
+                        sendMessageToPhone("/end_call")
+                        finish()
                     }
                 )
             }
         }
+    }
+
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent?): Boolean {
+        if (ev?.action == android.view.MotionEvent.ACTION_DOWN) {
+            val prefs = getSharedPreferences("simple_phone_watch", Context.MODE_PRIVATE)
+            if (prefs.getBoolean("setting_silence_call_on_touch", false) && !_isAnswered.value) {
+                sendMessageToPhone("/silence_ringer")
+            }
+        }
+        return super.dispatchTouchEvent(ev)
     }
 
     override fun onDestroy() {
@@ -100,8 +149,8 @@ class WatchCallActivity : ComponentActivity() {
 }
 
 @Composable
-fun WatchCallScreen(callerName: String, isAnswered: Boolean, onAccept: () -> Unit, onSilence: () -> Unit, onReject: () -> Unit) {
-    Column(modifier = Modifier.fillMaxSize()) {
+fun WatchCallScreen(callerName: String, contactPhoto: Bitmap?, isAnswered: Boolean, onAccept: () -> Unit, onSilence: () -> Unit, onReject: () -> Unit, onHangup: () -> Unit) {
+    Column(modifier = Modifier.fillMaxSize().background(Color.Black)) {
         if (!isAnswered) {
             // Top Half: Blue (Silence Ringtone)
             Box(
@@ -150,29 +199,71 @@ fun WatchCallScreen(callerName: String, isAnswered: Boolean, onAccept: () -> Uni
                 }
             }
         } else {
-            // Full Screen: Red (Reject/End Call)
-            Box(
+            // REDESIGNED: Compact friendlier UI for round watch
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .background(Color(0xFFE53935))
-                    .clickable {
-                        onReject()
-                    },
-                contentAlignment = Alignment.Center
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp, vertical = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                // Avatar (48dp - compact for round screen)
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF1E88E5)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (contactPhoto != null) {
+                        Image(
+                            bitmap = contactPhoto.asImageBitmap(),
+                            contentDescription = "Contact photo",
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Text(
+                            text = callerName.take(1).uppercase(),
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Name
+                Text(
+                    text = callerName,
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1
+                )
+
+                // Status
+                Text(
+                    text = "On call",
+                    color = Color.Gray,
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Red Hangup Button (48dp)
+                Button(
+                    onClick = { onHangup() },
+                    modifier = Modifier.size(48.dp),
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFE53935))
+                ) {
                     Text(
-                        text = callerName,
+                        text = "✕",
                         color = Color.White,
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Normal,
-                        textAlign = TextAlign.Center
-                    )
-                    Text(
-                        text = stringResource(R.string.watch_hangup),
-                        color = Color.White,
-                        fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }

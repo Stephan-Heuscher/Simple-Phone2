@@ -40,6 +40,10 @@ class PhoneWearableListenerService : WearableListenerService() {
                 Log.d("PhoneWearableListener", "Watch requested to silence ringer")
                 CallService.silenceRinger()
             }
+            "/end_call" -> {
+                Log.d("PhoneWearableListener", "Watch requested to end call")
+                CallService.endCall()
+            }
             "/initiate_call" -> {
                 val number = String(messageEvent.data, Charsets.UTF_8)
                 Log.d("PhoneWearableListener", "Watch requested to initiate call to $number")

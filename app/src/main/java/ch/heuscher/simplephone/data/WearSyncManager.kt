@@ -83,4 +83,30 @@ class WearSyncManager(private val context: Context) {
         }
         return null
     }
+
+    fun syncSettings(settings: AppSettings) {
+        try {
+            val putDataMapReq = PutDataMapRequest.create("/settings")
+            putDataMapReq.dataMap.putBoolean("confirm_before_call", settings.confirmBeforeCall)
+            putDataMapReq.dataMap.putBoolean("silence_call_on_touch", settings.silenceCallOnTouch)
+            putDataMapReq.dataMap.putBoolean("block_unknown_callers", settings.blockUnknownCallers)
+            putDataMapReq.dataMap.putBoolean("use_haptic_feedback", settings.useHapticFeedback)
+            
+            // Add a timestamp to ensure update
+            putDataMapReq.dataMap.putLong("timestamp", System.currentTimeMillis())
+
+            val putDataReq = putDataMapReq.asPutDataRequest()
+            putDataReq.setUrgent()
+
+            dataClient.putDataItem(putDataReq)
+                .addOnSuccessListener {
+                    Log.d("WearSyncManager", "Successfully synced settings to wear")
+                }
+                .addOnFailureListener { e ->
+                    Log.e("WearSyncManager", "Failed to sync settings to wear", e)
+                }
+        } catch (e: Exception) {
+            Log.e("WearSyncManager", "Error in syncSettings", e)
+        }
+    }
 }

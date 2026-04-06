@@ -113,6 +113,29 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Ensure we are the default dialer to fully replace the stock watch phone app functions
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                val roleManager = getSystemService(Context.ROLE_SERVICE) as android.app.role.RoleManager
+                if (roleManager.isRoleAvailable(android.app.role.RoleManager.ROLE_DIALER) &&
+                    !roleManager.isRoleHeld(android.app.role.RoleManager.ROLE_DIALER)
+                ) {
+                    val intent = roleManager.createRequestRoleIntent(android.app.role.RoleManager.ROLE_DIALER)
+                    startActivityForResult(intent, 123)
+                }
+            } else {
+                val telecomManager = getSystemService(Context.TELECOM_SERVICE) as android.telecom.TelecomManager
+                if (telecomManager.defaultDialerPackage != packageName) {
+                    val intent = Intent(android.telecom.TelecomManager.ACTION_CHANGE_DEFAULT_DIALER)
+                    intent.putExtra(android.telecom.TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, packageName)
+                    startActivity(intent)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("WatchMainActivity", "Failed to ask for default dialer", e)
+        }
+
         if (loadContactsFromPrefs()) {
             isContactsLoading.value = false
         }
@@ -141,6 +164,8 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
                 if (item.uri.path == "/contacts") {
                     found = true
                     updateContactsFromDataItem(item)
+                } else if (item.uri.path == "/settings") {
+                    updateSettingsFromDataItem(item)
                 }
             }
             if (!found && contactsState.isEmpty()) {
@@ -155,9 +180,29 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
 
     override fun onDataChanged(dataEvents: DataEventBuffer) {
         for (event in dataEvents) {
-            if (event.dataItem.uri.path == "/contacts") {
+            val path = event.dataItem.uri.path
+            if (path == "/contacts") {
                 updateContactsFromDataItem(event.dataItem)
+            } else if (path == "/settings") {
+                updateSettingsFromDataItem(event.dataItem)
             }
+        }
+    }
+
+    private fun updateSettingsFromDataItem(dataItem: com.google.android.gms.wearable.DataItem) {
+        try {
+            val dataMap = DataMapItem.fromDataItem(dataItem).dataMap
+            val prefs = getSharedPreferences("simple_phone_watch", Context.MODE_PRIVATE)
+            prefs.edit().apply {
+                putBoolean("setting_confirm_before_call", dataMap.getBoolean("confirm_before_call", false))
+                putBoolean("setting_silence_call_on_touch", dataMap.getBoolean("silence_call_on_touch", false))
+                putBoolean("setting_block_unknown_callers", dataMap.getBoolean("block_unknown_callers", false))
+                putBoolean("setting_use_haptic_feedback", dataMap.getBoolean("use_haptic_feedback", true))
+                apply()
+            }
+            Log.d("WatchMainActivity", "Updated settings from phone")
+        } catch (e: Exception) {
+            Log.e("WatchMainActivity", "Failed to update settings", e)
         }
     }
 
@@ -245,16 +290,22 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
 
 @Composable
 fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoading: Boolean) {
+    var showConfirmDialog by remember { mutableStateOf<String?>(null) }
     
     val callPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
-    ) {
-        // If granted, the user needs to tap the button again.
+    ) { isGranted ->
+        if (isGranted) {
+            android.widget.Toast.makeText(context, "Permission granted. Tap contact again.", android.widget.Toast.LENGTH_SHORT).show()
+        }
     }
 
-    fun smartCall(number: String) {
-        if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CALL_PHONE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            callPermissionLauncher.launch(android.Manifest.permission.CALL_PHONE)
+    fun smartCall(number: String, force: Boolean = false) {
+        val prefs = context.getSharedPreferences("simple_phone_watch", Context.MODE_PRIVATE)
+        val confirmReq = prefs.getBoolean("setting_confirm_before_call", false)
+        
+        if (confirmReq && !force) {
+            showConfirmDialog = number
             return
         }
 
@@ -263,6 +314,9 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoadi
                 val nodes = Tasks.await(Wearable.getNodeClient(context).connectedNodes)
                 if (nodes.isNotEmpty()) {
                     // Phone is connected, route through phone
+                    withContext(Dispatchers.Main) {
+                        android.widget.Toast.makeText(context, "Dialing on phone...", android.widget.Toast.LENGTH_SHORT).show()
+                    }
                     val messageClient = Wearable.getMessageClient(context)
                     for (node in nodes) {
                         messageClient.sendMessage(node.id, "/initiate_call", number.toByteArray(Charsets.UTF_8))
@@ -270,16 +324,61 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoadi
                 } else {
                     // No phone connected, direct local dial
                     withContext(Dispatchers.Main) {
-                        val intent = Intent(Intent.ACTION_CALL).apply {
-                            data = Uri.parse("tel:$number")
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CALL_PHONE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                            callPermissionLauncher.launch(android.Manifest.permission.CALL_PHONE)
+                        } else {
+                            android.widget.Toast.makeText(context, "Dialing natively...", android.widget.Toast.LENGTH_SHORT).show()
+                            val intent = Intent(Intent.ACTION_CALL).apply {
+                                data = Uri.parse("tel:$number")
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
+                            context.startActivity(intent)
                         }
-                        context.startActivity(intent)
                     }
                 }
             } catch (e: Exception) {
                 Log.e("WatchMainActivity", "Failed to smart call", e)
+                withContext(Dispatchers.Main) {
+                    android.widget.Toast.makeText(context, "Call error: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                }
             }
+        }
+    }
+
+    // Confirmation Dialog
+    androidx.wear.compose.material.dialog.Dialog(
+        showDialog = showConfirmDialog != null,
+        onDismissRequest = { showConfirmDialog = null }
+    ) {
+        androidx.wear.compose.material.dialog.Alert(
+            title = {
+                Text(
+                    text = "Call ${showConfirmDialog ?: ""}?",
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+        ) {
+            item {
+                Button(
+                    onClick = {
+                        val num = showConfirmDialog
+                        showConfirmDialog = null
+                        if (num != null) smartCall(num, true)
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF43A047))
+                ) { Text("Call", color = Color.White) }
+            }
+            item {
+                Button(
+                    onClick = { showConfirmDialog = null },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFE53935))
+                ) { Text("Cancel", color = Color.White) }
+            }
+            item { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }
 

@@ -52,6 +52,14 @@ class AppLauncherComplicationService : SuspendingComplicationDataSourceService()
                 .setTapAction(pendingIntent)
                 .build()
             }
+            ComplicationType.SHORT_TEXT -> {
+                androidx.wear.watchface.complications.data.ShortTextComplicationData.Builder(
+                    text = PlainComplicationText.Builder("Phone").build(),
+                    contentDescription = contentDesc
+                )
+                .setTapAction(pendingIntent)
+                .build()
+            }
             else -> null
         }
     }

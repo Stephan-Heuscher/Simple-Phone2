@@ -42,6 +42,7 @@ class SettingsRepository(private val context: Context) {
     
     // Remote settings repository (Firebase for gentlephone, stub for simplephone)
     private val remoteSettings = RemoteSettingsRepository(context)
+    private val wearSyncManager = WearSyncManager(context)
     
     // Cache of remote settings - these override local settings when present
     private var remoteCache: Map<String, Any>? = null
@@ -127,6 +128,9 @@ class SettingsRepository(private val context: Context) {
         
         // Listen for local preference changes to update flow if changed elsewhere (unlikely but safe)
         prefs.registerOnSharedPreferenceChangeListener(preferenceChangeListener)
+
+        // Initial sync of settings to wear
+        wearSyncManager.syncSettings(loadSettings())
     }
     
     /**
@@ -265,6 +269,7 @@ class SettingsRepository(private val context: Context) {
         set(value) {
             prefs.edit().putBoolean(KEY_CONFIRM_BEFORE_CALL, value).apply()
             updateRemote(REMOTE_KEY_CONFIRM_BEFORE_CALL, value)
+            wearSyncManager.syncSettings(loadSettings())
         }
 
     var useHapticFeedback: Boolean
@@ -272,6 +277,7 @@ class SettingsRepository(private val context: Context) {
         set(value) {
             prefs.edit().putBoolean(KEY_USE_HAPTIC_FEEDBACK, value).apply()
             updateRemote(REMOTE_KEY_HAPTIC_FEEDBACK, value)
+            wearSyncManager.syncSettings(loadSettings())
         }
 
     var useVoiceAnnouncements: Boolean
@@ -294,6 +300,7 @@ class SettingsRepository(private val context: Context) {
         set(value) {
             prefs.edit().putBoolean(KEY_BLOCK_UNKNOWN_CALLERS, value).apply()
             updateRemote(REMOTE_KEY_BLOCK_UNKNOWN, value)
+            wearSyncManager.syncSettings(loadSettings())
         }
         
     var lastBlockedNumber: String?
@@ -320,6 +327,7 @@ class SettingsRepository(private val context: Context) {
         set(value) {
             prefs.edit().putBoolean(KEY_SILENCE_CALL_ON_TOUCH, value).apply()
             updateRemote(REMOTE_KEY_SILENCE_ON_TOUCH, value)
+            wearSyncManager.syncSettings(loadSettings())
         }
 
     var ringtoneSilenceTimeout: Int
