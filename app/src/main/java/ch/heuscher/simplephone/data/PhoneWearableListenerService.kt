@@ -44,6 +44,7 @@ class PhoneWearableListenerService : WearableListenerService() {
                 val number = String(messageEvent.data, Charsets.UTF_8)
                 Log.d("PhoneWearableListener", "Watch requested to initiate call to $number")
                 if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.CALL_PHONE) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    CallService.watchInitiated = true
                     val intent = android.content.Intent(android.content.Intent.ACTION_CALL).apply {
                         data = android.net.Uri.parse("tel:$number")
                         flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK

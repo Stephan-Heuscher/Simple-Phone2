@@ -20,6 +20,15 @@ class WatchWearableListenerService : WearableListenerService() {
                 }
                 startActivity(intent)
             }
+            "/outgoing_call" -> {
+                val callerName = String(messageEvent.data)
+                val intent = Intent(this, WatchCallActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    putExtra("CALLER_NAME", callerName)
+                    putExtra("IS_OUTGOING", true)
+                }
+                startActivity(intent)
+            }
             "/call_answered" -> {
                 val intent = Intent("ch.heuscher.simplephone.watch.CALL_ANSWERED")
                 sendBroadcast(intent)

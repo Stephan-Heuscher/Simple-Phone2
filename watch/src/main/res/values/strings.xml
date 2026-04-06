@@ -8,9 +8,6 @@
     <string name="watch_find_phone">Find Phone</string>
 
     <!-- Call Screen -->
-    <string name="watch_choose_call_method">Select Device</string>
-    <string name="watch_call_watch">Call on Watch</string>
-    <string name="watch_call_phone">Call on Phone</string>
     <string name="watch_silence">Silence</string>
     <string name="watch_accept">Accept</string>
     <string name="watch_hangup">Hang up</string>

@@ -79,6 +79,8 @@ class CallService : InCallService() {
         @Volatile var currentAudioState: CallAudioState? = null
         
         @Volatile var shouldHighlightSpeaker: Boolean = false
+
+        @Volatile var watchInitiated: Boolean = false
             
         // Thread-safe listener list (accessed from main thread + IO coroutines)
         private val callStateListeners = CopyOnWriteArrayList<CallStateListener>()
@@ -566,7 +568,13 @@ class CallService : InCallService() {
         
         CallService.notifyCallStateChanged()
         
-        if (call.state == Call.STATE_RINGING) {
+        if (watchInitiated) {
+            watchInitiated = false
+            setAudioRoute(android.telecom.CallAudioState.ROUTE_BLUETOOTH)
+            sendWearMessage("/outgoing_call", CallService.callerName ?: CallService.callerNumber ?: getString(R.string.unknown_contact))
+        }
+        
+        if (call.state == android.telecom.Call.STATE_RINGING) {
             startRinging(CallService.callerNumber)
         }
         
@@ -575,12 +583,12 @@ class CallService : InCallService() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
             putExtra("caller_number", CallService.callerNumber)
             putExtra("caller_name", CallService.callerName)
-            putExtra("is_incoming", call.state == Call.STATE_RINGING)
+            putExtra("is_incoming", call.state == android.telecom.Call.STATE_RINGING)
         }
         startActivity(intent)
 
         // Inform Watch of incoming call
-        if (call.state == Call.STATE_RINGING) {
+        if (call.state == android.telecom.Call.STATE_RINGING) {
             sendWearMessage("/incoming_call", "${CallService.callerName ?: CallService.callerNumber ?: getString(R.string.unknown_contact)}")
         }
     }

@@ -47,6 +47,10 @@ class WatchCallActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         
         val callerName = intent.getStringExtra("CALLER_NAME") ?: getString(R.string.watch_call_label)
+        val isOutgoing = intent.getBooleanExtra("IS_OUTGOING", false)
+        if (isOutgoing) {
+            _isAnswered.value = true
+        }
 
         // Register receivers
         registerReceiver(endCallReceiver, IntentFilter("ch.heuscher.simplephone.watch.CALL_ENDED"), RECEIVER_NOT_EXPORTED)

@@ -245,69 +245,41 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
 
 @Composable
 fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoading: Boolean) {
-    var pendingCallNumber by remember { mutableStateOf<String?>(null) }
     
     val callPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted && pendingCallNumber != null) {
-            val intent = Intent(Intent.ACTION_CALL).apply {
-                data = Uri.parse("tel:$pendingCallNumber")
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-            context.startActivity(intent)
-            pendingCallNumber = null
-        }
-    }
-
-    fun attemptCall(number: String) {
-        if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CALL_PHONE) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            val intent = Intent(Intent.ACTION_CALL).apply {
-                data = Uri.parse("tel:$number")
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-            context.startActivity(intent)
-            pendingCallNumber = null
-        } else {
-            // Keep pendingCallNumber set for the permission result
-            callPermissionLauncher.launch(android.Manifest.permission.CALL_PHONE)
-        }
-    }
-
-    androidx.wear.compose.material.dialog.Dialog(
-        showDialog = pendingCallNumber != null,
-        onDismissRequest = { pendingCallNumber = null }
     ) {
-        androidx.wear.compose.material.dialog.Alert(
-            title = {
-                Text(
-                    text = stringResource(R.string.watch_choose_call_method),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+        // If granted, the user needs to tap the button again.
+    }
+
+    fun smartCall(number: String) {
+        if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CALL_PHONE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            callPermissionLauncher.launch(android.Manifest.permission.CALL_PHONE)
+            return
+        }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val nodes = Tasks.await(Wearable.getNodeClient(context).connectedNodes)
+                if (nodes.isNotEmpty()) {
+                    // Phone is connected, route through phone
+                    val messageClient = Wearable.getMessageClient(context)
+                    for (node in nodes) {
+                        messageClient.sendMessage(node.id, "/initiate_call", number.toByteArray(Charsets.UTF_8))
+                    }
+                } else {
+                    // No phone connected, direct local dial
+                    withContext(Dispatchers.Main) {
+                        val intent = Intent(Intent.ACTION_CALL).apply {
+                            data = Uri.parse("tel:$number")
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        context.startActivity(intent)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("WatchMainActivity", "Failed to smart call", e)
             }
-        ) {
-            item {
-                Button(
-                    onClick = {
-                        attemptCall(pendingCallNumber!!)
-                    },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF1E88E5))
-                ) { Text(stringResource(R.string.watch_call_watch), color = Color.White) }
-            }
-            item {
-                Button(
-                    onClick = {
-                        initiatePhoneCall(context, pendingCallNumber!!)
-                        pendingCallNumber = null
-                    },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF43A047))
-                ) { Text(stringResource(R.string.watch_call_phone), color = Color.White) }
-            }
-            item { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }
 
@@ -342,7 +314,7 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoadi
         } else {
             items(contacts) { contact ->
                 ContactButton(contact = contact) {
-                    pendingCallNumber = contact.number
+                    smartCall(contact.number)
                 }
             }
         }
@@ -351,7 +323,7 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoadi
 
         item {
             ActionButton(text = stringResource(R.string.watch_emergency_call), color = Color(0xFFE53935)) {
-                pendingCallNumber = context.getString(R.string.watch_emergency_number)
+                smartCall(context.getString(R.string.watch_emergency_number))
             }
         }
         
