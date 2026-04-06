@@ -14,9 +14,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,10 +52,23 @@ class WatchCallActivity : ComponentActivity() {
         }
     }
 
+    private val callInfoReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val name = intent?.getStringExtra("CALLER_NAME") ?: return
+            _callerName.value = name
+            // Re-lookup photo
+            updatePhoto(name)
+        }
+    }
+
+    private val _callerName = mutableStateOf("")
+    private val _contactPhoto = mutableStateOf<Bitmap?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        val callerName = intent.getStringExtra("CALLER_NAME") ?: getString(R.string.watch_call_label)
+        val initialName = intent.getStringExtra("CALLER_NAME") ?: getString(R.string.watch_call_label)
+        _callerName.value = initialName
         val isOutgoing = intent.getBooleanExtra("IS_OUTGOING", false)
         if (isOutgoing) {
             _isAnswered.value = true
@@ -66,35 +77,16 @@ class WatchCallActivity : ComponentActivity() {
         // Register receivers
         registerReceiver(endCallReceiver, IntentFilter("ch.heuscher.simplephone.watch.CALL_ENDED"), RECEIVER_NOT_EXPORTED)
         registerReceiver(answerCallReceiver, IntentFilter("ch.heuscher.simplephone.watch.CALL_ANSWERED"), RECEIVER_NOT_EXPORTED)
+        registerReceiver(callInfoReceiver, IntentFilter("ch.heuscher.simplephone.watch.CALL_INFO"), RECEIVER_NOT_EXPORTED)
 
         // Try to find contact photo
-        val prefs = getSharedPreferences("simple_phone_watch", Context.MODE_PRIVATE)
-        val cachedJson = prefs.getString("contacts_cache", null)
-        var contactPhoto: Bitmap? = null
-        if (cachedJson != null) {
-            try {
-                val array = org.json.JSONArray(cachedJson)
-                for (i in 0 until array.length()) {
-                    val obj = array.getJSONObject(i)
-                    if (obj.getString("name") == callerName) {
-                        val base64 = obj.optString("photo_base64", "")
-                        if (base64.isNotEmpty()) {
-                            val bytes = android.util.Base64.decode(base64, android.util.Base64.DEFAULT)
-                            contactPhoto = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                        }
-                        break
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("WatchCallActivity", "Failed to parse cache for photo", e)
-            }
-        }
+        updatePhoto(initialName)
 
         setContent {
             MaterialTheme {
                 WatchCallScreen(
-                    callerName = callerName,
-                    contactPhoto = contactPhoto,
+                    callerName = _callerName.value,
+                    contactPhoto = _contactPhoto.value,
                     isAnswered = _isAnswered.value,
                     onAccept = {
                         _isAnswered.value = true
@@ -116,6 +108,29 @@ class WatchCallActivity : ComponentActivity() {
         }
     }
 
+    private fun updatePhoto(name: String) {
+        val prefs = getSharedPreferences("simple_phone_watch", Context.MODE_PRIVATE)
+        val cachedJson = prefs.getString("cached_contacts", null)
+        if (cachedJson != null) {
+            try {
+                val array = org.json.JSONArray(cachedJson)
+                for (i in 0 until array.length()) {
+                    val obj = array.getJSONObject(i)
+                    if (obj.getString("name") == name) {
+                        val base64 = obj.optString("photoBase64", "")
+                        if (base64.isNotEmpty()) {
+                            val bytes = android.util.Base64.decode(base64, android.util.Base64.DEFAULT)
+                            _contactPhoto.value = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                        }
+                        return
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("WatchCallActivity", "Failed to parse cache for photo", e)
+            }
+        }
+    }
+
     override fun dispatchTouchEvent(ev: android.view.MotionEvent?): Boolean {
         if (ev?.action == android.view.MotionEvent.ACTION_DOWN) {
             val prefs = getSharedPreferences("simple_phone_watch", Context.MODE_PRIVATE)
@@ -130,6 +145,7 @@ class WatchCallActivity : ComponentActivity() {
         super.onDestroy()
         unregisterReceiver(endCallReceiver)
         unregisterReceiver(answerCallReceiver)
+        unregisterReceiver(callInfoReceiver)
     }
 
     private fun sendMessageToPhone(path: String) {

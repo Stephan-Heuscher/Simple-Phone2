@@ -300,7 +300,7 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoadi
         }
     }
 
-    fun smartCall(number: String, force: Boolean = false) {
+    fun smartCall(number: String, contactName: String? = null, force: Boolean = false) {
         val prefs = context.getSharedPreferences("simple_phone_watch", Context.MODE_PRIVATE)
         val confirmReq = prefs.getBoolean("setting_confirm_before_call", false)
         
@@ -309,14 +309,19 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoadi
             return
         }
 
+        // Immediately open the call screen with the name we already know
+        val callIntent = Intent(context, WatchCallActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("CALLER_NAME", contactName ?: number)
+            putExtra("IS_OUTGOING", true)
+        }
+        context.startActivity(callIntent)
+
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val nodes = Tasks.await(Wearable.getNodeClient(context).connectedNodes)
                 if (nodes.isNotEmpty()) {
                     // Phone is connected, route through phone
-                    withContext(Dispatchers.Main) {
-                        android.widget.Toast.makeText(context, "Dialing on phone...", android.widget.Toast.LENGTH_SHORT).show()
-                    }
                     val messageClient = Wearable.getMessageClient(context)
                     for (node in nodes) {
                         messageClient.sendMessage(node.id, "/initiate_call", number.toByteArray(Charsets.UTF_8))
@@ -327,12 +332,11 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoadi
                         if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CALL_PHONE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
                             callPermissionLauncher.launch(android.Manifest.permission.CALL_PHONE)
                         } else {
-                            android.widget.Toast.makeText(context, "Dialing natively...", android.widget.Toast.LENGTH_SHORT).show()
-                            val intent = Intent(Intent.ACTION_CALL).apply {
+                            val dialIntent = Intent(Intent.ACTION_CALL).apply {
                                 data = Uri.parse("tel:$number")
                                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
                             }
-                            context.startActivity(intent)
+                            context.startActivity(dialIntent)
                         }
                     }
                 }
@@ -365,7 +369,7 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoadi
                     onClick = {
                         val num = showConfirmDialog
                         showConfirmDialog = null
-                        if (num != null) smartCall(num, true)
+                        if (num != null) smartCall(num, force = true)
                     },
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
                     colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF43A047))
@@ -413,7 +417,7 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoadi
         } else {
             items(contacts) { contact ->
                 ContactButton(contact = contact) {
-                    smartCall(contact.number)
+                    smartCall(contact.number, contact.name)
                 }
             }
         }

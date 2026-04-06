@@ -38,6 +38,13 @@ class WatchWearableListenerService : WearableListenerService() {
                 val intent = Intent("ch.heuscher.simplephone.watch.CALL_ENDED")
                 sendBroadcast(intent)
             }
+            "/call_info" -> {
+                val callerName = String(messageEvent.data)
+                val intent = Intent("ch.heuscher.simplephone.watch.CALL_INFO").apply {
+                    putExtra("CALLER_NAME", callerName)
+                }
+                sendBroadcast(intent)
+            }
         }
     }
 }

@@ -315,8 +315,14 @@ class CallService : InCallService() {
         }
         
         override fun onDetailsChanged(call: Call, details: Call.Details) {
+            val oldName = CallService.callerName
             updateCallInfo(call)
             CallService.notifyCallStateChanged()
+            
+            // If the name was resolved/changed, inform the watch
+            if (CallService.callerName != oldName && CallService.callerName != null) {
+                sendWearMessage("/call_info", CallService.callerName!!)
+            }
         }
     }
     
@@ -500,14 +506,23 @@ class CallService : InCallService() {
     private fun updateCallInfo(call: Call) {
         val details = call.details
         val handle = details?.handle
-        CallService.callerNumber = handle?.schemeSpecificPart
+        val number = handle?.schemeSpecificPart
+        CallService.callerNumber = number
         
-        // Try to get caller name from gateway info or caller display name
-        CallService.callerName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        // Try to get caller name from system display name first
+        var name = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             details?.contactDisplayName
         } else {
             null
         }
+        
+        // If system didn't give us a name, try our local repository
+        if (name == null && number != null) {
+            val contact = contactRepository.getContactByNumber(number)
+            name = contact?.name
+        }
+        
+        CallService.callerName = name
     }
 
     override fun onCallAdded(call: Call) {
