@@ -5,6 +5,7 @@ import android.os.PowerManager
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import android.telecom.Call
 import android.telecom.CallAudioState
 import android.view.WindowManager
@@ -203,6 +204,7 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
     }
     
     override fun onCallStateChanged(state: Int, number: String?, name: String?, audioState: CallAudioState?, disconnectCause: android.telecom.DisconnectCause?) {
+        Log.d("IncomingCallActivity", "onCallStateChanged: state=$state, cause=${disconnectCause?.code}")
         callState = state
         if (number != null) callerNumber = number
         if (name != null) callerName = name
@@ -218,9 +220,11 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
                     android.telecom.DisconnectCause.BUSY -> "User is Busy"
                     android.telecom.DisconnectCause.REJECTED -> "Call Rejected"
                     android.telecom.DisconnectCause.ERROR -> "Call Error"
+                    android.telecom.DisconnectCause.MISSED -> "Call Missed"
                     else -> "Call Ended"
                 }
                 
+                Log.d("IncomingCallActivity", "Disconnect cause not local/remote. Reason=$reason. Delaying finish by 3s.")
                 // Show transparent message (Toast is effectively a transparent overlay message)
                 android.widget.Toast.makeText(this, reason, android.widget.Toast.LENGTH_LONG).show()
                 
@@ -229,9 +233,11 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
                 
                 // Delay finish slightly to allow TTS to start
                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    Log.d("IncomingCallActivity", "Calling finish (delayed)")
                     finish()
                 }, 3000)
             } else {
+                Log.d("IncomingCallActivity", "Calling finish (immediate)")
                 finish()
             }
         }
@@ -844,7 +850,12 @@ private fun AudioControlsVerticalPanel(
             devices.take(2).forEach { device ->
                 val isSelected = audioState.activeBluetoothDevice?.address == device.address
                 @Suppress("MissingPermission")
-                val label = device.name ?: stringResource(R.string.bluetooth)
+                val defaultBluetoothLabel = stringResource(R.string.bluetooth)
+                val label = try {
+                    device.name ?: defaultBluetoothLabel
+                } catch (e: SecurityException) {
+                    defaultBluetoothLabel
+                }
                 
                 AudioRouteButton(
                     icon = Icons.Filled.Bluetooth,
