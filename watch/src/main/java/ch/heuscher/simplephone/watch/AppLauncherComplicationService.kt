@@ -3,20 +3,32 @@ package ch.heuscher.simplephone.watch
 import android.app.PendingIntent
 import android.content.Intent
 import android.graphics.drawable.Icon
+import android.util.Log
 import androidx.wear.watchface.complications.data.ComplicationData
 import androidx.wear.watchface.complications.data.ComplicationType
+import androidx.wear.watchface.complications.data.MonochromaticImage
+import androidx.wear.watchface.complications.data.MonochromaticImageComplicationData
 import androidx.wear.watchface.complications.data.PhotoImageComplicationData
 import androidx.wear.watchface.complications.data.PlainComplicationText
+import androidx.wear.watchface.complications.data.SmallImage
+import androidx.wear.watchface.complications.data.SmallImageComplicationData
+import androidx.wear.watchface.complications.data.SmallImageType
 import androidx.wear.watchface.complications.datasource.ComplicationRequest
 import androidx.wear.watchface.complications.datasource.SuspendingComplicationDataSourceService
 
 class AppLauncherComplicationService : SuspendingComplicationDataSourceService() {
 
+    companion object {
+        private const val TAG = "AppLauncherComplication"
+    }
+
     override fun getPreviewData(type: ComplicationType): ComplicationData? {
+        Log.d(TAG, "getPreviewData requested type: $type")
         return createComplicationData(type)
     }
 
     override suspend fun onComplicationRequest(request: ComplicationRequest): ComplicationData? {
+        Log.d(TAG, "onComplicationRequest type: ${request.complicationType}")
         return createComplicationData(request.complicationType)
     }
 
@@ -36,15 +48,17 @@ class AppLauncherComplicationService : SuspendingComplicationDataSourceService()
         drawable?.setBounds(0, 0, canvas.width, canvas.height)
         drawable?.draw(canvas)
 
-        // Use a bitmap-backed icon since some watchfaces reject vector PHOTO_IMAGEs
         val outlineIcon = Icon.createWithBitmap(bitmap)
 
         val contentDesc = PlainComplicationText.Builder(
             getString(R.string.watch_complication_open)
         ).build()
 
+        Log.d(TAG, "Creating complication data for type: $type")
+
         return when (type) {
             ComplicationType.PHOTO_IMAGE -> {
+                Log.d(TAG, "Returning PHOTO_IMAGE complication")
                 PhotoImageComplicationData.Builder(
                     photoImage = outlineIcon,
                     contentDescription = contentDesc
@@ -52,7 +66,26 @@ class AppLauncherComplicationService : SuspendingComplicationDataSourceService()
                 .setTapAction(pendingIntent)
                 .build()
             }
+            ComplicationType.SMALL_IMAGE -> {
+                Log.d(TAG, "Returning SMALL_IMAGE complication")
+                SmallImageComplicationData.Builder(
+                    smallImage = SmallImage.Builder(outlineIcon, SmallImageType.ICON).build(),
+                    contentDescription = contentDesc
+                )
+                .setTapAction(pendingIntent)
+                .build()
+            }
+            ComplicationType.MONOCHROMATIC_IMAGE -> {
+                Log.d(TAG, "Returning MONOCHROMATIC_IMAGE complication")
+                MonochromaticImageComplicationData.Builder(
+                    monochromaticImage = MonochromaticImage.Builder(outlineIcon).build(),
+                    contentDescription = contentDesc
+                )
+                .setTapAction(pendingIntent)
+                .build()
+            }
             ComplicationType.SHORT_TEXT -> {
+                Log.d(TAG, "Returning SHORT_TEXT complication")
                 androidx.wear.watchface.complications.data.ShortTextComplicationData.Builder(
                     text = PlainComplicationText.Builder("Phone").build(),
                     contentDescription = contentDesc
@@ -60,7 +93,10 @@ class AppLauncherComplicationService : SuspendingComplicationDataSourceService()
                 .setTapAction(pendingIntent)
                 .build()
             }
-            else -> null
+            else -> {
+                Log.w(TAG, "Unsupported type requested: $type")
+                null
+            }
         }
     }
 }
