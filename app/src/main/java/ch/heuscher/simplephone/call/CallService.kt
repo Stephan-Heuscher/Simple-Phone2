@@ -81,7 +81,9 @@ class CallService : InCallService() {
         @Volatile var shouldHighlightSpeaker: Boolean = false
 
         @Volatile var watchInitiated: Boolean = false
-            
+
+        @Volatile var hasAttemptedBluetoothDefault: Boolean = false
+
         // Thread-safe listener list (accessed from main thread + IO coroutines)
         private val callStateListeners = CopyOnWriteArrayList<CallStateListener>()
         
@@ -525,6 +527,7 @@ class CallService : InCallService() {
 
     override fun onCallAdded(call: Call) {
         Log.d(TAG, "Call added")
+        CallService.hasAttemptedBluetoothDefault = false
         
         // Block incoming calls if we already have an active/ringing call
         val activeCall = CallService.currentCall
@@ -908,6 +911,17 @@ class CallService : InCallService() {
     override fun onCallAudioStateChanged(audioState: CallAudioState?) {
         Log.d(TAG, "Audio state changed: ${audioState?.route}")
         CallService.currentAudioState = audioState
+        
+        if (settingsRepository.defaultToBluetooth && !CallService.hasAttemptedBluetoothDefault) {
+            val mask = audioState?.supportedRouteMask ?: 0
+            if (mask and android.telecom.CallAudioState.ROUTE_BLUETOOTH != 0) {
+                CallService.hasAttemptedBluetoothDefault = true
+                Log.d(TAG, "Defaulting to Bluetooth (first availability)")
+                @Suppress("DEPRECATION")
+                setAudioRoute(android.telecom.CallAudioState.ROUTE_BLUETOOTH)
+            }
+        }
+        
         updateSpeakerHighlightState() // Re-evaluate glow when audio route changes
         CallService.notifyCallStateChanged()
     }
