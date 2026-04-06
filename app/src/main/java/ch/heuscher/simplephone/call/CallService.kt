@@ -81,6 +81,8 @@ class CallService : InCallService() {
         @Volatile var shouldHighlightSpeaker: Boolean = false
 
         @Volatile var watchInitiated: Boolean = false
+
+        @Volatile var forceBluetoothAudio: Boolean = false
             
         // Thread-safe listener list (accessed from main thread + IO coroutines)
         private val callStateListeners = CopyOnWriteArrayList<CallStateListener>()
@@ -570,6 +572,7 @@ class CallService : InCallService() {
         
         if (watchInitiated) {
             watchInitiated = false
+            forceBluetoothAudio = true
             setAudioRoute(android.telecom.CallAudioState.ROUTE_BLUETOOTH)
             sendWearMessage("/outgoing_call", CallService.callerName ?: CallService.callerNumber ?: getString(R.string.unknown_contact))
         }
@@ -620,6 +623,7 @@ class CallService : InCallService() {
         
         stopProximitySensor()
         shouldHighlightSpeaker = false
+        CallService.forceBluetoothAudio = false
         
         // Show our own missed call notification since we are the default dialer.
         // The system won't show one when we handle calls.
@@ -882,6 +886,13 @@ class CallService : InCallService() {
     override fun onCallAudioStateChanged(audioState: CallAudioState?) {
         Log.d(TAG, "Audio state changed: ${audioState?.route}")
         CallService.currentAudioState = audioState
+        // Stickily enforce Bluetooth if requested by the watch proxy
+        if (CallService.forceBluetoothAudio && audioState?.route != CallAudioState.ROUTE_BLUETOOTH) {
+            val mask = audioState?.supportedRouteMask ?: 0
+            if (mask and CallAudioState.ROUTE_BLUETOOTH != 0) {
+                setAudioRoute(CallAudioState.ROUTE_BLUETOOTH)
+            }
+        }
         updateSpeakerHighlightState() // Re-evaluate glow when audio route changes
         CallService.notifyCallStateChanged()
     }
