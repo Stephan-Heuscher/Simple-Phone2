@@ -597,13 +597,17 @@ class CallService : InCallService() {
         }
         
         // Launch the incoming call activity
-        val intent = Intent(this, IncomingCallActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-            putExtra("caller_number", CallService.callerNumber)
-            putExtra("caller_name", CallService.callerName)
-            putExtra("is_incoming", call.state == android.telecom.Call.STATE_RINGING)
+        try {
+            val intent = Intent(this, IncomingCallActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                putExtra("caller_number", CallService.callerNumber)
+                putExtra("caller_name", CallService.callerName)
+                putExtra("is_incoming", call.state == android.telecom.Call.STATE_RINGING)
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to start IncomingCallActivity", e)
         }
-        startActivity(intent)
 
         // Inform Watch of incoming call
         if (call.state == android.telecom.Call.STATE_RINGING) {
