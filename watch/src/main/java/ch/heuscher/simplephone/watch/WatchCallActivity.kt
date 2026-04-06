@@ -166,17 +166,16 @@ class WatchCallActivity : ComponentActivity() {
 
 @Composable
 fun WatchCallScreen(callerName: String, contactPhoto: Bitmap?, isAnswered: Boolean, onAccept: () -> Unit, onSilence: () -> Unit, onReject: () -> Unit, onHangup: () -> Unit) {
-    Column(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-        if (!isAnswered) {
+    if (!isAnswered) {
+        // Incoming call: split screen - top silence, bottom accept with name
+        Column(modifier = Modifier.fillMaxSize().background(Color.Black)) {
             // Top Half: Blue (Silence Ringtone)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
                     .background(Color(0xFF1E88E5))
-                    .clickable {
-                        onSilence()
-                    },
+                    .clickable { onSilence() },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -193,9 +192,7 @@ fun WatchCallScreen(callerName: String, contactPhoto: Bitmap?, isAnswered: Boole
                     .fillMaxWidth()
                     .weight(1f)
                     .background(Color(0xFF43A047))
-                    .clickable {
-                        onAccept()
-                    },
+                    .clickable { onAccept() },
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -214,50 +211,68 @@ fun WatchCallScreen(callerName: String, contactPhoto: Bitmap?, isAnswered: Boole
                     )
                 }
             }
-        } else {
-            // REDESIGNED: Compact friendlier UI for round watch
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 24.dp, vertical = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                // Avatar (48dp - compact for round screen)
+        }
+    } else {
+        // Active call: full-bleed photo like ContactButton, with disconnect button
+        Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+            // Big contact photo filling the screen
+            if (contactPhoto != null) {
+                Image(
+                    bitmap = contactPhoto.asImageBitmap(),
+                    contentDescription = "Contact photo",
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    alignment = androidx.compose.ui.BiasAlignment(0f, -0.3f),
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                // Fallback: large initial letter
                 Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF1E88E5)),
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (contactPhoto != null) {
-                        Image(
-                            bitmap = contactPhoto.asImageBitmap(),
-                            contentDescription = "Contact photo",
-                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    } else {
-                        Text(
-                            text = callerName.take(1).uppercase(),
-                            color = Color.White,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    Text(
+                        text = callerName.take(1).uppercase(),
+                        color = Color.White.copy(alpha = 0.15f),
+                        fontSize = 120.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
+            }
 
-                Spacer(modifier = Modifier.height(4.dp))
+            // Dark gradient overlay from bottom
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.7f),
+                                Color.Black.copy(alpha = 0.95f)
+                            ),
+                            startY = 100f
+                        )
+                    )
+            )
 
+            // Bottom content: name + status + hangup button
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 // Name
                 Text(
                     text = callerName,
                     color = Color.White,
-                    fontSize = 16.sp,
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(horizontal = 24.dp)
                 )
 
                 // Status
@@ -270,7 +285,7 @@ fun WatchCallScreen(callerName: String, contactPhoto: Bitmap?, isAnswered: Boole
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Red Hangup Button (48dp)
+                // Red Hangup Button
                 Button(
                     onClick = { onHangup() },
                     modifier = Modifier.size(48.dp),
