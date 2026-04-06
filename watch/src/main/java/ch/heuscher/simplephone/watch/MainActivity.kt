@@ -267,9 +267,47 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoadi
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
             context.startActivity(intent)
+            pendingCallNumber = null
         } else {
-            pendingCallNumber = number
+            // Keep pendingCallNumber set for the permission result
             callPermissionLauncher.launch(android.Manifest.permission.CALL_PHONE)
+        }
+    }
+
+    androidx.wear.compose.material.dialog.Dialog(
+        showDialog = pendingCallNumber != null,
+        onDismissRequest = { pendingCallNumber = null }
+    ) {
+        androidx.wear.compose.material.dialog.Alert(
+            title = {
+                Text(
+                    text = stringResource(R.string.watch_choose_call_method),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+        ) {
+            item {
+                Button(
+                    onClick = {
+                        attemptCall(pendingCallNumber!!)
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF1E88E5))
+                ) { Text(stringResource(R.string.watch_call_watch), color = Color.White) }
+            }
+            item {
+                Button(
+                    onClick = {
+                        initiatePhoneCall(context, pendingCallNumber!!)
+                        pendingCallNumber = null
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF43A047))
+                ) { Text(stringResource(R.string.watch_call_phone), color = Color.White) }
+            }
+            item { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }
 
@@ -304,7 +342,7 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoadi
         } else {
             items(contacts) { contact ->
                 ContactButton(contact = contact) {
-                    attemptCall(contact.number)
+                    pendingCallNumber = contact.number
                 }
             }
         }
@@ -313,7 +351,7 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoadi
 
         item {
             ActionButton(text = stringResource(R.string.watch_emergency_call), color = Color(0xFFE53935)) {
-                attemptCall(context.getString(R.string.watch_emergency_number))
+                pendingCallNumber = context.getString(R.string.watch_emergency_number)
             }
         }
         
@@ -336,6 +374,21 @@ private fun findMyPhone(context: Context) {
             }
         } catch (e: Exception) {
             Log.e("WatchMainActivity", "Failed to send find phone message", e)
+        }
+    }
+}
+
+private fun initiatePhoneCall(context: Context, number: String) {
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val nodeClient = Wearable.getNodeClient(context)
+            val nodes = Tasks.await(nodeClient.connectedNodes)
+            val messageClient = Wearable.getMessageClient(context)
+            for (node in nodes) {
+                messageClient.sendMessage(node.id, "/initiate_call", number.toByteArray(Charsets.UTF_8))
+            }
+        } catch (e: Exception) {
+            Log.e("WatchMainActivity", "Failed to send initiate call message", e)
         }
     }
 }

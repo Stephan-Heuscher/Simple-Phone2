@@ -40,6 +40,19 @@ class PhoneWearableListenerService : WearableListenerService() {
                 Log.d("PhoneWearableListener", "Watch requested to silence ringer")
                 CallService.silenceRinger()
             }
+            "/initiate_call" -> {
+                val number = String(messageEvent.data, Charsets.UTF_8)
+                Log.d("PhoneWearableListener", "Watch requested to initiate call to $number")
+                if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.CALL_PHONE) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    val intent = android.content.Intent(android.content.Intent.ACTION_CALL).apply {
+                        data = android.net.Uri.parse("tel:$number")
+                        flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                    startActivity(intent)
+                } else {
+                    Log.e("PhoneWearableListener", "Missing CALL_PHONE permission")
+                }
+            }
         }
     }
 
