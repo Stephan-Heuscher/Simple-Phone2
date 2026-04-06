@@ -376,19 +376,26 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @Suppress("MissingPermission")
     private fun makePhoneCall(phoneNumber: String) {
         val normalizedNumber = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.normalize(phoneNumber)
+        val uri = Uri.fromParts("tel", normalizedNumber, null)
         
-        val intent = Intent(Intent.ACTION_CALL).apply {
-            data = Uri.fromParts("tel", normalizedNumber, null)
-        }
-
         // Cancel missed call notification if exists
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
         val notificationId = normalizedNumber.hashCode() 
         notificationManager.cancel(notificationId)
         
-        startActivity(intent)
+        try {
+            val telecomManager = getSystemService(Context.TELECOM_SERVICE) as android.telecom.TelecomManager
+            telecomManager.placeCall(uri, null)
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "Error placing call via TelecomManager, falling back to intent", e)
+            val intent = Intent(Intent.ACTION_CALL).apply {
+                data = uri
+            }
+            startActivity(intent)
+        }
     }
     
     @Deprecated("Deprecated in Java")
