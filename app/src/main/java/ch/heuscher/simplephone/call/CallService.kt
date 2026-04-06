@@ -909,7 +909,12 @@ class CallService : InCallService() {
         if (CallService.forceBluetoothAudio && audioState?.route != CallAudioState.ROUTE_BLUETOOTH) {
             val mask = audioState?.supportedRouteMask ?: 0
             if (mask and CallAudioState.ROUTE_BLUETOOTH != 0) {
-                setAudioRoute(CallAudioState.ROUTE_BLUETOOTH)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && audioState?.supportedBluetoothDevices?.isNullOrEmpty() == false) {
+                    requestBluetoothAudio(audioState.supportedBluetoothDevices.first())
+                } else {
+                    @Suppress("DEPRECATION")
+                    setAudioRoute(CallAudioState.ROUTE_BLUETOOTH)
+                }
             }
         }
         updateSpeakerHighlightState() // Re-evaluate glow when audio route changes
