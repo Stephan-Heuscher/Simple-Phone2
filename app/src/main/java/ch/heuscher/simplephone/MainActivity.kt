@@ -291,7 +291,17 @@ class MainActivity : ComponentActivity() {
     
     private fun offerReplacingDefaultDialer() {
         if (!checkIsDefaultDialer()) {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                try {
+                    val roleManager = getSystemService(android.app.role.RoleManager::class.java)
+                    if (roleManager?.isRoleAvailable(android.app.role.RoleManager.ROLE_DIALER) == true) {
+                        val intent = roleManager.createRequestRoleIntent(android.app.role.RoleManager.ROLE_DIALER)
+                        startActivityForResult(intent, REQUEST_CODE_SET_DEFAULT_DIALER)
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("MainActivity", "Failed to show role manager dialer prompt", e)
+                }
+            } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
                 try {
                     android.util.Log.d("MainActivity", "Requesting to be default dialer")
                     val intent = Intent(android.telecom.TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
@@ -310,7 +320,10 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun checkIsDefaultDialer(): Boolean {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            val roleManager = getSystemService(android.app.role.RoleManager::class.java)
+            return roleManager?.isRoleHeld(android.app.role.RoleManager.ROLE_DIALER) == true
+        } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             val telecomManager = getSystemService(android.telecom.TelecomManager::class.java)
             return telecomManager?.defaultDialerPackage == packageName
         }
