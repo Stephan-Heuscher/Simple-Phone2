@@ -124,6 +124,8 @@ fun SettingsScreen(
     onRingtoneSilenceTimeoutChange: (Int) -> Unit = {},
     raiseToEarToAnswer: Boolean = false,
     onRaiseToEarToAnswerChange: (Boolean) -> Unit = {},
+    defaultToBluetooth: Boolean = true,
+    onDefaultToBluetoothChange: (Boolean) -> Unit = {},
     // gentle phone specific
     pairingCode: String? = null,
     showPairingCode: Boolean = false,
@@ -928,6 +930,36 @@ fun SettingsScreen(
                     isEnabled = raiseToEarToAnswer,
                     onToggle = { vibrate(); onRaiseToEarToAnswerChange(!raiseToEarToAnswer) },
                     label = if (raiseToEarToAnswer) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
+                )
+            }
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // --- Default to Bluetooth Section ---
+        item {
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_default_to_bluetooth_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_default_to_bluetooth_desc),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                BigToggleButton(
+                    isEnabled = defaultToBluetooth,
+                    onToggle = { vibrate(); onDefaultToBluetoothChange(!defaultToBluetooth) },
+                    label = if (defaultToBluetooth) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
                 )
             }
             HorizontalDivider()

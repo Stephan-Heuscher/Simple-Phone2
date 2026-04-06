@@ -19,6 +19,7 @@ data class AppSettings(
     val useHapticFeedback: Boolean,
     val useVoiceAnnouncements: Boolean,
     val blockUnknownCallers: Boolean,
+    val raiseToEarToAnswer: Boolean,
     val displayMode: Int,
     val simplifiedContactCallScreen: Boolean,
     val silenceCallOnTouch: Boolean,
@@ -26,7 +27,7 @@ data class AppSettings(
     val isDemoMode: Boolean,
     val onboardingCompleted: Boolean,
     val lastBlockedNumber: String?,
-    val raiseToEarToAnswer: Boolean
+    val defaultToBluetooth: Boolean
 )
 
 /**
@@ -35,7 +36,6 @@ data class AppSettings(
  * For simple phone: Only local SharedPreferences are used.
  */
 class SettingsRepository(private val context: Context) {
-    
     private val prefs: SharedPreferences = context.getSharedPreferences(
         PREFS_NAME, Context.MODE_PRIVATE
     )
@@ -68,8 +68,8 @@ class SettingsRepository(private val context: Context) {
         private const val KEY_SIMPLIFIED_CONTACT_CALL_SCREEN = "simplified_contact_call_screen"
         private const val KEY_RINGTONE_SILENCE_TIMEOUT = "ringtone_silence_timeout"
         private const val KEY_RAISE_TO_EAR_TO_ANSWER = "raise_to_ear_to_answer"
+        private const val KEY_DEFAULT_TO_BLUETOOTH = "default_to_bluetooth"
         
-        // Zoom factors per screen size
         // Zoom factors per screen size
         private const val KEY_ZOOM_COMPACT = "zoom_compact"
         private const val KEY_ZOOM_MEDIUM = "zoom_medium"
@@ -103,21 +103,12 @@ class SettingsRepository(private val context: Context) {
         private const val REMOTE_KEY_ZOOM_FACTOR = "zoomFactor"
         private const val REMOTE_KEY_FAVORITES_ORDER = "favoritesOrder"
         private const val REMOTE_KEY_RAISE_TO_EAR = "raiseToEarToAnswer"
+        private const val REMOTE_KEY_DEFAULT_TO_BLUETOOTH = "defaultToBluetooth"
     }
     
     // Strong reference to listener to prevent garbage collection
     private val preferenceChangeListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         refreshSettings()
-
-        // Special handling for Zoom changes to sync back to remote
-        if (key == KEY_ZOOM_COMPACT || key == KEY_ZOOM_MEDIUM || key == KEY_ZOOM_EXPANDED) {
-           // We only sync one "zoomFactor" to remote, assume Compact is the primary one for now 
-           // OR check which one changed. 
-           // For simplicity in this iteration, we might not sync LOCAL -> REMOTE for Zoom 
-           // if we consider Remote as "Source of Truth" for configuration.
-           // However, if user changes it on phone, it should update portal.
-           // Let's defer that specific logic to the setter.
-        }
     }
 
     init {
@@ -198,7 +189,8 @@ class SettingsRepository(private val context: Context) {
             isDemoMode = prefs.getBoolean(KEY_IS_DEMO_MODE, false),
             onboardingCompleted = prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false),
             lastBlockedNumber = prefs.getString(KEY_LAST_BLOCKED_NUMBER, null),
-            raiseToEarToAnswer = getRemoteBool(REMOTE_KEY_RAISE_TO_EAR) ?: prefs.getBoolean(KEY_RAISE_TO_EAR_TO_ANSWER, false)
+            raiseToEarToAnswer = getRemoteBool(REMOTE_KEY_RAISE_TO_EAR) ?: prefs.getBoolean(KEY_RAISE_TO_EAR_TO_ANSWER, false),
+            defaultToBluetooth = getRemoteBool(REMOTE_KEY_DEFAULT_TO_BLUETOOTH) ?: prefs.getBoolean(KEY_DEFAULT_TO_BLUETOOTH, true)
         )
     }
     
@@ -342,6 +334,13 @@ class SettingsRepository(private val context: Context) {
         set(value) {
             prefs.edit().putBoolean(KEY_RAISE_TO_EAR_TO_ANSWER, value).apply()
             updateRemote(REMOTE_KEY_RAISE_TO_EAR, value)
+        }
+
+    var defaultToBluetooth: Boolean
+        get() = settings.value.defaultToBluetooth
+        set(value) {
+            prefs.edit().putBoolean(KEY_DEFAULT_TO_BLUETOOTH, value).apply()
+            updateRemote(REMOTE_KEY_DEFAULT_TO_BLUETOOTH, value)
         }
 
     // Derived properties for backward compatibility / ease of use

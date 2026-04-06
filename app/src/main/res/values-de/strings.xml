@@ -202,5 +202,8 @@
     <string name="settings_raise_to_ear_title">Ans Ohr halten zum Annehmen</string>
     <string name="settings_raise_to_ear_desc">Nimmt eingehende Anrufe automatisch an, wenn Sie das Telefon ans Ohr halten (nur aufrecht).</string>
 
+    <!-- Default to Bluetooth -->
+    <string name="settings_default_to_bluetooth_title">Standardmäßig Bluetooth verwenden</string>
+    <string name="settings_default_to_bluetooth_desc">Verwendet für Anrufe automatisch ein verbundenes Bluetooth-Gerät, sofern verfügbar.</string>
 
 </resources>

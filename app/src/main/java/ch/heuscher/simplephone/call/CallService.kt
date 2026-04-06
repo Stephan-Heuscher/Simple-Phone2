@@ -581,6 +581,14 @@ class CallService : InCallService() {
         // Start monitoring sensor for phone orientation / proximity
         startProximitySensor()
         
+        // Default outgoing calls to Bluetooth if available and setting is ON
+        if (settingsRepository.defaultToBluetooth && call.state != android.telecom.Call.STATE_RINGING) {
+            val mask = CallService.currentAudioState?.supportedRouteMask ?: 0
+            if (mask and android.telecom.CallAudioState.ROUTE_BLUETOOTH != 0) {
+                setAudioRoute(android.telecom.CallAudioState.ROUTE_BLUETOOTH)
+            }
+        }
+        
         CallService.notifyCallStateChanged()
         
         if (watchInitiated) {

@@ -728,17 +728,21 @@ fun SimplePhoneApp(
                         currentWidthSizeClass = widthSizeClass,
                         onShowOnboarding = onShowOnboarding,
                         simplifiedContactCallScreen = settings.simplifiedContactCallScreen,
-                        onSimplifiedContactCallScreenChange = { settingsRepository.simplifiedContactCallScreen = it },
+                        onSimplifiedContactCallScreenChange = { value -> settingsRepository.simplifiedContactCallScreen = value },
                         silenceCallOnTouch = settings.silenceCallOnTouch,
-                        onSilenceCallOnTouchChange = { settingsRepository.silenceCallOnTouch = it },
+                        onSilenceCallOnTouchChange = { value -> settingsRepository.silenceCallOnTouch = value },
                         ringtoneSilenceTimeout = settings.ringtoneSilenceTimeout,
-                        onRingtoneSilenceTimeoutChange = { settingsRepository.ringtoneSilenceTimeout = it },
+                        onRingtoneSilenceTimeoutChange = { value -> settingsRepository.ringtoneSilenceTimeout = value },
                         raiseToEarToAnswer = settings.raiseToEarToAnswer,
-                        onRaiseToEarToAnswerChange = { settingsRepository.raiseToEarToAnswer = it },
+                        onRaiseToEarToAnswerChange = { value -> settingsRepository.raiseToEarToAnswer = value },
+                        defaultToBluetooth = settings.defaultToBluetooth,
+                        onDefaultToBluetoothChange = { value -> settingsRepository.defaultToBluetooth = value },
                         // gentle phone specific
                         pairingCode = settingsRepository.getPairingCode(),
                         showPairingCode = settingsRepository.isRemoteSettingsEnabled(),
-                        onGeneratePairingCode = { settingsRepository.generateTemporaryPairingCode() }
+                        onGeneratePairingCode = {
+                            settingsRepository.generateTemporaryPairingCode()
+                        }
                     )
                 }
             }

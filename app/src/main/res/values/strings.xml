@@ -218,5 +218,8 @@
     <string name="settings_raise_to_ear_title">Raise to ear to answer</string>
     <string name="settings_raise_to_ear_desc">Automatically answer incoming calls when you lift the phone and hold it to your ear (only upright).</string>
 
+    <!-- Default to Bluetooth -->
+    <string name="settings_default_to_bluetooth_title">Default to Bluetooth</string>
+    <string name="settings_default_to_bluetooth_desc">Always use a connected Bluetooth device for call audio if available.</string>
 
 </resources>
