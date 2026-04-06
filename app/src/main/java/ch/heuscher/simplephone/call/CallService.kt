@@ -909,9 +909,15 @@ class CallService : InCallService() {
         if (CallService.forceBluetoothAudio && audioState?.route != CallAudioState.ROUTE_BLUETOOTH) {
             val mask = audioState?.supportedRouteMask ?: 0
             if (mask and CallAudioState.ROUTE_BLUETOOTH != 0) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && audioState?.supportedBluetoothDevices?.isNullOrEmpty() == false) {
-                    requestBluetoothAudio(audioState.supportedBluetoothDevices.first())
-                } else {
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && audioState?.supportedBluetoothDevices?.isNullOrEmpty() == false) {
+                        requestBluetoothAudio(audioState.supportedBluetoothDevices.first())
+                    } else {
+                        @Suppress("DEPRECATION")
+                        setAudioRoute(CallAudioState.ROUTE_BLUETOOTH)
+                    }
+                } catch (e: SecurityException) {
+                    Log.d(TAG, "Missing BLUETOOTH_CONNECT, falling back to setAudioRoute")
                     @Suppress("DEPRECATION")
                     setAudioRoute(CallAudioState.ROUTE_BLUETOOTH)
                 }
