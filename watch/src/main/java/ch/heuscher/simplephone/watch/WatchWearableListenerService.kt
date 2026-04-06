@@ -30,17 +30,22 @@ class WatchWearableListenerService : WearableListenerService() {
                 startActivity(intent)
             }
             "/call_answered" -> {
-                val intent = Intent("ch.heuscher.simplephone.watch.CALL_ANSWERED")
+                val intent = Intent("ch.heuscher.simplephone.watch.CALL_ANSWERED").apply {
+                    setPackage(packageName)
+                }
                 sendBroadcast(intent)
             }
             "/call_ended" -> {
                 // Send broadcast to close the call screen if it's open
-                val intent = Intent("ch.heuscher.simplephone.watch.CALL_ENDED")
+                val intent = Intent("ch.heuscher.simplephone.watch.CALL_ENDED").apply {
+                    setPackage(packageName)
+                }
                 sendBroadcast(intent)
             }
             "/call_info" -> {
                 val callerName = String(messageEvent.data)
                 val intent = Intent("ch.heuscher.simplephone.watch.CALL_INFO").apply {
+                    setPackage(packageName)
                     putExtra("CALLER_NAME", callerName)
                 }
                 sendBroadcast(intent)
