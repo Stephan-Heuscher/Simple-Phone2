@@ -733,33 +733,8 @@ private fun AudioControlsCompactRow(
             Spacer(modifier = Modifier.width(8.dp))
         }
         
-        // Bluetooth Devices (compact)
-        var showedBluetooth = false
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-            val devices = audioState.supportedBluetoothDevices
-            if (!devices.isNullOrEmpty()) {
-                showedBluetooth = true
-                devices.forEach { device ->
-                    val isSelected = audioState.activeBluetoothDevice?.address == device.address
-                    @Suppress("MissingPermission")
-                    val label = device.name ?: stringResource(R.string.bluetooth)
-                    
-                    AudioRouteButtonCompact(
-                        icon = Icons.Filled.Bluetooth,
-                        label = label,
-                        isSelected = isSelected,
-                        onClick = {
-                            vibrate(context)
-                            onBluetoothDeviceSelected(device)
-                        }
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                }
-            }
-        }
-        
         // Fallback Bluetooth
-        if (!showedBluetooth && (supportedRouteMask and CallAudioState.ROUTE_BLUETOOTH != 0)) {
+        if (supportedRouteMask and CallAudioState.ROUTE_BLUETOOTH != 0) {
             val isSelected = route == CallAudioState.ROUTE_BLUETOOTH
             AudioRouteButtonCompact(
                 icon = Icons.Filled.Bluetooth,
@@ -840,39 +815,8 @@ private fun AudioControlsVerticalPanel(
         Spacer(modifier = Modifier.height(12.dp))
     }
     
-    // Bluetooth Devices
-    var showedBluetooth = false
-    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-        val devices = audioState.supportedBluetoothDevices
-        if (!devices.isNullOrEmpty()) {
-            showedBluetooth = true
-            // Show only first 2 bluetooth devices in landscape to save space
-            devices.take(2).forEach { device ->
-                val isSelected = audioState.activeBluetoothDevice?.address == device.address
-                @Suppress("MissingPermission")
-                val defaultBluetoothLabel = stringResource(R.string.bluetooth)
-                val label = try {
-                    device.name ?: defaultBluetoothLabel
-                } catch (e: SecurityException) {
-                    defaultBluetoothLabel
-                }
-                
-                AudioRouteButton(
-                    icon = Icons.Filled.Bluetooth,
-                    label = label,
-                    isSelected = isSelected,
-                    onClick = {
-                        vibrate(context)
-                        onBluetoothDeviceSelected(device)
-                    }
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-        }
-    }
-    
     // Fallback Bluetooth
-    if (!showedBluetooth && (supportedRouteMask and CallAudioState.ROUTE_BLUETOOTH != 0)) {
+    if (supportedRouteMask and CallAudioState.ROUTE_BLUETOOTH != 0) {
         val isSelected = route == CallAudioState.ROUTE_BLUETOOTH
         AudioRouteButton(
             icon = Icons.Filled.Bluetooth,
