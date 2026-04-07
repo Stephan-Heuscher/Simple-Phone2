@@ -391,7 +391,7 @@ class MainActivity : ComponentActivity() {
             telecomManager.placeCall(uri, null)
         } catch (e: Exception) {
             android.util.Log.e("MainActivity", "Error placing call via TelecomManager, falling back to intent", e)
-            val intent = Intent(Intent.ACTION_CALL).apply {
+            val intent = Intent(Intent.ACTION_DIAL).apply {
                 data = uri
             }
             startActivity(intent)

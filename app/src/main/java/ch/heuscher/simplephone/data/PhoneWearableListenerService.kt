@@ -58,7 +58,7 @@ class PhoneWearableListenerService : WearableListenerService() {
                         telecomManager.placeCall(uri, null)
                     } catch (e: Exception) {
                         Log.e("PhoneWearableListener", "Error placing call via TelecomManager, falling back to intent", e)
-                        val intent = android.content.Intent(android.content.Intent.ACTION_CALL).apply {
+                        val intent = android.content.Intent(android.content.Intent.ACTION_DIAL).apply {
                             data = uri
                             flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
                         }
