@@ -439,11 +439,20 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleIntent(intent: Intent) {
-        if (intent.action == Intent.ACTION_VIEW || intent.action == Intent.ACTION_DIAL) {
+        if (intent.action == Intent.ACTION_VIEW || intent.action == Intent.ACTION_DIAL || intent.action == Intent.ACTION_CALL) {
             if (intent.data?.scheme == "tel") {
                 val number = intent.data?.schemeSpecificPart
                 val viewModel = ViewModelProvider(this)[MainViewModel::class.java]
                 viewModel.setPendingDialerNumber(number)
+                
+                if (intent.action == Intent.ACTION_CALL && !number.isNullOrEmpty()) {
+                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+                        makePhoneCall(number)
+                    } else {
+                        // Request permission if missing
+                        requestPermissionsIfNeeded()
+                    }
+                }
             }
         }
     }
@@ -740,9 +749,7 @@ fun SimplePhoneApp(
                         // gentle phone specific
                         pairingCode = settingsRepository.getPairingCode(),
                         showPairingCode = settingsRepository.isRemoteSettingsEnabled(),
-                        onGeneratePairingCode = {
-                            settingsRepository.generateTemporaryPairingCode()
-                        }
+                        onGeneratePairingCode = { settingsRepository.generateTemporaryPairingCode() }
                     )
                 }
             }
