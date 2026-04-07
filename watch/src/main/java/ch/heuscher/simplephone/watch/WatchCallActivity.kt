@@ -8,7 +8,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -26,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.wear.ambient.AmbientModeSupport
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.MaterialTheme
@@ -35,8 +35,11 @@ import com.google.android.gms.wearable.Wearable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-class WatchCallActivity : ComponentActivity() {
+class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeSupport.AmbientCallbackProvider {
 
     private val endCallReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -63,9 +66,29 @@ class WatchCallActivity : ComponentActivity() {
 
     private val _callerName = mutableStateOf("")
     private val _contactPhoto = mutableStateOf<Bitmap?>(null)
+    
+    private val _isAmbient = mutableStateOf(false)
+    private val _ambientUpdateTrigger = mutableIntStateOf(0)
+    private lateinit var ambientController: AmbientModeSupport.AmbientController
+
+    override fun getAmbientCallback(): AmbientModeSupport.AmbientCallback {
+        return object : AmbientModeSupport.AmbientCallback() {
+            override fun onEnterAmbient(ambientDetails: Bundle?) {
+                _isAmbient.value = true
+            }
+            override fun onExitAmbient() {
+                _isAmbient.value = false
+            }
+            override fun onUpdateAmbient() {
+                _ambientUpdateTrigger.intValue++
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        ambientController = AmbientModeSupport.attach(this)
         
         val initialName = intent.getStringExtra("CALLER_NAME") ?: getString(R.string.watch_call_label)
         _callerName.value = initialName
@@ -88,6 +111,8 @@ class WatchCallActivity : ComponentActivity() {
                     callerName = _callerName.value,
                     contactPhoto = _contactPhoto.value,
                     isAnswered = _isAnswered.value,
+                    isAmbient = _isAmbient.value,
+                    ambientUpdateTrigger = _ambientUpdateTrigger.intValue,
                     onAccept = {
                         _isAnswered.value = true
                         sendMessageToPhone("/answer_call")
@@ -165,7 +190,49 @@ class WatchCallActivity : ComponentActivity() {
 }
 
 @Composable
-fun WatchCallScreen(callerName: String, contactPhoto: Bitmap?, isAnswered: Boolean, onAccept: () -> Unit, onSilence: () -> Unit, onReject: () -> Unit, onHangup: () -> Unit) {
+fun WatchCallScreen(
+    callerName: String, 
+    contactPhoto: Bitmap?, 
+    isAnswered: Boolean, 
+    isAmbient: Boolean = false,
+    ambientUpdateTrigger: Int = 0,
+    onAccept: () -> Unit, 
+    onSilence: () -> Unit, 
+    onReject: () -> Unit, 
+    onHangup: () -> Unit
+) {
+    if (isAmbient) {
+        val trigger = ambientUpdateTrigger
+        val currentTime = remember(trigger) {
+            SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
+        }
+        
+        Box(
+            modifier = Modifier.fillMaxSize().background(Color.Black),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = currentTime,
+                    color = Color.White,
+                    fontSize = 64.sp,
+                    fontWeight = FontWeight.Thin
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = callerName,
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Light,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
+            }
+        }
+        return
+    }
+
     if (!isAnswered) {
         // Incoming call: split screen - top silence, bottom accept with name
         Column(modifier = Modifier.fillMaxSize().background(Color.Black)) {
