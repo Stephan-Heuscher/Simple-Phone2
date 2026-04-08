@@ -584,10 +584,11 @@ class CallService : InCallService() {
         // Start monitoring sensor for phone orientation / proximity
         startProximitySensor()
         
-        // Default outgoing calls to Bluetooth if available and setting is ON
-        if (settingsRepository.defaultToBluetooth && call.state != android.telecom.Call.STATE_RINGING) {
+        // Default outgoing calls to Bluetooth if available and setting is ON OR if watch initiated
+        if ((settingsRepository.defaultToBluetooth || watchInitiated) && call.state != android.telecom.Call.STATE_RINGING) {
             val mask = CallService.currentAudioState?.supportedRouteMask ?: 0
             if (mask and android.telecom.CallAudioState.ROUTE_BLUETOOTH != 0) {
+                Log.d(TAG, "Defaulting to Bluetooth (watchInitiated=$watchInitiated)")
                 setAudioRoute(android.telecom.CallAudioState.ROUTE_BLUETOOTH)
             }
         }
@@ -909,7 +910,8 @@ class CallService : InCallService() {
     }
     
     override fun onCallAudioStateChanged(audioState: CallAudioState?) {
-        Log.d(TAG, "Audio state changed: ${audioState?.route}")
+        val route = audioState?.route ?: CallAudioState.ROUTE_EARPIECE
+        Log.d(TAG, "Audio state changed: $route")
         CallService.currentAudioState = audioState
         
         if (settingsRepository.defaultToBluetooth && !CallService.hasAttemptedBluetoothDefault) {
@@ -924,6 +926,9 @@ class CallService : InCallService() {
         
         updateSpeakerHighlightState() // Re-evaluate glow when audio route changes
         CallService.notifyCallStateChanged()
+        
+        // Notify watch
+        sendWearMessage("/audio_state", route.toString())
     }
     private fun startProximitySensor() {
         if (!isProximitySensorRegistered && proximitySensor != null) {

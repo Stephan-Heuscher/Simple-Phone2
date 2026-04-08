@@ -44,6 +44,11 @@ class PhoneWearableListenerService : WearableListenerService() {
                 Log.d("PhoneWearableListener", "Watch requested to end call")
                 CallService.endCall()
             }
+            "/set_audio_route" -> {
+                val route = String(messageEvent.data).toIntOrNull() ?: return
+                Log.d("PhoneWearableListener", "Watch requested to set audio route to $route")
+                CallService.setAudioRoute(route)
+            }
             "/initiate_call" -> {
                 val number = String(messageEvent.data, Charsets.UTF_8)
                 Log.d("PhoneWearableListener", "Watch requested to initiate call to $number")

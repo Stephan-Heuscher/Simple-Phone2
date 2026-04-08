@@ -64,8 +64,22 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
         }
     }
 
+    private val audioStateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val route = intent?.getIntExtra("AUDIO_ROUTE", 1) ?: 1
+            _audioRoute.intValue = route
+            
+            // Try to bring this activity to front if it was superseded by system dialer
+            val bringToFrontIntent = Intent(context, WatchCallActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
+            startActivity(bringToFrontIntent)
+        }
+    }
+
     private val _callerName = mutableStateOf("")
     private val _contactPhoto = mutableStateOf<Bitmap?>(null)
+    private val _audioRoute = mutableIntStateOf(1) // Default to EARPIECE (1)
     
     private val _isAmbient = mutableStateOf(false)
     private val _ambientUpdateTrigger = mutableIntStateOf(0)
@@ -101,6 +115,7 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
         registerReceiver(endCallReceiver, IntentFilter("ch.heuscher.simplephone.watch.CALL_ENDED"), RECEIVER_NOT_EXPORTED)
         registerReceiver(answerCallReceiver, IntentFilter("ch.heuscher.simplephone.watch.CALL_ANSWERED"), RECEIVER_NOT_EXPORTED)
         registerReceiver(callInfoReceiver, IntentFilter("ch.heuscher.simplephone.watch.CALL_INFO"), RECEIVER_NOT_EXPORTED)
+        registerReceiver(audioStateReceiver, IntentFilter("ch.heuscher.simplephone.watch.AUDIO_STATE"), RECEIVER_NOT_EXPORTED)
 
         // Try to find contact photo
         updatePhoto(initialName)
@@ -112,6 +127,7 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
                     contactPhoto = _contactPhoto.value,
                     isAnswered = _isAnswered.value,
                     isAmbient = _isAmbient.value,
+                    audioRoute = _audioRoute.intValue,
                     ambientUpdateTrigger = _ambientUpdateTrigger.intValue,
                     onAccept = {
                         _isAnswered.value = true
@@ -127,6 +143,9 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
                     onHangup = {
                         sendMessageToPhone("/end_call")
                         finish()
+                    },
+                    onSetAudioRoute = { route ->
+                        sendMessageToPhone("/set_audio_route", route.toString())
                     }
                 )
             }
@@ -171,16 +190,17 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
         unregisterReceiver(endCallReceiver)
         unregisterReceiver(answerCallReceiver)
         unregisterReceiver(callInfoReceiver)
+        unregisterReceiver(audioStateReceiver)
     }
 
-    private fun sendMessageToPhone(path: String) {
+    private fun sendMessageToPhone(path: String, payload: String = "") {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val nodeClient = Wearable.getNodeClient(this@WatchCallActivity)
                 val nodes = Tasks.await(nodeClient.connectedNodes)
                 val messageClient = Wearable.getMessageClient(this@WatchCallActivity)
                 for (node in nodes) {
-                    messageClient.sendMessage(node.id, path, ByteArray(0))
+                    messageClient.sendMessage(node.id, path, payload.toByteArray())
                 }
             } catch (e: Exception) {
                 Log.e("WatchCallActivity", "Failed to send $path", e)
@@ -195,11 +215,13 @@ fun WatchCallScreen(
     contactPhoto: Bitmap?, 
     isAnswered: Boolean, 
     isAmbient: Boolean = false,
+    audioRoute: Int = 1,
     ambientUpdateTrigger: Int = 0,
     onAccept: () -> Unit, 
     onSilence: () -> Unit, 
     onReject: () -> Unit, 
-    onHangup: () -> Unit
+    onHangup: () -> Unit,
+    onSetAudioRoute: (Int) -> Unit
 ) {
     if (isAmbient) {
         val trigger = ambientUpdateTrigger
@@ -322,19 +344,19 @@ fun WatchCallScreen(
                     )
             )
 
-            // Bottom content: name + status + hangup button
+            // Bottom content: name + status + controls + hangup button
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 16.dp),
+                    .padding(bottom = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Name
                 Text(
                     text = callerName,
                     color = Color.White,
-                    fontSize = 22.sp,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
@@ -346,16 +368,49 @@ fun WatchCallScreen(
                 Text(
                     text = "On call",
                     color = Color.Gray,
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     textAlign = TextAlign.Center
                 )
+
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                // Audio Route Controls
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Speaker Button (ROUTE_SPEAKER = 8)
+                    val isSpeaker = audioRoute == 8
+                    Button(
+                        onClick = { onSetAudioRoute(if (isSpeaker) 1 else 8) },
+                        modifier = Modifier.size(36.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = if (isSpeaker) Color(0xFF43A047) else Color.DarkGray
+                        )
+                    ) {
+                        Text("🔊", fontSize = 14.sp)
+                    }
+                    
+                    // Bluetooth Button (ROUTE_BLUETOOTH = 2)
+                    val isBt = audioRoute == 2
+                    Button(
+                        onClick = { onSetAudioRoute(2) },
+                        modifier = Modifier.size(36.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = if (isBt) Color(0xFF1E88E5) else Color.DarkGray
+                        )
+                    ) {
+                        Text("ᛒ", fontSize = 14.sp)
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Red Hangup Button
                 Button(
                     onClick = { onHangup() },
-                    modifier = Modifier.size(48.dp),
+                    modifier = Modifier.size(44.dp),
                     colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFE53935))
                 ) {
                     Text(
