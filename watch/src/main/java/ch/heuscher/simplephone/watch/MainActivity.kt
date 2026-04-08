@@ -111,6 +111,16 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
         return false
     }
 
+    private val defaultDialerLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            Log.d("WatchMainActivity", "Default dialer role granted")
+        } else {
+            Log.w("WatchMainActivity", "Default dialer role denied or ignored")
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
@@ -122,14 +132,14 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
                     !roleManager.isRoleHeld(android.app.role.RoleManager.ROLE_DIALER)
                 ) {
                     val intent = roleManager.createRequestRoleIntent(android.app.role.RoleManager.ROLE_DIALER)
-                    startActivityForResult(intent, 123)
+                    defaultDialerLauncher.launch(intent)
                 }
             } else {
                 val telecomManager = getSystemService(Context.TELECOM_SERVICE) as android.telecom.TelecomManager
                 if (telecomManager.defaultDialerPackage != packageName) {
                     val intent = Intent(android.telecom.TelecomManager.ACTION_CHANGE_DEFAULT_DIALER)
                     intent.putExtra(android.telecom.TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, packageName)
-                    startActivity(intent)
+                    defaultDialerLauncher.launch(intent)
                 }
             }
         } catch (e: Exception) {
