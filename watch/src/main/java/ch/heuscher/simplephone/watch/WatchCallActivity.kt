@@ -41,8 +41,20 @@ import java.util.Locale
 
 class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeSupport.AmbientCallbackProvider {
 
+    private var isCallActive = true
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val bringToFrontRunnable = Runnable {
+        if (isCallActive && !isDestroyed && !isFinishing) {
+            val bringToFrontIntent = Intent(this@WatchCallActivity, WatchCallActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
+            startActivity(bringToFrontIntent)
+        }
+    }
+
     private val endCallReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
+            isCallActive = false
             finish()
         }
     }
@@ -70,10 +82,12 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
             _audioRoute.intValue = route
             
             // Try to bring this activity to front if it was superseded by system dialer
-            val bringToFrontIntent = Intent(context, WatchCallActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            if (isCallActive && !isDestroyed && !isFinishing) {
+                val bringToFrontIntent = Intent(context, WatchCallActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                }
+                startActivity(bringToFrontIntent)
             }
-            startActivity(bringToFrontIntent)
         }
     }
 
@@ -103,6 +117,7 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
         super.onCreate(savedInstanceState)
         
         ambientController = AmbientModeSupport.attach(this)
+        isCallActive = true
         
         val initialName = intent.getStringExtra("CALLER_NAME") ?: getString(R.string.watch_call_label)
         _callerName.value = initialName
@@ -137,10 +152,12 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
                         sendMessageToPhone("/silence_ringer")
                     },
                     onReject = {
+                        isCallActive = false
                         sendMessageToPhone("/reject_call")
                         finish()
                     },
                     onHangup = {
+                        isCallActive = false
                         sendMessageToPhone("/end_call")
                         finish()
                     },
@@ -149,6 +166,19 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
                     }
                 )
             }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        handler.removeCallbacks(bringToFrontRunnable)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (isCallActive && !isFinishing) {
+            // System dialer likely took over. Re-assert focus after a short delay.
+            handler.postDelayed(bringToFrontRunnable, 500)
         }
     }
 
