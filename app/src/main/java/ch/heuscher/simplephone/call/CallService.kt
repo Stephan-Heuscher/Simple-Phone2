@@ -587,10 +587,12 @@ class CallService : InCallService() {
         // Default outgoing calls to Bluetooth ONLY if watch initiated.
         // If phone initiated the call, we stay on handset (system default).
         if (watchInitiated && call.state != android.telecom.Call.STATE_RINGING) {
-            val mask = CallService.currentAudioState?.supportedRouteMask ?: 0
+            val audioState = callAudioState
+            val mask = audioState?.supportedRouteMask ?: 0
             if (mask and android.telecom.CallAudioState.ROUTE_BLUETOOTH != 0) {
-                Log.d(TAG, "Defaulting to Bluetooth (watchInitiated=true)")
+                Log.d(TAG, "Defaulting to Bluetooth in onCallAdded (watchInitiated=true)")
                 setAudioRoute(android.telecom.CallAudioState.ROUTE_BLUETOOTH)
+                CallService.hasAttemptedBluetoothDefault = true
             }
         }
         
@@ -915,7 +917,7 @@ class CallService : InCallService() {
         Log.d(TAG, "Audio state changed: $route")
         CallService.currentAudioState = audioState
         
-        if (watchInitiated && settingsRepository.defaultToBluetooth && !CallService.hasAttemptedBluetoothDefault) {
+        if (watchInitiated && !CallService.hasAttemptedBluetoothDefault) {
             val mask = audioState?.supportedRouteMask ?: 0
             if (mask and android.telecom.CallAudioState.ROUTE_BLUETOOTH != 0) {
                 CallService.hasAttemptedBluetoothDefault = true
