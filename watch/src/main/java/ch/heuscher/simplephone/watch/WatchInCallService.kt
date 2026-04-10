@@ -20,6 +20,10 @@ class WatchInCallService : InCallService() {
             if (handle != null) {
                 putExtra("CALLER_NAME", handle)
             }
+            val audioState = callAudioState
+            if (audioState != null) {
+                putExtra("AUDIO_ROUTE", audioState.route)
+            }
         }
         try {
             startActivity(intent)

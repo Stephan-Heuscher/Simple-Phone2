@@ -125,6 +125,8 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
         if (isOutgoing) {
             _isAnswered.value = true
         }
+        val initialRoute = intent.getIntExtra("AUDIO_ROUTE", 1)
+        _audioRoute.intValue = initialRoute
 
         // Register receivers
         registerReceiver(endCallReceiver, IntentFilter("ch.heuscher.simplephone.watch.CALL_ENDED"), RECEIVER_NOT_EXPORTED)
