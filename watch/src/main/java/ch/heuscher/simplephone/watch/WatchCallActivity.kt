@@ -286,47 +286,98 @@ fun WatchCallScreen(
     }
 
     if (!isAnswered) {
-        // Incoming call: split screen - top silence, bottom accept with name
+        // Incoming call: top avatar/name, bottom action buttons
         Column(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-            // Top Half: Blue (Silence Ringtone)
+            // Top 2/3: Contact Photo / Name
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
-                    .background(Color(0xFF1E88E5))
-                    .clickable { onSilence() },
+                    .weight(2f),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = stringResource(R.string.watch_silence),
-                    color = Color.White,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+                if (contactPhoto != null) {
+                    Image(
+                        bitmap = contactPhoto.asImageBitmap(),
+                        contentDescription = "Contact photo",
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize().background(Color.DarkGray),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = callerName.take(1).uppercase(),
+                            color = Color.White.copy(alpha = 0.2f),
+                            fontSize = 80.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
 
-            // Bottom Half: Green (Accept)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .background(Color(0xFF43A047))
-                    .clickable { onAccept() },
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                // Name overlay with gradient for readability
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            androidx.compose.ui.graphics.Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.8f)),
+                                startY = 100f
+                            )
+                        ),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
                     Text(
                         text = callerName,
                         color = Color.White,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(bottom = 12.dp, start = 8.dp, end = 8.dp)
+                    )
+                }
+            }
+
+            // Bottom 1/3: Buttons side-by-side
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
+                // Left: Silence (Blue)
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(1f)
+                        .background(Color(0xFF1E88E5))
+                        .clickable { onSilence() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.watch_silence),
+                        color = Color.White,
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Normal,
+                        fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
                     )
+                }
+
+                // Right: Accept (Green)
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(1f)
+                        .background(Color(0xFF43A047))
+                        .clickable { onAccept() },
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
                         text = stringResource(R.string.watch_accept),
                         color = Color.White,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
                     )
                 }
             }
