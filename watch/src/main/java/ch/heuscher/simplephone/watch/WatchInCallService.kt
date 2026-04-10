@@ -15,6 +15,11 @@ class WatchInCallService : InCallService() {
         // Bring our custom call activity to the front just in case
         val intent = Intent(this, WatchCallActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            putExtra("IS_OUTGOING", call.state != Call.STATE_RINGING)
+            val handle = call.details.handle?.schemeSpecificPart
+            if (handle != null) {
+                putExtra("CALLER_NAME", handle)
+            }
         }
         try {
             startActivity(intent)

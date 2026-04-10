@@ -595,9 +595,9 @@ class CallService : InCallService() {
         
         CallService.notifyCallStateChanged()
         
-        if (watchInitiated) {
-            watchInitiated = false
+        if (call.state != android.telecom.Call.STATE_RINGING) {
             sendWearMessage("/outgoing_call", CallService.callerName ?: CallService.callerNumber ?: getString(R.string.unknown_contact))
+            watchInitiated = false
         }
         
         if (call.state == android.telecom.Call.STATE_RINGING) {
