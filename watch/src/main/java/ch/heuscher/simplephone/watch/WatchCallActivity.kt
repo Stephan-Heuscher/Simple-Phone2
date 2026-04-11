@@ -163,8 +163,11 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
                         sendMessageToPhone("/end_call")
                         finish()
                     },
-                    onSetAudioRoute = { route ->
-                        sendMessageToPhone("/set_audio_route", route.toString())
+                    onVolumeUp = {
+                        sendMessageToPhone("/volume_up")
+                    },
+                    onVolumeDown = {
+                        sendMessageToPhone("/volume_down")
                     }
                 )
             }
@@ -253,7 +256,8 @@ fun WatchCallScreen(
     onSilence: () -> Unit, 
     onReject: () -> Unit, 
     onHangup: () -> Unit,
-    onSetAudioRoute: (Int) -> Unit
+    onVolumeUp: () -> Unit,
+    onVolumeDown: () -> Unit
 ) {
     if (isAmbient) {
         val trigger = ambientUpdateTrigger
@@ -455,39 +459,7 @@ fun WatchCallScreen(
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
-                
-                // Audio Route Controls
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Speaker Button (ROUTE_SPEAKER = 8)
-                    val isSpeaker = audioRoute == 8
-                    Button(
-                        onClick = { onSetAudioRoute(if (isSpeaker) 1 else 8) },
-                        modifier = Modifier.size(36.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            backgroundColor = if (isSpeaker) Color(0xFF43A047) else Color.DarkGray
-                        )
-                    ) {
-                        Text("🔊", fontSize = 14.sp)
-                    }
-                    
-                    // Bluetooth Button (ROUTE_BLUETOOTH = 2)
-                    val isBt = audioRoute == 2
-                    Button(
-                        onClick = { onSetAudioRoute(2) },
-                        modifier = Modifier.size(36.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            backgroundColor = if (isBt) Color(0xFF1E88E5) else Color.DarkGray
-                        )
-                    ) {
-                        Text("ᛒ", fontSize = 14.sp)
-                    }
-                }
-
+                // Audio Route Controls removed for accessibility. Volume controls are now on the screen edges.
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Red Hangup Button
@@ -503,6 +475,42 @@ fun WatchCallScreen(
                         fontWeight = FontWeight.Bold
                     )
                 }
+            }
+
+            // Left Half: Volume Down (Huge invisible tap target for accessibility)
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(0.35f)
+                    .align(Alignment.CenterStart)
+                    .clickable { onVolumeDown() },
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Text(
+                    text = "-", 
+                    fontSize = 48.sp, 
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White.copy(alpha = 0.6f), 
+                    modifier = Modifier.padding(start = 12.dp)
+                )
+            }
+
+            // Right Half: Volume Up (Huge invisible tap target for accessibility)
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(0.35f)
+                    .align(Alignment.CenterEnd)
+                    .clickable { onVolumeUp() },
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Text(
+                    text = "+", 
+                    fontSize = 48.sp, 
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White.copy(alpha = 0.6f), 
+                    modifier = Modifier.padding(end = 12.dp)
+                )
             }
         }
     }

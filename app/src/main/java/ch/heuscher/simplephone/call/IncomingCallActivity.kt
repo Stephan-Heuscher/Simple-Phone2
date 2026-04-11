@@ -228,8 +228,10 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
                 // Show transparent message (Toast is effectively a transparent overlay message)
                 android.widget.Toast.makeText(this, reason, android.widget.Toast.LENGTH_LONG).show()
                 
-                // Speak it
-                textToSpeech?.speak(reason, android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, null)
+                if (!CallService.watchInitiated) {
+                    // Speak it
+                    textToSpeech?.speak(reason, android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, null)
+                }
                 
                 // Delay finish slightly to allow TTS to start
                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({

@@ -82,7 +82,7 @@ class CallService : InCallService() {
 
         @Volatile var watchInitiated: Boolean = false
 
-        @Volatile var hasAttemptedBluetoothDefault: Boolean = false
+        @Volatile var watchRequestedAudioRoute: Int? = null
 
         // Thread-safe listener list (accessed from main thread + IO coroutines)
         private val callStateListeners = CopyOnWriteArrayList<CallStateListener>()
@@ -135,6 +135,7 @@ class CallService : InCallService() {
         }
         
         fun setAudioRoute(route: Int) {
+            Log.d(TAG, "setAudioRoute companion: requesting route $route")
             @Suppress("DEPRECATION")
             instance?.setAudioRoute(route)
         }
@@ -276,6 +277,70 @@ class CallService : InCallService() {
         }
     }
     
+    private val audioRouteHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    
+    /**
+     * Force the audio route to the target, retrying with delays to overcome
+     * the system's aggressive route resets during call state transitions.
+     */
+    private fun forceAudioRouteWithRetry(targetRoute: Int) {
+        // Cancel any pending retries
+        audioRouteHandler.removeCallbacksAndMessages("audioRetry")
+        
+        fun attemptForce(label: String) {
+            val currentRoute = callAudioState?.route ?: 0
+            val mask = callAudioState?.supportedRouteMask ?: 0
+            if (currentRoute == targetRoute) {
+                Log.d(TAG, "forceAudioRoute($label): Already at target route $targetRoute")
+                return
+            }
+            if (mask and targetRoute == 0) {
+                Log.d(TAG, "forceAudioRoute($label): Target route $targetRoute not available in mask $mask")
+                return
+            }
+            Log.d(TAG, "forceAudioRoute($label): Forcing route from $currentRoute to $targetRoute")
+            @Suppress("DEPRECATION")
+            setAudioRoute(targetRoute)
+            
+            // Also try requestBluetoothAudio for Bluetooth route (API 28+)
+            if (targetRoute == android.telecom.CallAudioState.ROUTE_BLUETOOTH && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                try {
+                    val bluetoothManager = getSystemService(android.content.Context.BLUETOOTH_SERVICE) as? android.bluetooth.BluetoothManager
+                    val adapter = bluetoothManager?.adapter
+                    val bondedDevices = adapter?.bondedDevices ?: emptySet()
+                    // Find a connected audio device (headset/watch)
+                    for (device in bondedDevices) {
+                        val deviceClass = device.bluetoothClass?.majorDeviceClass
+                        if (deviceClass == android.bluetooth.BluetoothClass.Device.Major.AUDIO_VIDEO ||
+                            deviceClass == android.bluetooth.BluetoothClass.Device.Major.WEARABLE) {
+                            Log.d(TAG, "forceAudioRoute($label): Also requesting BT audio via device ${device.name}")
+                            @Suppress("DEPRECATION")
+                            requestBluetoothAudio(device)
+                            break
+                        }
+                    }
+                } catch (e: SecurityException) {
+                    Log.w(TAG, "forceAudioRoute($label): Missing BLUETOOTH_CONNECT permission", e)
+                } catch (e: Exception) {
+                    Log.w(TAG, "forceAudioRoute($label): Error requesting BT audio", e)
+                }
+            }
+        }
+        
+        // Immediate attempt
+        attemptForce("immediate")
+        
+        // Retry after 500ms (system may have reset the route)
+        audioRouteHandler.postDelayed({
+            attemptForce("retry-500ms")
+        }, "audioRetry", 500)
+        
+        // Retry after 1500ms (final attempt after system settles)
+        audioRouteHandler.postDelayed({
+            attemptForce("retry-1500ms")
+        }, "audioRetry", 1500)
+    }
+    
     private val callCallback = object : Call.Callback() {
         override fun onStateChanged(call: Call, state: Int) {
             Log.d(CallService.TAG, "Call state changed: $state")
@@ -294,6 +359,14 @@ class CallService : InCallService() {
                     
                     // Inform watch that the call is now active
                     sendWearMessage("/call_answered", "")
+                    
+                    // Re-enforce watch-requested audio route on state transitions.
+                    // The system aggressively resets the route to earpiece during
+                    // call state transitions. We use delayed retries to let it settle.
+                    val targetRoute = CallService.watchRequestedAudioRoute
+                    if (watchInitiated && targetRoute != null) {
+                        forceAudioRouteWithRetry(targetRoute)
+                    }
                 }
                 CallService.notifyCallStateChanged()
                 updateSpeakerHighlightState() // Re-evaluate glow when call state changes (e.g. Ringing -> Active)
@@ -527,7 +600,7 @@ class CallService : InCallService() {
 
     override fun onCallAdded(call: Call) {
         Log.d(TAG, "Call added")
-        CallService.hasAttemptedBluetoothDefault = false
+        CallService.watchRequestedAudioRoute = null
         
         // Block incoming calls if we already have an active/ringing call
         val activeCall = CallService.currentCall
@@ -578,22 +651,31 @@ class CallService : InCallService() {
         CallService.callState = call.state
         updateCallInfo(call)
         
-        // Acquire wake lock for any new call
-        updateWakeLock(call.state)
-        
-        // Start monitoring sensor for phone orientation / proximity
-        startProximitySensor()
+        if (!watchInitiated) {
+            // Acquire wake lock for any new call
+            updateWakeLock(call.state)
+            
+            // Start monitoring sensor for phone orientation / proximity
+            startProximitySensor()
+        }
         
         // Default outgoing calls to Bluetooth ONLY if watch initiated.
         // If phone initiated the call, we stay on handset (system default).
+        Log.d(TAG, "onCallAdded: watchInitiated=$watchInitiated, state=${call.state}")
         if (watchInitiated && call.state != android.telecom.Call.STATE_RINGING) {
             val audioState = callAudioState
             val mask = audioState?.supportedRouteMask ?: 0
+            Log.d(TAG, "onCallAdded: supportedRouteMask=$mask, bluetoothAvailable=${mask and android.telecom.CallAudioState.ROUTE_BLUETOOTH != 0}")
             if (mask and android.telecom.CallAudioState.ROUTE_BLUETOOTH != 0) {
-                Log.d(TAG, "Defaulting to Bluetooth in onCallAdded (watchInitiated=true)")
+                Log.d(TAG, "onCallAdded: FORCING Bluetooth (watchInitiated=true)")
                 setAudioRoute(android.telecom.CallAudioState.ROUTE_BLUETOOTH)
-                CallService.hasAttemptedBluetoothDefault = true
+                CallService.watchRequestedAudioRoute = android.telecom.CallAudioState.ROUTE_BLUETOOTH
+            } else {
+                Log.d(TAG, "onCallAdded: Bluetooth NOT available in mask. Will rely on onCallAudioStateChanged")
+                CallService.watchRequestedAudioRoute = android.telecom.CallAudioState.ROUTE_BLUETOOTH
             }
+        } else {
+            Log.d(TAG, "onCallAdded: NOT forcing Bluetooth (watchInitiated=$watchInitiated, state=${call.state})")
         }
         
         CallService.notifyCallStateChanged()
@@ -606,17 +688,21 @@ class CallService : InCallService() {
             startRinging(CallService.callerNumber)
         }
         
-        // Launch the incoming call activity
-        try {
-            val intent = Intent(this, IncomingCallActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-                putExtra("caller_number", CallService.callerNumber)
-                putExtra("caller_name", CallService.callerName)
-                putExtra("is_incoming", call.state == android.telecom.Call.STATE_RINGING)
+        // Launch the incoming call activity (only if not initiated from watch)
+        if (!watchInitiated) {
+            try {
+                val intent = Intent(this, IncomingCallActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                    putExtra("caller_number", CallService.callerNumber)
+                    putExtra("caller_name", CallService.callerName)
+                    putExtra("is_incoming", call.state == android.telecom.Call.STATE_RINGING)
+                }
+                startActivity(intent)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to start IncomingCallActivity", e)
             }
-            startActivity(intent)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to start IncomingCallActivity", e)
+        } else {
+            Log.d(TAG, "Skipping IncomingCallActivity launch because call was watch-initiated")
         }
 
         // Inform Watch of incoming call
@@ -914,16 +1000,17 @@ class CallService : InCallService() {
     
     override fun onCallAudioStateChanged(audioState: CallAudioState?) {
         val route = audioState?.route ?: CallAudioState.ROUTE_EARPIECE
-        Log.d(TAG, "Audio state changed: $route")
+        val mask = audioState?.supportedRouteMask ?: 0
+        Log.d(TAG, "onCallAudioStateChanged: route=$route, mask=$mask, watchInitiated=$watchInitiated, requestedRoute=${CallService.watchRequestedAudioRoute}")
         CallService.currentAudioState = audioState
         
-        if (watchInitiated && !CallService.hasAttemptedBluetoothDefault) {
-            val mask = audioState?.supportedRouteMask ?: 0
-            if (mask and android.telecom.CallAudioState.ROUTE_BLUETOOTH != 0) {
-                CallService.hasAttemptedBluetoothDefault = true
-                Log.d(TAG, "Defaulting to Bluetooth for watch-initiated call")
-                @Suppress("DEPRECATION")
-                setAudioRoute(android.telecom.CallAudioState.ROUTE_BLUETOOTH)
+        if (watchInitiated && CallService.watchRequestedAudioRoute != null && CallService.watchRequestedAudioRoute != route) {
+            val targetRoute = CallService.watchRequestedAudioRoute!!
+            if (mask and targetRoute != 0) {
+                Log.d(TAG, "onCallAudioStateChanged: Route mismatch (want $targetRoute, got $route). Scheduling retry.")
+                forceAudioRouteWithRetry(targetRoute)
+            } else {
+                Log.d(TAG, "onCallAudioStateChanged: Target route $targetRoute NOT available in mask yet")
             }
         }
         

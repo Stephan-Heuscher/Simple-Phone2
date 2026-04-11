@@ -47,7 +47,18 @@ class PhoneWearableListenerService : WearableListenerService() {
             "/set_audio_route" -> {
                 val route = String(messageEvent.data).toIntOrNull() ?: return
                 Log.d("PhoneWearableListener", "Watch requested to set audio route to $route")
+                CallService.watchRequestedAudioRoute = route
                 CallService.setAudioRoute(route)
+            }
+            "/volume_up" -> {
+                Log.d("PhoneWearableListener", "Watch requested volume up")
+                val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                audioManager.adjustStreamVolume(AudioManager.STREAM_VOICE_CALL, AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
+            }
+            "/volume_down" -> {
+                Log.d("PhoneWearableListener", "Watch requested volume down")
+                val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                audioManager.adjustStreamVolume(AudioManager.STREAM_VOICE_CALL, AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI)
             }
             "/initiate_call" -> {
                 val number = String(messageEvent.data, Charsets.UTF_8)
