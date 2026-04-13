@@ -688,21 +688,17 @@ class CallService : InCallService() {
             startRinging(CallService.callerNumber)
         }
         
-        // Launch the incoming call activity (only if not initiated from watch)
-        if (!watchInitiated) {
-            try {
-                val intent = Intent(this, IncomingCallActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-                    putExtra("caller_number", CallService.callerNumber)
-                    putExtra("caller_name", CallService.callerName)
-                    putExtra("is_incoming", call.state == android.telecom.Call.STATE_RINGING)
-                }
-                startActivity(intent)
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to start IncomingCallActivity", e)
+        // Launch the incoming call activity
+        try {
+            val intent = Intent(this, IncomingCallActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                putExtra("caller_number", CallService.callerNumber)
+                putExtra("caller_name", CallService.callerName)
+                putExtra("is_incoming", call.state == android.telecom.Call.STATE_RINGING)
             }
-        } else {
-            Log.d(TAG, "Skipping IncomingCallActivity launch because call was watch-initiated")
+            startActivity(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to start IncomingCallActivity", e)
         }
 
         // Inform Watch of incoming call
@@ -762,6 +758,9 @@ class CallService : InCallService() {
             callerName = null
             watchInitiated = false
             notifyCallStateChanged(disconnectCause)
+            
+            // Inform watch that the call ended
+            sendWearMessage("/call_ended", "")
         }
     }
     

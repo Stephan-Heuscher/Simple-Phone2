@@ -119,23 +119,13 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
         ambientController = AmbientModeSupport.attach(this)
         isCallActive = true
         
-        val initialName = intent.getStringExtra("CALLER_NAME") ?: getString(R.string.watch_call_label)
-        _callerName.value = initialName
-        val isOutgoing = intent.getBooleanExtra("IS_OUTGOING", false)
-        if (isOutgoing) {
-            _isAnswered.value = true
-        }
-        val initialRoute = intent.getIntExtra("AUDIO_ROUTE", 1)
-        _audioRoute.intValue = initialRoute
+        handleIntent(intent)
 
         // Register receivers
         registerReceiver(endCallReceiver, IntentFilter("ch.heuscher.simplephone.watch.CALL_ENDED"), RECEIVER_NOT_EXPORTED)
         registerReceiver(answerCallReceiver, IntentFilter("ch.heuscher.simplephone.watch.CALL_ANSWERED"), RECEIVER_NOT_EXPORTED)
         registerReceiver(callInfoReceiver, IntentFilter("ch.heuscher.simplephone.watch.CALL_INFO"), RECEIVER_NOT_EXPORTED)
         registerReceiver(audioStateReceiver, IntentFilter("ch.heuscher.simplephone.watch.AUDIO_STATE"), RECEIVER_NOT_EXPORTED)
-
-        // Try to find contact photo
-        updatePhoto(initialName)
 
         setContent {
             MaterialTheme {
@@ -172,6 +162,30 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
                 )
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent) {
+        val initialName = intent.getStringExtra("CALLER_NAME") ?: getString(R.string.watch_call_label)
+        _callerName.value = initialName
+        val isOutgoing = intent.getBooleanExtra("IS_OUTGOING", false)
+        if (isOutgoing) {
+            _isAnswered.value = true
+        } else {
+            // If it's a new incoming intent, we might need to reset _isAnswered
+            // though usually a new call means the old one is gone.
+            _isAnswered.value = false
+        }
+        val initialRoute = intent.getIntExtra("AUDIO_ROUTE", 1)
+        _audioRoute.intValue = initialRoute
+
+        // Try to find contact photo
+        updatePhoto(initialName)
     }
 
     override fun onResume() {
