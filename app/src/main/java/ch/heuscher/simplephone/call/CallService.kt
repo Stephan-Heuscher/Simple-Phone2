@@ -134,8 +134,21 @@ class CallService : InCallService() {
             currentCall?.disconnect()
         }
         
-        fun setAudioRoute(route: Int) {
-            Log.d(TAG, "setAudioRoute companion: requesting route $route")
+        fun setAudioRoute(route: Int, isManual: Boolean = false) {
+            Log.d(TAG, "setAudioRoute companion: requesting route $route, isManual=$isManual")
+            // Only clear watch request if it was a manual selection from the phone UI
+            if (isManual) {
+                watchRequestedAudioRoute = null
+            }
+            
+            // Log current volume for debugging "no sound"
+            instance?.let { 
+                val am = it.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                val vol = am.getStreamVolume(AudioManager.STREAM_VOICE_CALL)
+                val max = am.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL)
+                Log.d(TAG, "setAudioRoute: Current Voice Volume: $vol/$max, Mode: ${am.mode}")
+            }
+            
             @Suppress("DEPRECATION")
             instance?.setAudioRoute(route)
         }
@@ -288,9 +301,19 @@ class CallService : InCallService() {
         audioRouteHandler.removeCallbacksAndMessages("audioRetry")
         
         fun attemptForce(label: String) {
+            // Check if user manually selected something else in the meantime
+            if (CallService.watchRequestedAudioRoute == null) {
+                Log.d(TAG, "forceAudioRoute($label): Aborting, manual selection detected")
+                return
+            }
+
+            val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
             val currentRoute = callAudioState?.route ?: 0
             val mask = callAudioState?.supportedRouteMask ?: 0
-            if (currentRoute == targetRoute) {
+            
+            Log.d(TAG, "forceAudioRoute($label): Target=$targetRoute, Current=$currentRoute, Mask=$mask, Mode=${am.mode}, Vol=${am.getStreamVolume(AudioManager.STREAM_VOICE_CALL)}")
+
+            if (currentRoute == targetRoute && targetRoute != android.telecom.CallAudioState.ROUTE_BLUETOOTH) {
                 Log.d(TAG, "forceAudioRoute($label): Already at target route $targetRoute")
                 return
             }
@@ -298,31 +321,51 @@ class CallService : InCallService() {
                 Log.d(TAG, "forceAudioRoute($label): Target route $targetRoute not available in mask $mask")
                 return
             }
-            Log.d(TAG, "forceAudioRoute($label): Forcing route from $currentRoute to $targetRoute")
+
+            Log.d(TAG, "forceAudioRoute($label): Forcing route to $targetRoute")
             @Suppress("DEPRECATION")
             setAudioRoute(targetRoute)
             
-            // Also try requestBluetoothAudio for Bluetooth route (API 28+)
+            // Set max volume for voice call if forcing Bluetooth
+            if (targetRoute == android.telecom.CallAudioState.ROUTE_BLUETOOTH) {
+                try {
+                    val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                    val maxVol = am.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL)
+                    am.setStreamVolume(AudioManager.STREAM_VOICE_CALL, maxVol, 0)
+                    Log.d(TAG, "forceAudioRoute($label): Maxed STREAM_VOICE_CALL to $maxVol")
+                    
+                    // Also ensure not muted
+                    if (am.isMicrophoneMute) {
+                        am.isMicrophoneMute = false
+                        Log.d(TAG, "forceAudioRoute($label): Un-muted microphone")
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "forceAudioRoute($label): Failed to adjust volume/mute", e)
+                }
+            }
             if (targetRoute == android.telecom.CallAudioState.ROUTE_BLUETOOTH && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 try {
                     val bluetoothManager = getSystemService(android.content.Context.BLUETOOTH_SERVICE) as? android.bluetooth.BluetoothManager
                     val adapter = bluetoothManager?.adapter
                     val bondedDevices = adapter?.bondedDevices ?: emptySet()
-                    // Find a connected audio device (headset/watch)
-                    for (device in bondedDevices) {
-                        val deviceClass = device.bluetoothClass?.majorDeviceClass
-                        if (deviceClass == android.bluetooth.BluetoothClass.Device.Major.AUDIO_VIDEO ||
-                            deviceClass == android.bluetooth.BluetoothClass.Device.Major.WEARABLE) {
-                            Log.d(TAG, "forceAudioRoute($label): Also requesting BT audio via device ${device.name}")
-                            @Suppress("DEPRECATION")
-                            requestBluetoothAudio(device)
-                            break
-                        }
+                    
+                    val device = if (watchInitiated) {
+                        Log.d(TAG, "forceAudioRoute: watchInitiated=true, searching for WEARABLE among ${bondedDevices.size} devices")
+                        bondedDevices.forEach { Log.d(TAG, "forceAudioRoute: Found device ${it.name} class ${it.bluetoothClass?.majorDeviceClass}") }
+                        bondedDevices.find { it.bluetoothClass?.majorDeviceClass == android.bluetooth.BluetoothClass.Device.Major.WEARABLE }
+                            ?: bondedDevices.find { it.bluetoothClass?.majorDeviceClass == android.bluetooth.BluetoothClass.Device.Major.AUDIO_VIDEO }
+                    } else {
+                        bondedDevices.find { it.bluetoothClass?.majorDeviceClass == android.bluetooth.BluetoothClass.Device.Major.AUDIO_VIDEO }
+                            ?: bondedDevices.find { it.bluetoothClass?.majorDeviceClass == android.bluetooth.BluetoothClass.Device.Major.WEARABLE }
+                    }
+
+                    if (device != null) {
+                        Log.d(TAG, "forceAudioRoute($label): Requesting BT audio via device ${device.name}")
+                        @Suppress("DEPRECATION")
+                        requestBluetoothAudio(device)
                     }
                 } catch (e: SecurityException) {
                     Log.w(TAG, "forceAudioRoute($label): Missing BLUETOOTH_CONNECT permission", e)
-                } catch (e: Exception) {
-                    Log.w(TAG, "forceAudioRoute($label): Error requesting BT audio", e)
                 }
             }
         }
@@ -330,15 +373,10 @@ class CallService : InCallService() {
         // Immediate attempt
         attemptForce("immediate")
         
-        // Retry after 500ms (system may have reset the route)
-        audioRouteHandler.postDelayed({
-            attemptForce("retry-500ms")
-        }, "audioRetry", 500)
-        
-        // Retry after 1500ms (final attempt after system settles)
-        audioRouteHandler.postDelayed({
-            attemptForce("retry-1500ms")
-        }, "audioRetry", 1500)
+        // Retries
+        audioRouteHandler.postDelayed({ attemptForce("retry-500ms") }, "audioRetry", 500)
+        audioRouteHandler.postDelayed({ attemptForce("retry-1500ms") }, "audioRetry", 1500)
+        audioRouteHandler.postDelayed({ attemptForce("retry-3000ms") }, "audioRetry", 3000)
     }
     
     private val callCallback = object : Call.Callback() {
@@ -599,8 +637,7 @@ class CallService : InCallService() {
     }
 
     override fun onCallAdded(call: Call) {
-        Log.d(TAG, "Call added")
-        CallService.watchRequestedAudioRoute = null
+        Log.d(TAG, "Call added: watchInitiated=$watchInitiated")
         
         // Block incoming calls if we already have an active/ringing call
         val activeCall = CallService.currentCall
@@ -650,6 +687,10 @@ class CallService : InCallService() {
         call.registerCallback(callCallback)
         CallService.callState = call.state
         updateCallInfo(call)
+        
+        // Log AudioManager state
+        val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        Log.d(TAG, "onCallAdded: Voice Vol: ${am.getStreamVolume(AudioManager.STREAM_VOICE_CALL)}/${am.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL)}, Mode: ${am.mode}")
         
         if (!watchInitiated) {
             // Acquire wake lock for any new call
@@ -705,6 +746,19 @@ class CallService : InCallService() {
         if (call.state == android.telecom.Call.STATE_RINGING) {
             sendWearMessage("/incoming_call", "${CallService.callerName ?: CallService.callerNumber ?: getString(R.string.unknown_contact)}")
         }
+        
+        // Send initial audio status
+        sendAudioStatusToWatch()
+    }
+
+    private fun sendAudioStatusToWatch() {
+        val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val vol = am.getStreamVolume(AudioManager.STREAM_VOICE_CALL)
+        val max = am.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL)
+        val isMuted = am.isMicrophoneMute
+        val percent = if (max > 0) (vol * 100) / max else 0
+        
+        sendWearMessage("/audio_status", "$percent|$isMuted")
     }
 
     private fun sendWearMessage(path: String, payload: String) {
@@ -1018,6 +1072,17 @@ class CallService : InCallService() {
         
         // Notify watch
         sendWearMessage("/audio_state", route.toString())
+        sendAudioStatusToWatch()
+    }
+    
+    fun sendAudioStatusToWatch() {
+        val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val vol = am.getStreamVolume(AudioManager.STREAM_VOICE_CALL)
+        val max = am.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL)
+        val isMuted = am.isMicrophoneMute
+        val percent = if (max > 0) (vol * 100) / max else 0
+        
+        sendWearMessage("/audio_status", "$percent|$isMuted")
     }
     private fun startProximitySensor() {
         if (!isProximitySensorRegistered && proximitySensor != null) {

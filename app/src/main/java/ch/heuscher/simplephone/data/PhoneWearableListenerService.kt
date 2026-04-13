@@ -60,6 +60,17 @@ class PhoneWearableListenerService : WearableListenerService() {
                 val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
                 audioManager.adjustStreamVolume(AudioManager.STREAM_VOICE_CALL, AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI)
             }
+            "/toggle_mute" -> {
+                Log.d("PhoneWearableListener", "Watch requested toggle mute")
+                val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                audioManager.isMicrophoneMute = !audioManager.isMicrophoneMute
+                // Trigger an update back to the watch
+                CallService.instance?.sendAudioStatusToWatch()
+            }
+            "/request_audio_status" -> {
+                Log.d("PhoneWearableListener", "Watch requested audio status")
+                CallService.instance?.sendAudioStatusToWatch()
+            }
             "/initiate_call" -> {
                 val number = String(messageEvent.data, Charsets.UTF_8)
                 Log.d("PhoneWearableListener", "Watch requested to initiate call to $number")

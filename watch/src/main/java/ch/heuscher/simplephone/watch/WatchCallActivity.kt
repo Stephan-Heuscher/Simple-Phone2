@@ -94,10 +94,27 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
     private val _callerName = mutableStateOf("")
     private val _contactPhoto = mutableStateOf<Bitmap?>(null)
     private val _audioRoute = mutableIntStateOf(1) // Default to EARPIECE (1)
+    private val _volumePercent = mutableIntStateOf(0)
+    private val _isMuted = mutableStateOf(false)
     
     private val _isAmbient = mutableStateOf(false)
     private val _ambientUpdateTrigger = mutableIntStateOf(0)
     private lateinit var ambientController: AmbientModeSupport.AmbientController
+
+    private val audioStatusReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val data = intent?.getStringExtra("AUDIO_STATUS_DATA") ?: return
+            try {
+                val parts = data.split("|")
+                if (parts.size == 2) {
+                    _volumePercent.intValue = parts[0].toInt()
+                    _isMuted.value = parts[1].toBoolean()
+                }
+            } catch (e: Exception) {
+                Log.e("WatchCallActivity", "Error parsing audio status: $data", e)
+            }
+        }
+    }
 
     override fun getAmbientCallback(): AmbientModeSupport.AmbientCallback {
         return object : AmbientModeSupport.AmbientCallback() {
@@ -126,6 +143,10 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
         registerReceiver(answerCallReceiver, IntentFilter("ch.heuscher.simplephone.watch.CALL_ANSWERED"), RECEIVER_NOT_EXPORTED)
         registerReceiver(callInfoReceiver, IntentFilter("ch.heuscher.simplephone.watch.CALL_INFO"), RECEIVER_NOT_EXPORTED)
         registerReceiver(audioStateReceiver, IntentFilter("ch.heuscher.simplephone.watch.AUDIO_STATE"), RECEIVER_NOT_EXPORTED)
+        registerReceiver(audioStatusReceiver, IntentFilter("ch.heuscher.simplephone.watch.AUDIO_STATUS"), RECEIVER_NOT_EXPORTED)
+
+        // Request initial status
+        sendMessageToPhone("/request_audio_status")
 
         setContent {
             MaterialTheme {
@@ -135,6 +156,8 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
                     isAnswered = _isAnswered.value,
                     isAmbient = _isAmbient.value,
                     audioRoute = _audioRoute.intValue,
+                    volumePercent = _volumePercent.intValue,
+                    isMuted = _isMuted.value,
                     ambientUpdateTrigger = _ambientUpdateTrigger.intValue,
                     onAccept = {
                         _isAnswered.value = true
@@ -158,6 +181,12 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
                     },
                     onVolumeDown = {
                         sendMessageToPhone("/volume_down")
+                    },
+                    onToggleMute = {
+                        sendMessageToPhone("/toggle_mute")
+                    },
+                    onSetAudioRoute = { route ->
+                        sendMessageToPhone("/set_audio_route", route.toString())
                     }
                 )
             }
@@ -168,6 +197,7 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
         super.onNewIntent(intent)
         setIntent(intent)
         handleIntent(intent)
+        sendMessageToPhone("/request_audio_status")
     }
 
     private fun handleIntent(intent: Intent) {
@@ -236,10 +266,16 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(endCallReceiver)
-        unregisterReceiver(answerCallReceiver)
-        unregisterReceiver(callInfoReceiver)
-        unregisterReceiver(audioStateReceiver)
+        isCallActive = false
+        try {
+            unregisterReceiver(endCallReceiver)
+            unregisterReceiver(answerCallReceiver)
+            unregisterReceiver(callInfoReceiver)
+            unregisterReceiver(audioStateReceiver)
+            unregisterReceiver(audioStatusReceiver)
+        } catch (e: Exception) {
+            // Might not be registered
+        }
     }
 
     private fun sendMessageToPhone(path: String, payload: String = "") {
@@ -265,13 +301,17 @@ fun WatchCallScreen(
     isAnswered: Boolean, 
     isAmbient: Boolean = false,
     audioRoute: Int = 1,
+    volumePercent: Int = 0,
+    isMuted: Boolean = false,
     ambientUpdateTrigger: Int = 0,
     onAccept: () -> Unit, 
     onSilence: () -> Unit, 
     onReject: () -> Unit, 
     onHangup: () -> Unit,
     onVolumeUp: () -> Unit,
-    onVolumeDown: () -> Unit
+    onVolumeDown: () -> Unit,
+    onToggleMute: () -> Unit,
+    onSetAudioRoute: (Int) -> Unit
 ) {
     if (isAmbient) {
         val trigger = ambientUpdateTrigger
@@ -465,29 +505,85 @@ fun WatchCallScreen(
                     modifier = Modifier.padding(horizontal = 24.dp)
                 )
 
-                // Status
-                Text(
-                    text = "On call",
-                    color = Color.Gray,
-                    fontSize = 11.sp,
-                    textAlign = TextAlign.Center
-                )
-
-                // Audio Route Controls removed for accessibility. Volume controls are now on the screen edges.
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Red Hangup Button
-                Button(
-                    onClick = { onHangup() },
-                    modifier = Modifier.size(44.dp),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFE53935))
-                ) {
+                // Status with Volume and Mute
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "✕",
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                        text = if (isMuted) "MUTED" else "Vol: $volumePercent%",
+                        color = if (isMuted) Color.Red else Color.Gray,
+                        fontSize = 12.sp,
+                        fontWeight = if (isMuted) FontWeight.Bold else FontWeight.Normal,
+                        textAlign = TextAlign.Center
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    // Audio route indicator
+                    val routeLabel = when(audioRoute) {
+                        2 -> "BT"
+                        4 -> "SPEAKER"
+                        else -> "PHONE"
+                    }
+                    Text(
+                        text = "[$routeLabel]",
+                        color = Color.Cyan,
+                        fontSize = 11.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // BT Button
+                    Button(
+                        onClick = { onSetAudioRoute(2) },
+                        modifier = Modifier.size(36.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = if (audioRoute == 2) Color.Blue else Color.DarkGray
+                        )
+                    ) {
+                        Text("BT", fontSize = 10.sp)
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    
+                    // Mute Button
+                    Button(
+                        onClick = { onToggleMute() },
+                        modifier = Modifier.size(36.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = if (isMuted) Color.Red else Color.DarkGray
+                        )
+                    ) {
+                        Text(if (isMuted) "UNMUTE" else "MUTE", fontSize = 8.sp)
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    // Red Hangup Button
+                    Button(
+                        onClick = { onHangup() },
+                        modifier = Modifier.size(44.dp),
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFE53935))
+                    ) {
+                        Text(
+                            text = "✕",
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    // Speaker Button
+                    Button(
+                        onClick = { onSetAudioRoute(8) },
+                        modifier = Modifier.size(36.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = if (audioRoute == 8) Color.Green else Color.DarkGray
+                        )
+                    ) {
+                        Text("SPK", fontSize = 10.sp)
+                    }
                 }
             }
 
@@ -495,7 +591,7 @@ fun WatchCallScreen(
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .fillMaxWidth(0.35f)
+                    .fillMaxWidth(0.3f)
                     .align(Alignment.CenterStart)
                     .clickable { onVolumeDown() },
                 contentAlignment = Alignment.CenterStart
@@ -504,8 +600,8 @@ fun WatchCallScreen(
                     text = "-", 
                     fontSize = 48.sp, 
                     fontWeight = FontWeight.Bold,
-                    color = Color.White.copy(alpha = 0.6f), 
-                    modifier = Modifier.padding(start = 12.dp)
+                    color = Color.White.copy(alpha = 0.4f), 
+                    modifier = Modifier.padding(start = 8.dp)
                 )
             }
 
@@ -513,7 +609,7 @@ fun WatchCallScreen(
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .fillMaxWidth(0.35f)
+                    .fillMaxWidth(0.3f)
                     .align(Alignment.CenterEnd)
                     .clickable { onVolumeUp() },
                 contentAlignment = Alignment.CenterEnd
@@ -522,8 +618,8 @@ fun WatchCallScreen(
                     text = "+", 
                     fontSize = 48.sp, 
                     fontWeight = FontWeight.Bold,
-                    color = Color.White.copy(alpha = 0.6f), 
-                    modifier = Modifier.padding(end = 12.dp)
+                    color = Color.White.copy(alpha = 0.4f), 
+                    modifier = Modifier.padding(end = 8.dp)
                 )
             }
         }

@@ -146,7 +146,7 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
                         finish()
                     },
                     onAudioRouteSelected = { route ->
-                        CallService.setAudioRoute(route)
+                        CallService.setAudioRoute(route, isManual = true)
                     },
                     onBluetoothDeviceSelected = { device ->
                         CallService.requestBluetoothAudio(device)

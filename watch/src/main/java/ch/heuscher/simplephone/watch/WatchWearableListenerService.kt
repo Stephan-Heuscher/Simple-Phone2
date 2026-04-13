@@ -43,6 +43,14 @@ class WatchWearableListenerService : WearableListenerService() {
                 }
                 sendBroadcast(intent)
             }
+            "/audio_status" -> {
+                val data = String(messageEvent.data)
+                val intent = Intent("ch.heuscher.simplephone.watch.AUDIO_STATUS").apply {
+                    setPackage(packageName)
+                    putExtra("AUDIO_STATUS_DATA", data)
+                }
+                sendBroadcast(intent)
+            }
             "/call_ended" -> {
                 // Send broadcast to close the call screen if it's open
                 val intent = Intent("ch.heuscher.simplephone.watch.CALL_ENDED").apply {
