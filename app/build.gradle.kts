@@ -56,6 +56,11 @@ android {
     }
 
     buildTypes {
+        all {
+            ndk {
+                debugSymbolLevel = "FULL"
+            }
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
