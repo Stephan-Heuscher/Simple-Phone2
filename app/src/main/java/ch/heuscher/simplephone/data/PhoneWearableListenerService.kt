@@ -30,6 +30,7 @@ class PhoneWearableListenerService : WearableListenerService() {
             "/find_my_phone" -> startRingingAndVibrating()
             "/answer_call" -> {
                 Log.d("PhoneWearableListener", "Watch requested to answer call")
+                CallService.watchInitiated = true
                 CallService.answerCall()
             }
             "/reject_call" -> {
@@ -54,22 +55,24 @@ class PhoneWearableListenerService : WearableListenerService() {
                 Log.d("PhoneWearableListener", "Watch requested volume up")
                 val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
                 audioManager.adjustStreamVolume(AudioManager.STREAM_VOICE_CALL, AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI)
+                CallService.requestAudioStatus()
             }
             "/volume_down" -> {
                 Log.d("PhoneWearableListener", "Watch requested volume down")
                 val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
                 audioManager.adjustStreamVolume(AudioManager.STREAM_VOICE_CALL, AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI)
+                CallService.requestAudioStatus()
             }
             "/toggle_mute" -> {
                 Log.d("PhoneWearableListener", "Watch requested toggle mute")
                 val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
                 audioManager.isMicrophoneMute = !audioManager.isMicrophoneMute
                 // Trigger an update back to the watch
-                CallService.instance?.sendAudioStatusToWatch()
+                CallService.requestAudioStatus()
             }
             "/request_audio_status" -> {
                 Log.d("PhoneWearableListener", "Watch requested audio status")
-                CallService.instance?.sendAudioStatusToWatch()
+                CallService.requestAudioStatus()
             }
             "/initiate_call" -> {
                 val number = String(messageEvent.data, Charsets.UTF_8)

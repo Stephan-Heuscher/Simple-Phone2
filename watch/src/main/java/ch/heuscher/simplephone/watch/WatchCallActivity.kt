@@ -52,36 +52,23 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
         }
     }
 
-    private val endCallReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            isCallActive = false
-            finish()
-        }
-    }
+    private val _callState = mutableIntStateOf(0) // Default 0
+    private val _callerName = mutableStateOf("")
+    private val _contactPhoto = mutableStateOf<Bitmap?>(null)
+    private val _audioRoute = mutableIntStateOf(1) // Default to EARPIECE (1)
+    private val _volumePercent = mutableIntStateOf(0)
+    private val _isMuted = mutableStateOf(false)
+    private val _watchInitiated = mutableStateOf(false)
+    
+    private val _isAmbient = mutableStateOf(false)
+    private val _ambientUpdateTrigger = mutableIntStateOf(0)
+    private lateinit var ambientController: AmbientModeSupport.AmbientController
 
-    private var _isAnswered = mutableStateOf(false)
-
-    private val answerCallReceiver = object : BroadcastReceiver() {
+    private val syncStateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            _isAnswered.value = true
-        }
-    }
-
-    private val callInfoReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            val name = intent?.getStringExtra("CALLER_NAME") ?: return
-            _callerName.value = name
-            // Re-lookup photo
-            updatePhoto(name)
-        }
-    }
-
-    private val audioStateReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            val route = intent?.getIntExtra("AUDIO_ROUTE", 1) ?: 1
-            _audioRoute.intValue = route
+            val jsonPayload = intent?.getStringExtra("SYNC_STATE_JSON") ?: return
+            handleSyncStateJson(jsonPayload)
             
-            // Try to bring this activity to front if it was superseded by system dialer
             if (isCallActive && !isDestroyed && !isFinishing) {
                 val bringToFrontIntent = Intent(context, WatchCallActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -91,28 +78,34 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
         }
     }
 
-    private val _callerName = mutableStateOf("")
-    private val _contactPhoto = mutableStateOf<Bitmap?>(null)
-    private val _audioRoute = mutableIntStateOf(1) // Default to EARPIECE (1)
-    private val _volumePercent = mutableIntStateOf(0)
-    private val _isMuted = mutableStateOf(false)
-    
-    private val _isAmbient = mutableStateOf(false)
-    private val _ambientUpdateTrigger = mutableIntStateOf(0)
-    private lateinit var ambientController: AmbientModeSupport.AmbientController
-
-    private val audioStatusReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            val data = intent?.getStringExtra("AUDIO_STATUS_DATA") ?: return
-            try {
-                val parts = data.split("|")
-                if (parts.size == 2) {
-                    _volumePercent.intValue = parts[0].toInt()
-                    _isMuted.value = parts[1].toBoolean()
+    private fun handleSyncStateJson(jsonString: String) {
+        try {
+            val json = org.json.JSONObject(jsonString)
+            val newState = json.getInt("callState")
+            _callState.intValue = newState
+            
+            val newName = json.getString("callerName")
+            if (newName.isNotEmpty() && newName != _callerName.value) {
+                _callerName.value = newName
+                updatePhoto(newName)
+            } else if (newName.isEmpty()) {
+                val number = json.getString("callerNumber")
+                if (number.isNotEmpty() && number != _callerName.value) {
+                    _callerName.value = number
                 }
-            } catch (e: Exception) {
-                Log.e("WatchCallActivity", "Error parsing audio status: $data", e)
             }
+            
+            _audioRoute.intValue = json.getInt("audioRoute")
+            _volumePercent.intValue = json.getInt("volumePercent")
+            _isMuted.value = json.getBoolean("isMuted")
+            _watchInitiated.value = json.getBoolean("watchInitiated")
+            
+            if (newState == android.telecom.Call.STATE_DISCONNECTED) {
+                isCallActive = false
+                finish()
+            }
+        } catch (e: Exception) {
+            Log.e("WatchCallActivity", "Failed to parse sync state", e)
         }
     }
 
@@ -138,12 +131,8 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
         
         handleIntent(intent)
 
-        // Register receivers
-        registerReceiver(endCallReceiver, IntentFilter("ch.heuscher.simplephone.watch.CALL_ENDED"), RECEIVER_NOT_EXPORTED)
-        registerReceiver(answerCallReceiver, IntentFilter("ch.heuscher.simplephone.watch.CALL_ANSWERED"), RECEIVER_NOT_EXPORTED)
-        registerReceiver(callInfoReceiver, IntentFilter("ch.heuscher.simplephone.watch.CALL_INFO"), RECEIVER_NOT_EXPORTED)
-        registerReceiver(audioStateReceiver, IntentFilter("ch.heuscher.simplephone.watch.AUDIO_STATE"), RECEIVER_NOT_EXPORTED)
-        registerReceiver(audioStatusReceiver, IntentFilter("ch.heuscher.simplephone.watch.AUDIO_STATUS"), RECEIVER_NOT_EXPORTED)
+        // Register sync receiver
+        registerReceiver(syncStateReceiver, IntentFilter("ch.heuscher.simplephone.watch.SYNC_CALL_STATE"), RECEIVER_NOT_EXPORTED)
 
         // Request initial status
         sendMessageToPhone("/request_audio_status")
@@ -153,14 +142,15 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
                 WatchCallScreen(
                     callerName = _callerName.value,
                     contactPhoto = _contactPhoto.value,
-                    isAnswered = _isAnswered.value,
+                    callState = _callState.intValue,
                     isAmbient = _isAmbient.value,
                     audioRoute = _audioRoute.intValue,
                     volumePercent = _volumePercent.intValue,
                     isMuted = _isMuted.value,
                     ambientUpdateTrigger = _ambientUpdateTrigger.intValue,
                     onAccept = {
-                        _isAnswered.value = true
+                        // Immediately show answered state visually while request goes out
+                        _callState.intValue = android.telecom.Call.STATE_ACTIVE
                         sendMessageToPhone("/answer_call")
                     },
                     onSilence = {
@@ -201,21 +191,23 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
     }
 
     private fun handleIntent(intent: Intent) {
-        val initialName = intent.getStringExtra("CALLER_NAME") ?: getString(R.string.watch_call_label)
-        _callerName.value = initialName
-        val isOutgoing = intent.getBooleanExtra("IS_OUTGOING", false)
-        if (isOutgoing) {
-            _isAnswered.value = true
+        val jsonPayload = intent.getStringExtra("SYNC_STATE_JSON")
+        if (jsonPayload != null) {
+            handleSyncStateJson(jsonPayload)
         } else {
-            // If it's a new incoming intent, we might need to reset _isAnswered
-            // though usually a new call means the old one is gone.
-            _isAnswered.value = false
+            // Legacy handling for WatchInCallService launch
+            val initialName = intent.getStringExtra("CALLER_NAME") ?: getString(R.string.watch_call_label)
+            _callerName.value = initialName
+            val isOutgoing = intent.getBooleanExtra("IS_OUTGOING", false)
+            if (isOutgoing) {
+                _callState.intValue = android.telecom.Call.STATE_DIALING
+            } else {
+                _callState.intValue = android.telecom.Call.STATE_RINGING
+            }
+            val initialRoute = intent.getIntExtra("AUDIO_ROUTE", 1)
+            _audioRoute.intValue = initialRoute
+            updatePhoto(initialName)
         }
-        val initialRoute = intent.getIntExtra("AUDIO_ROUTE", 1)
-        _audioRoute.intValue = initialRoute
-
-        // Try to find contact photo
-        updatePhoto(initialName)
     }
 
     override fun onResume() {
@@ -257,7 +249,7 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
     override fun dispatchTouchEvent(ev: android.view.MotionEvent?): Boolean {
         if (ev?.action == android.view.MotionEvent.ACTION_DOWN) {
             val prefs = getSharedPreferences("simple_phone_watch", Context.MODE_PRIVATE)
-            if (prefs.getBoolean("setting_silence_call_on_touch", false) && !_isAnswered.value) {
+            if (prefs.getBoolean("setting_silence_call_on_touch", false) && _callState.intValue == android.telecom.Call.STATE_RINGING) {
                 sendMessageToPhone("/silence_ringer")
             }
         }
@@ -268,11 +260,7 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
         super.onDestroy()
         isCallActive = false
         try {
-            unregisterReceiver(endCallReceiver)
-            unregisterReceiver(answerCallReceiver)
-            unregisterReceiver(callInfoReceiver)
-            unregisterReceiver(audioStateReceiver)
-            unregisterReceiver(audioStatusReceiver)
+            unregisterReceiver(syncStateReceiver)
         } catch (e: Exception) {
             // Might not be registered
         }
@@ -298,7 +286,7 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
 fun WatchCallScreen(
     callerName: String, 
     contactPhoto: Bitmap?, 
-    isAnswered: Boolean, 
+    callState: Int, 
     isAmbient: Boolean = false,
     audioRoute: Int = 1,
     volumePercent: Int = 0,
@@ -345,7 +333,9 @@ fun WatchCallScreen(
         return
     }
 
-    if (!isAnswered) {
+    val isIncoming = callState == android.telecom.Call.STATE_RINGING
+
+    if (isIncoming) {
         // Incoming call: top avatar/name, bottom action buttons
         Column(modifier = Modifier.fillMaxSize().background(Color.Black)) {
             // Top 2/3: Contact Photo / Name

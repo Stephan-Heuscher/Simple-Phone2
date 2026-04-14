@@ -33,6 +33,7 @@ import androidx.work.workDataOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 
@@ -115,15 +116,18 @@ class CallService : InCallService() {
             val call = currentCall ?: return
             call.answer(android.telecom.VideoProfile.STATE_AUDIO_ONLY)
             
-            val supportedRouteMask = currentAudioState?.supportedRouteMask ?: 0
-            val route = if (supportedRouteMask and CallAudioState.ROUTE_BLUETOOTH != 0) {
-                 CallAudioState.ROUTE_BLUETOOTH
-            } else if (supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0) {
-                 CallAudioState.ROUTE_WIRED_HEADSET
+            if (watchInitiated) {
+                watchRequestedAudioRoute = CallAudioState.ROUTE_BLUETOOTH
+                instance?.forceAudioRouteWithRetry(CallAudioState.ROUTE_BLUETOOTH)
             } else {
-                 CallAudioState.ROUTE_EARPIECE
+                val supportedRouteMask = currentAudioState?.supportedRouteMask ?: 0
+                val route = if (supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0) {
+                     CallAudioState.ROUTE_WIRED_HEADSET
+                } else {
+                     CallAudioState.ROUTE_EARPIECE
+                }
+                setAudioRoute(route)
             }
-            setAudioRoute(route)
         }
         
         fun rejectCall() {
@@ -183,6 +187,32 @@ class CallService : InCallService() {
             }, 200)
         }
         
+        fun requestAudioStatus() {
+            instance?.broadcastCallSyncState()
+        }
+
+        fun getSyncStateJson(): String {
+            val json = JSONObject()
+            json.put("callState", callState)
+            json.put("callerNumber", callerNumber ?: "")
+            json.put("callerName", callerName ?: "")
+            val currentRoute = currentAudioState?.route ?: CallAudioState.ROUTE_EARPIECE
+            json.put("audioRoute", currentRoute)
+            
+            instance?.let { 
+                val am = it.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                val vol = am.getStreamVolume(AudioManager.STREAM_VOICE_CALL)
+                val max = am.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL)
+                val percent = if (max > 0) (vol * 100) / max else 0
+                json.put("volumePercent", percent)
+                json.put("isMuted", am.isMicrophoneMute)
+            } ?: run {
+                json.put("volumePercent", 0)
+                json.put("isMuted", false)
+            }
+            json.put("watchInitiated", watchInitiated)
+            return json.toString()
+        }
 
         }
         
@@ -396,7 +426,7 @@ class CallService : InCallService() {
                     showOngoingCallNotification(call)
                     
                     // Inform watch that the call is now active
-                    sendWearMessage("/call_answered", "")
+                    broadcastCallSyncState()
                     
                     // Re-enforce watch-requested audio route on state transitions.
                     // The system aggressively resets the route to earpiece during
@@ -421,7 +451,7 @@ class CallService : InCallService() {
                 CallService.callerName = null
                 stopRinging()
                 // Inform watch that the call ended
-                sendWearMessage("/call_ended", "")
+                broadcastCallSyncState()
             }
         }
         
@@ -432,7 +462,7 @@ class CallService : InCallService() {
             
             // If the name was resolved/changed, inform the watch
             if (CallService.callerName != oldName && CallService.callerName != null) {
-                sendWearMessage("/call_info", CallService.callerName!!)
+                broadcastCallSyncState()
             }
         }
     }
@@ -721,9 +751,7 @@ class CallService : InCallService() {
         
         CallService.notifyCallStateChanged()
         
-        if (call.state != android.telecom.Call.STATE_RINGING) {
-            sendWearMessage("/outgoing_call", CallService.callerName ?: CallService.callerNumber ?: getString(R.string.unknown_contact))
-        }
+        broadcastCallSyncState()
         
         if (call.state == android.telecom.Call.STATE_RINGING) {
             startRinging(CallService.callerNumber)
@@ -741,24 +769,10 @@ class CallService : InCallService() {
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start IncomingCallActivity", e)
         }
-
-        // Inform Watch of incoming call
-        if (call.state == android.telecom.Call.STATE_RINGING) {
-            sendWearMessage("/incoming_call", "${CallService.callerName ?: CallService.callerNumber ?: getString(R.string.unknown_contact)}")
-        }
-        
-        // Send initial audio status
-        sendAudioStatusToWatch()
     }
 
-    private fun sendAudioStatusToWatch() {
-        val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val vol = am.getStreamVolume(AudioManager.STREAM_VOICE_CALL)
-        val max = am.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL)
-        val isMuted = am.isMicrophoneMute
-        val percent = if (max > 0) (vol * 100) / max else 0
-        
-        sendWearMessage("/audio_status", "$percent|$isMuted")
+    fun broadcastCallSyncState() {
+        sendWearMessage("/sync_call_state", CallService.getSyncStateJson())
     }
 
     private fun sendWearMessage(path: String, payload: String) {
@@ -814,7 +828,7 @@ class CallService : InCallService() {
             notifyCallStateChanged(disconnectCause)
             
             // Inform watch that the call ended
-            sendWearMessage("/call_ended", "")
+            broadcastCallSyncState()
         }
     }
     
@@ -1071,19 +1085,9 @@ class CallService : InCallService() {
         CallService.notifyCallStateChanged()
         
         // Notify watch
-        sendWearMessage("/audio_state", route.toString())
-        sendAudioStatusToWatch()
+        broadcastCallSyncState()
     }
     
-    fun sendAudioStatusToWatch() {
-        val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val vol = am.getStreamVolume(AudioManager.STREAM_VOICE_CALL)
-        val max = am.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL)
-        val isMuted = am.isMicrophoneMute
-        val percent = if (max > 0) (vol * 100) / max else 0
-        
-        sendWearMessage("/audio_status", "$percent|$isMuted")
-    }
     private fun startProximitySensor() {
         if (!isProximitySensorRegistered && proximitySensor != null) {
             sensorManager?.registerListener(sensorEventListener, proximitySensor, android.hardware.SensorManager.SENSOR_DELAY_NORMAL)
