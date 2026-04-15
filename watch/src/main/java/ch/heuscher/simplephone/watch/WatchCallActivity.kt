@@ -195,18 +195,12 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
         if (jsonPayload != null) {
             handleSyncStateJson(jsonPayload)
         } else {
-            // Legacy handling for WatchInCallService launch
-            val initialName = intent.getStringExtra("CALLER_NAME") ?: getString(R.string.watch_call_label)
-            _callerName.value = initialName
-            val isOutgoing = intent.getBooleanExtra("IS_OUTGOING", false)
-            if (isOutgoing) {
-                _callState.intValue = android.telecom.Call.STATE_DIALING
-            } else {
-                _callState.intValue = android.telecom.Call.STATE_RINGING
-            }
-            val initialRoute = intent.getIntExtra("AUDIO_ROUTE", 1)
-            _audioRoute.intValue = initialRoute
-            updatePhoto(initialName)
+            // No sync state JSON means this wasn't launched by the phone app.
+            // This can happen if the system or another path starts the activity.
+            // Without accurate state data we should not show the call UI.
+            Log.w("WatchCallActivity", "No SYNC_STATE_JSON in intent — finishing")
+            isCallActive = false
+            finish()
         }
     }
 
@@ -217,8 +211,11 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeS
 
     override fun onStop() {
         super.onStop()
-        if (isCallActive && !isFinishing) {
-            // System dialer likely took over. Re-assert focus after a short delay.
+        val state = _callState.intValue
+        if (isCallActive && !isFinishing &&
+            (state == android.telecom.Call.STATE_ACTIVE || state == android.telecom.Call.STATE_RINGING)) {
+            // System dialer likely took over. Re-assert focus after a short delay,
+            // but only if there's genuinely an active or ringing call.
             handler.postDelayed(bringToFrontRunnable, 500)
         }
     }
