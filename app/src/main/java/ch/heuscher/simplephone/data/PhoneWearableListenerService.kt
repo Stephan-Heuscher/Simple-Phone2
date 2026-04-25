@@ -30,7 +30,7 @@ class PhoneWearableListenerService : WearableListenerService() {
             "/find_my_phone" -> startRingingAndVibrating()
             "/answer_call" -> {
                 Log.d("PhoneWearableListener", "Watch requested to answer call")
-                CallService.watchAnswered = true
+                CallService.watchInitiated = true
                 CallService.answerCall()
             }
             "/reject_call" -> {

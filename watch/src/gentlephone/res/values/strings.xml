@@ -2,7 +2,7 @@
 <resources>
     <!-- Note: app_name is set via resValue in build.gradle.kts -->
     
-    <!-- gentle phone Specific Strings -->
+    <!-- Gentle Phone Specific Strings -->
     <string name="gentle_phone_pairing_title">confidant pairing</string>
     <string name="gentle_phone_pairing_desc">Share this code with your confidant so they can adjust your phone settings remotely:</string>
     <string name="gentle_phone_pairing_code">Pairing Code</string>

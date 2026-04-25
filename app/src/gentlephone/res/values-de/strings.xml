@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- gentle phone Deutsche Strings -->
+    <!-- Gentle Phone Deutsche Strings -->
     <string name="gentle_phone_pairing_title">vertraute person koppelung</string>
     <string name="gentle_phone_pairing_desc">Teilen Sie diesen Link mit Ihrer Vertrauensperson, damit diese Ihre Telefoneinstellungen aus der Ferne anpassen kann:</string>
     <string name="gentle_phone_pairing_code">Kopplungscode</string>

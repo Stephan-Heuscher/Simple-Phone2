@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.wear.ambient.AmbientModeSupport
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.MaterialTheme
@@ -38,7 +39,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
+class WatchCallActivity : androidx.fragment.app.FragmentActivity(), AmbientModeSupport.AmbientCallbackProvider {
 
     private var isCallActive = true
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
@@ -58,8 +59,10 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
     private val _volumePercent = mutableIntStateOf(0)
     private val _isMuted = mutableStateOf(false)
     private val _watchInitiated = mutableStateOf(false)
-    private val _watchAnswered = mutableStateOf(false)
-    private val _isOutgoing = mutableStateOf(false)
+    
+    private val _isAmbient = mutableStateOf(false)
+    private val _ambientUpdateTrigger = mutableIntStateOf(0)
+    private lateinit var ambientController: AmbientModeSupport.AmbientController
 
     private val syncStateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -81,27 +84,21 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
             val newState = json.getInt("callState")
             _callState.intValue = newState
             
-            var name = json.optString("callerName", "")
-            val number = json.optString("callerNumber", "")
-            
-            if (name.isEmpty() && number.isNotEmpty()) {
-                // Fallback: Try to look up name in watch cache if phone hasn't resolved it yet
-                name = lookupContactName(number) ?: number
-            }
-            
-            if (name.isNotEmpty() && name != _callerName.value) {
-                _callerName.value = name
-                updatePhoto(name)
-            } else if (name.isEmpty() && number.isNotEmpty() && number != _callerName.value) {
-                _callerName.value = number
+            val newName = json.getString("callerName")
+            if (newName.isNotEmpty() && newName != _callerName.value) {
+                _callerName.value = newName
+                updatePhoto(newName)
+            } else if (newName.isEmpty()) {
+                val number = json.getString("callerNumber")
+                if (number.isNotEmpty() && number != _callerName.value) {
+                    _callerName.value = number
+                }
             }
             
             _audioRoute.intValue = json.getInt("audioRoute")
             _volumePercent.intValue = json.getInt("volumePercent")
             _isMuted.value = json.getBoolean("isMuted")
             _watchInitiated.value = json.getBoolean("watchInitiated")
-            _watchAnswered.value = json.optBoolean("watchAnswered", false)
-            _isOutgoing.value = json.optBoolean("isOutgoing", false)
             
             if (newState == android.telecom.Call.STATE_DISCONNECTED) {
                 isCallActive = false
@@ -112,30 +109,24 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
         }
     }
 
-    private fun lookupContactName(number: String): String? {
-        val prefs = getSharedPreferences("simple_phone_watch", Context.MODE_PRIVATE)
-        val cachedJson = prefs.getString("cached_contacts", null) ?: return null
-        try {
-            val array = org.json.JSONArray(cachedJson)
-            val normalizedSearch = number.replace(Regex("[^0-9+]"), "")
-            for (i in 0 until array.length()) {
-                val obj = array.getJSONObject(i)
-                val contactNumber = obj.optString("number", "").replace(Regex("[^0-9+]"), "")
-                if (contactNumber == normalizedSearch && normalizedSearch.isNotEmpty()) {
-                    return obj.getString("name")
-                }
+    override fun getAmbientCallback(): AmbientModeSupport.AmbientCallback {
+        return object : AmbientModeSupport.AmbientCallback() {
+            override fun onEnterAmbient(ambientDetails: Bundle?) {
+                _isAmbient.value = true
             }
-        } catch (e: Exception) {
-            Log.e("WatchCallActivity", "Failed to lookup contact name", e)
+            override fun onExitAmbient() {
+                _isAmbient.value = false
+            }
+            override fun onUpdateAmbient() {
+                _ambientUpdateTrigger.intValue++
+            }
         }
-        return null
     }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        ambientController = AmbientModeSupport.attach(this)
         isCallActive = true
         
         handleIntent(intent)
@@ -152,12 +143,11 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
                     callerName = _callerName.value,
                     contactPhoto = _contactPhoto.value,
                     callState = _callState.intValue,
+                    isAmbient = _isAmbient.value,
                     audioRoute = _audioRoute.intValue,
                     volumePercent = _volumePercent.intValue,
                     isMuted = _isMuted.value,
-                    watchInitiated = _watchInitiated.value,
-                    watchAnswered = _watchAnswered.value,
-                    isOutgoing = _isOutgoing.value,
+                    ambientUpdateTrigger = _ambientUpdateTrigger.intValue,
                     onAccept = {
                         // Immediately show answered state visually while request goes out
                         _callState.intValue = android.telecom.Call.STATE_ACTIVE
@@ -291,26 +281,56 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
 
 @Composable
 fun WatchCallScreen(
-    callerName: String,
-    contactPhoto: Bitmap?,
-    callState: Int,
-    audioRoute: Int,
-    volumePercent: Int,
-    isMuted: Boolean,
-    watchInitiated: Boolean = false,
-    watchAnswered: Boolean = false,
-    isOutgoing: Boolean = false,
-    onAccept: () -> Unit = {},
-    onSilence: () -> Unit = {},
-    onReject: () -> Unit = {},
-    onHangup: () -> Unit = {},
-    onVolumeUp: () -> Unit = {},
-    onVolumeDown: () -> Unit = {},
-    onToggleMute: () -> Unit = {},
-    onSetAudioRoute: (Int) -> Unit = {}
+    callerName: String, 
+    contactPhoto: Bitmap?, 
+    callState: Int, 
+    isAmbient: Boolean = false,
+    audioRoute: Int = 1,
+    volumePercent: Int = 0,
+    isMuted: Boolean = false,
+    ambientUpdateTrigger: Int = 0,
+    onAccept: () -> Unit, 
+    onSilence: () -> Unit, 
+    onReject: () -> Unit, 
+    onHangup: () -> Unit,
+    onVolumeUp: () -> Unit,
+    onVolumeDown: () -> Unit,
+    onToggleMute: () -> Unit,
+    onSetAudioRoute: (Int) -> Unit
 ) {
-    val isIncoming = callState == android.telecom.Call.STATE_RINGING && !isOutgoing
+    if (isAmbient) {
+        val trigger = ambientUpdateTrigger
+        val currentTime = remember(trigger) {
+            SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
+        }
+        
+        Box(
+            modifier = Modifier.fillMaxSize().background(Color.Black),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = currentTime,
+                    color = Color.White,
+                    fontSize = 64.sp,
+                    fontWeight = FontWeight.Thin
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = callerName,
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Light,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
+            }
+        }
+        return
+    }
 
+    val isIncoming = callState == android.telecom.Call.STATE_RINGING
 
     if (isIncoming) {
         // Incoming call: top avatar/name, bottom action buttons
@@ -472,131 +492,122 @@ fun WatchCallScreen(
                     modifier = Modifier.padding(horizontal = 24.dp)
                 )
 
-                // Status with Volume and Mute (only for incoming or watch-initiated)
-                if (!isOutgoing || watchInitiated) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = if (isMuted) "MUTED" else "Vol: $volumePercent%",
-                            color = if (isMuted) Color.Red else Color.Gray,
-                            fontSize = 12.sp,
-                            fontWeight = if (isMuted) FontWeight.Bold else FontWeight.Normal,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        // Audio route indicator
-                        val routeLabel = when(audioRoute) {
-                            2 -> "BT"
-                            4 -> "SPEAKER"
-                            else -> "PHONE"
-                        }
-                        Text(
-                            text = "[$routeLabel]",
-                            color = Color.Cyan,
-                            fontSize = 11.sp,
-                            textAlign = TextAlign.Center
-                        )
+                // Status with Volume and Mute
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = if (isMuted) "MUTED" else "Vol: $volumePercent%",
+                        color = if (isMuted) Color.Red else Color.Gray,
+                        fontSize = 12.sp,
+                        fontWeight = if (isMuted) FontWeight.Bold else FontWeight.Normal,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    // Audio route indicator
+                    val routeLabel = when(audioRoute) {
+                        2 -> "BT"
+                        4 -> "SPEAKER"
+                        else -> "PHONE"
                     }
-
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "[$routeLabel]",
+                        color = Color.Cyan,
+                        fontSize = 11.sp,
+                        textAlign = TextAlign.Center
+                    )
                 }
+
+                Spacer(modifier = Modifier.height(4.dp))
 
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (!isOutgoing || watchInitiated) {
-                        // BT Button
-                        Button(
-                            onClick = { onSetAudioRoute(2) },
-                            modifier = Modifier.size(36.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                backgroundColor = if (audioRoute == 2) Color.Blue else Color.DarkGray
-                            )
-                        ) {
-                            Text("BT", fontSize = 10.sp)
-                        }
-                        Spacer(modifier = Modifier.width(4.dp))
-                        
-                        // Mute Button
-                        Button(
-                            onClick = { onToggleMute() },
-                            modifier = Modifier.size(36.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                backgroundColor = if (isMuted) Color.Red else Color.DarkGray
-                            )
-                        ) {
-                            Text(if (isMuted) "UNMUTE" else "MUTE", fontSize = 8.sp)
-                        }
-                        Spacer(modifier = Modifier.width(4.dp))
+                    // BT Button
+                    Button(
+                        onClick = { onSetAudioRoute(2) },
+                        modifier = Modifier.size(36.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = if (audioRoute == 2) Color.Blue else Color.DarkGray
+                        )
+                    ) {
+                        Text("BT", fontSize = 10.sp)
                     }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    
+                    // Mute Button
+                    Button(
+                        onClick = { onToggleMute() },
+                        modifier = Modifier.size(36.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = if (isMuted) Color.Red else Color.DarkGray
+                        )
+                    ) {
+                        Text(if (isMuted) "UNMUTE" else "MUTE", fontSize = 8.sp)
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
 
                     // Red Hangup Button
                     Button(
                         onClick = { onHangup() },
-                        modifier = Modifier.size(if (!isOutgoing || watchInitiated) 44.dp else 56.dp),
+                        modifier = Modifier.size(44.dp),
                         colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFE53935))
                     ) {
                         Text(
                             text = "✕",
                             color = Color.White,
-                            fontSize = if (!isOutgoing || watchInitiated) 18.sp else 24.sp,
+                            fontSize = 18.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
+                    Spacer(modifier = Modifier.width(4.dp))
 
-                    if (!isOutgoing || watchInitiated) {
-                        Spacer(modifier = Modifier.width(4.dp))
-
-                        // Speaker Button
-                        Button(
-                            onClick = { onSetAudioRoute(8) },
-                            modifier = Modifier.size(36.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                backgroundColor = if (audioRoute == 8) Color.Green else Color.DarkGray
-                            )
-                        ) {
-                            Text("SPK", fontSize = 10.sp)
-                        }
+                    // Speaker Button
+                    Button(
+                        onClick = { onSetAudioRoute(8) },
+                        modifier = Modifier.size(36.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = if (audioRoute == 8) Color.Green else Color.DarkGray
+                        )
+                    ) {
+                        Text("SPK", fontSize = 10.sp)
                     }
                 }
             }
 
             // Left Half: Volume Down (Huge invisible tap target for accessibility)
-            if (!isOutgoing || watchInitiated) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(0.3f)
-                        .align(Alignment.CenterStart)
-                        .clickable { onVolumeDown() },
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Text(
-                        text = "-", 
-                        fontSize = 48.sp, 
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White.copy(alpha = 0.4f), 
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                }
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(0.3f)
+                    .align(Alignment.CenterStart)
+                    .clickable { onVolumeDown() },
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Text(
+                    text = "-", 
+                    fontSize = 48.sp, 
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White.copy(alpha = 0.4f), 
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
 
-                // Right Half: Volume Up (Huge invisible tap target for accessibility)
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(0.3f)
-                        .align(Alignment.CenterEnd)
-                        .clickable { onVolumeUp() },
-                    contentAlignment = Alignment.CenterEnd
-                ) {
-                    Text(
-                        text = "+", 
-                        fontSize = 48.sp, 
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White.copy(alpha = 0.4f), 
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                }
+            // Right Half: Volume Up (Huge invisible tap target for accessibility)
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(0.3f)
+                    .align(Alignment.CenterEnd)
+                    .clickable { onVolumeUp() },
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Text(
+                    text = "+", 
+                    fontSize = 48.sp, 
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White.copy(alpha = 0.4f), 
+                    modifier = Modifier.padding(end = 8.dp)
+                )
             }
         }
     }
