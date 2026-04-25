@@ -341,14 +341,25 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoadi
                 } else {
                     // No Bluetooth connection (WLAN only or no phone at all) — dial directly
                     withContext(Dispatchers.Main) {
+                        val hasTelephony = context.packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_TELEPHONY)
+                        if (!hasTelephony) {
+                            android.widget.Toast.makeText(context, context.getString(R.string.watch_error_no_telephony), android.widget.Toast.LENGTH_LONG).show()
+                            return@withContext
+                        }
+                        
                         if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CALL_PHONE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
                             callPermissionLauncher.launch(android.Manifest.permission.CALL_PHONE)
                         } else {
-                            val dialIntent = Intent(Intent.ACTION_CALL).apply {
-                                data = Uri.parse("tel:$number")
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            try {
+                                val dialIntent = Intent(Intent.ACTION_CALL).apply {
+                                    data = Uri.parse("tel:$number")
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                }
+                                context.startActivity(dialIntent)
+                            } catch (e: Exception) {
+                                Log.e("WatchMainActivity", "Failed to start direct call", e)
+                                android.widget.Toast.makeText(context, context.getString(R.string.watch_error_no_telephony), android.widget.Toast.LENGTH_LONG).show()
                             }
-                            context.startActivity(dialIntent)
                         }
                     }
                 }

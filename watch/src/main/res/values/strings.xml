@@ -16,4 +16,5 @@
     <!-- Complication -->
     <string name="watch_complication_open">Open Simple Phone</string>
     <string name="watch_complication_label">Phone</string>
+    <string name="watch_error_no_telephony">Cannot call: Watch is not connected to phone via Bluetooth and has no local mobile connection.</string>
 </resources>
