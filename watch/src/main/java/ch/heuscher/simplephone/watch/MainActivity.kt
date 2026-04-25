@@ -330,14 +330,16 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoadi
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val nodes = Tasks.await(Wearable.getNodeClient(context).connectedNodes)
-                if (nodes.isNotEmpty()) {
-                    // Phone is connected, route through phone
+                // isNearby == true means Bluetooth (direct) connection — audio routing works.
+                // isNearby == false means WLAN/cloud relay only — BT audio can't be routed,
+                // so we must dial directly on the watch for the user to hear anything.
+                val nearbyNode = nodes.firstOrNull { it.isNearby }
+                if (nearbyNode != null) {
+                    // Phone is connected via Bluetooth, route through phone
                     val messageClient = Wearable.getMessageClient(context)
-                    for (node in nodes) {
-                        messageClient.sendMessage(node.id, "/initiate_call", number.toByteArray(Charsets.UTF_8))
-                    }
+                    messageClient.sendMessage(nearbyNode.id, "/initiate_call", number.toByteArray(Charsets.UTF_8))
                 } else {
-                    // No phone connected, direct local dial
+                    // No Bluetooth connection (WLAN only or no phone at all) — dial directly
                     withContext(Dispatchers.Main) {
                         if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CALL_PHONE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
                             callPermissionLauncher.launch(android.Manifest.permission.CALL_PHONE)
