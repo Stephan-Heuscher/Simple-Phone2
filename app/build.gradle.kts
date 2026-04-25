@@ -69,7 +69,7 @@ android {
         }
     }
     
-    // Product Flavors for Simple Phone and Gentle Phone
+    // Product Flavors for simple phone and gentle phone
     flavorDimensions += "version"
     productFlavors {
         create("simplephone") {
@@ -129,7 +129,7 @@ dependencies {
     // LibPhone number for better formatting
     implementation("com.googlecode.libphonenumber:libphonenumber:8.13.50")
 
-    // Firebase for Gentle Phone remote settings
+    // Firebase for gentle phone remote settings
     "gentlephoneImplementation"(platform("com.google.firebase:firebase-bom:33.7.0"))
     "gentlephoneImplementation"("com.google.firebase:firebase-firestore-ktx")
     

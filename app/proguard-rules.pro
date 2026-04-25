@@ -1,4 +1,4 @@
-# ProGuard / R8 rules for Simple Phone / gentle phone
+# ProGuard / R8 rules for simple phone / gentle phone
 #
 # User benefit: R8 shrinks the APK, removes unused code, and obfuscates
 # class names — resulting in a smaller download and faster install for users.
@@ -6,7 +6,7 @@
 # Compose — keep runtime metadata
 -dontwarn androidx.compose.**
 
-# Keep Firebase Firestore model classes (Gentle Phone remote settings)
+# Keep Firebase Firestore model classes (gentle phone remote settings)
 -keep class ch.heuscher.simplephone.model.** { *; }
 
 # Keep CallService and InCallService (system-invoked via telecom framework)

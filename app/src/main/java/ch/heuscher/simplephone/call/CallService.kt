@@ -82,7 +82,7 @@ class CallService : InCallService() {
         @Volatile var shouldHighlightSpeaker: Boolean = false
 
         @Volatile var watchInitiated: Boolean = false
-
+        @Volatile var watchAnswered: Boolean = false
         @Volatile var watchRequestedAudioRoute: Int? = null
 
         // Thread-safe listener list (accessed from main thread + IO coroutines)
@@ -116,9 +116,13 @@ class CallService : InCallService() {
             val call = currentCall ?: return
             call.answer(android.telecom.VideoProfile.STATE_AUDIO_ONLY)
             
-            if (watchInitiated) {
+            if (watchInitiated || watchAnswered) {
                 watchRequestedAudioRoute = CallAudioState.ROUTE_BLUETOOTH
-                instance?.forceAudioRouteWithRetry(CallAudioState.ROUTE_BLUETOOTH)
+                if (watchInitiated) {
+                    instance?.forceAudioRouteWithRetry(CallAudioState.ROUTE_BLUETOOTH)
+                } else {
+                    setAudioRoute(CallAudioState.ROUTE_BLUETOOTH)
+                }
             } else {
                 val supportedRouteMask = currentAudioState?.supportedRouteMask ?: 0
                 val route = if (supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0) {
@@ -211,6 +215,9 @@ class CallService : InCallService() {
                 json.put("isMuted", false)
             }
             json.put("watchInitiated", watchInitiated)
+            json.put("watchAnswered", watchAnswered)
+            val isIncoming = (callState == Call.STATE_RINGING)
+            json.put("isOutgoing", !isIncoming)
             return json.toString()
         }
 
@@ -751,7 +758,9 @@ class CallService : InCallService() {
         
         CallService.notifyCallStateChanged()
         
-        broadcastCallSyncState()
+        handler.postDelayed({
+            broadcastCallSyncState()
+        }, 500)
         
         if (call.state == android.telecom.Call.STATE_RINGING) {
             startRinging(CallService.callerNumber)
@@ -825,6 +834,7 @@ class CallService : InCallService() {
             callerNumber = null
             callerName = null
             watchInitiated = false
+            watchAnswered = false
             notifyCallStateChanged(disconnectCause)
             
             // Inform watch that the call ended
