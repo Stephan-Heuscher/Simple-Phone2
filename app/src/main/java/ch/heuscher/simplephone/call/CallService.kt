@@ -673,6 +673,12 @@ class CallService : InCallService() {
 
     override fun onCallAdded(call: Call) {
         Log.d(TAG, "Call added: watchInitiated=$watchInitiated")
+
+        // Reset watch flags if this is a fresh call state
+        if (CallService.currentCall == null) {
+            watchInitiated = false
+            watchAnswered = false
+        }
         
         // Block incoming calls if we already have an active/ringing call
         val activeCall = CallService.currentCall
@@ -735,8 +741,8 @@ class CallService : InCallService() {
             startProximitySensor()
         }
         
-        // Default outgoing calls to Bluetooth ONLY if watch initiated.
-        // If phone initiated the call, we stay on handset (system default).
+        // Default outgoing calls to Bluetooth ONLY if watch initiated OR defaultToBluetooth setting is ON.
+        // If phone initiated the call and defaultToBluetooth is OFF, we stay on handset.
         Log.d(TAG, "onCallAdded: watchInitiated=$watchInitiated, state=${call.state}")
         if (watchInitiated && call.state != android.telecom.Call.STATE_RINGING) {
             val audioState = callAudioState
@@ -750,8 +756,24 @@ class CallService : InCallService() {
                 Log.d(TAG, "onCallAdded: Bluetooth NOT available in mask. Will rely on onCallAudioStateChanged")
                 CallService.watchRequestedAudioRoute = android.telecom.CallAudioState.ROUTE_BLUETOOTH
             }
+        } else if (!watchInitiated && call.state != android.telecom.Call.STATE_RINGING) {
+            val useBluetooth = settingsRepository.defaultToBluetooth
+            val audioState = callAudioState
+            val mask = audioState?.supportedRouteMask ?: 0
+            
+            if (!useBluetooth && (mask and android.telecom.CallAudioState.ROUTE_BLUETOOTH != 0)) {
+                Log.d(TAG, "onCallAdded: NOT forcing Bluetooth, clamping to Handset/Wired")
+                val target = if (mask and android.telecom.CallAudioState.ROUTE_WIRED_HEADSET != 0) {
+                    android.telecom.CallAudioState.ROUTE_WIRED_HEADSET
+                } else {
+                    android.telecom.CallAudioState.ROUTE_EARPIECE
+                }
+                setAudioRoute(target)
+            } else {
+                Log.d(TAG, "onCallAdded: NOT forcing Bluetooth (useBluetooth=$useBluetooth, state=${call.state})")
+            }
         } else {
-            Log.d(TAG, "onCallAdded: NOT forcing Bluetooth (watchInitiated=$watchInitiated, state=${call.state})")
+            Log.d(TAG, "onCallAdded: Skipping audio route logic for state=${call.state}")
         }
         
         CallService.notifyCallStateChanged()
