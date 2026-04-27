@@ -137,7 +137,7 @@ class ContactRepository(private val context: Context) {
         }
         
         // Populate sort order from settings
-        val settingsRepository = SettingsRepository(context)
+        val settingsRepository = SettingsRepository.getInstance(context)
         val savedOrder = settingsRepository.getFavoritesOrder()
         
         val candidatesWithOrder = candidates.map { contact ->
@@ -207,6 +207,12 @@ class ContactRepository(private val context: Context) {
         val allCalls = getCallLogs()
         val cutoffTime = java.time.LocalDateTime.now().minusHours(hours.toLong())
         
+        // Group calls by their normalized suffix (last 7 digits) to avoid O(n^2) comparisons
+        val callsBySuffix = allCalls.groupBy { 
+            val normalized = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.normalize(it.contactId)
+            if (normalized.length >= 7) normalized.takeLast(7) else normalized
+        }
+        
         // 1. Filter for missed calls within the time window
         val recentMissedCalls = allCalls.filter { 
             it.type == ch.heuscher.simplephone.model.CallType.MISSED && it.timestamp.isAfter(cutoffTime)
@@ -214,7 +220,11 @@ class ContactRepository(private val context: Context) {
 
         // 2. Filter out missed calls if there was a successful conversation (> 20s) AFTER the missed call
         val filteredMissedCalls = recentMissedCalls.filter { missedCall ->
-            val hasSubsequentConversation = allCalls.any { otherCall ->
+            val normalizedMissed = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.normalize(missedCall.contactId)
+            val suffixMissed = if (normalizedMissed.length >= 7) normalizedMissed.takeLast(7) else normalizedMissed
+            val candidates = callsBySuffix[suffixMissed] ?: emptyList()
+
+            val hasSubsequentConversation = candidates.any { otherCall ->
                 // Check if it's the same number
                 val sameNumber = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.areNumbersSame(otherCall.contactId, missedCall.contactId, context)
                 // Check if it's after the missed call

@@ -97,7 +97,7 @@ class MainActivity : ComponentActivity() {
         
         powerManager = getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
         
-        settingsRepository = SettingsRepository(this)
+        settingsRepository = SettingsRepository.getInstance(this)
         contactRepository = ContactRepository(this) // Kept for Activity usage if any, but VM handles data
         
         // ensure device is registered in Firestore (gentle phone)

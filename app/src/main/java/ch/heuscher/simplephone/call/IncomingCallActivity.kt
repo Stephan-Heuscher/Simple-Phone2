@@ -115,7 +115,7 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
         CallService.addCallStateListener(this)
         
         // Read setting for simplified call screen
-        val settingsRepository = SettingsRepository(this)
+        val settingsRepository = SettingsRepository.getInstance(this)
         val useSimplifiedScreen = settingsRepository.simplifiedContactCallScreen
         
         setContent {
@@ -165,7 +165,7 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
     
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         // Check setting for silence on touch/keys
-        val settingsRepository = SettingsRepository(this)
+        val settingsRepository = SettingsRepository.getInstance(this)
         if (settingsRepository.silenceCallOnTouch && isIncoming && callState == Call.STATE_RINGING) {
              // Silence on ANY key press (except power which is handled by system, but VOLUME handled here)
              CallService.silenceRinger()
@@ -188,7 +188,7 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
 
     override fun dispatchTouchEvent(ev: android.view.MotionEvent?): Boolean {
         if (ev?.action == android.view.MotionEvent.ACTION_DOWN) {
-            val settingsRepository = SettingsRepository(this)
+            val settingsRepository = SettingsRepository.getInstance(this)
             if (settingsRepository.silenceCallOnTouch && isIncoming && callState == Call.STATE_RINGING) {
                 CallService.silenceRinger()
             }

@@ -21,6 +21,8 @@ import kotlinx.coroutines.launch
 class PhoneWearableListenerService : WearableListenerService() {
 
     private var currentRingtone: Ringtone? = null
+    private var isRinging = false
+    private var originalVolume: Int = -1
 
     override fun onMessageReceived(messageEvent: MessageEvent) {
         super.onMessageReceived(messageEvent)
@@ -75,8 +77,15 @@ class PhoneWearableListenerService : WearableListenerService() {
                 CallService.requestAudioStatus()
             }
             "/initiate_call" -> {
-                val number = String(messageEvent.data, Charsets.UTF_8)
+                val number = String(messageEvent.data, Charsets.UTF_8).trim()
                 Log.d("PhoneWearableListener", "Watch requested to initiate call to $number")
+                
+                // Sanity check for phone number characters
+                if (!number.matches(Regex("[0-9+*#,;]+"))) {
+                    Log.e("PhoneWearableListener", "Invalid phone number requested: $number")
+                    return
+                }
+
                 if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.CALL_PHONE) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
                     CallService.watchInitiated = true
                     
@@ -102,6 +111,11 @@ class PhoneWearableListenerService : WearableListenerService() {
     }
 
     private fun startRingingAndVibrating() {
+        if (isRinging) {
+            Log.d("PhoneWearableListener", "Already ringing, ignoring repeat request")
+            return
+        }
+
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
@@ -112,9 +126,10 @@ class PhoneWearableListenerService : WearableListenerService() {
         }
 
         // Temporarily max out the volume
-        val originalVolume = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
+        originalVolume = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
         val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
         audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0)
+        isRinging = true
 
         // Play alarm sound
         val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM) ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
@@ -143,7 +158,11 @@ class PhoneWearableListenerService : WearableListenerService() {
             currentRingtone?.stop()
             vibrator.cancel()
             // Restore original volume
-            audioManager.setStreamVolume(AudioManager.STREAM_ALARM, originalVolume, 0)
+            if (originalVolume != -1) {
+                audioManager.setStreamVolume(AudioManager.STREAM_ALARM, originalVolume, 0)
+            }
+            isRinging = false
+            originalVolume = -1
         }
     }
 }

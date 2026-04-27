@@ -29,7 +29,7 @@ class FavoritesRemoteViewsFactory(private val context: Context) : RemoteViewsSer
 
     private val favorites = mutableListOf<Contact>()
     private val contactRepository = ContactRepository(context)
-    private val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository(context)
+    private val settingsRepository = ch.heuscher.simplephone.data.SettingsRepository.getInstance(context)
 
     override fun onCreate() {
         // Initialize data

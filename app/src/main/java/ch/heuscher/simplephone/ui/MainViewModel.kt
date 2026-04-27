@@ -22,7 +22,7 @@ import kotlinx.coroutines.withContext
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val contactRepository = ContactRepository(application)
-    private val settingsRepository = SettingsRepository(application)
+    private val settingsRepository = SettingsRepository.getInstance(application)
     private val wearSyncManager = ch.heuscher.simplephone.data.WearSyncManager(application)
 
     data class ContactResolutionMaps(

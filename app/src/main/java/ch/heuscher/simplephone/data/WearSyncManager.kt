@@ -71,10 +71,15 @@ class WearSyncManager(private val context: Context) {
             if (bitmap != null) {
                 // Keep image relatively large but not huge to ensure it transmits, but good quality
                 val resizedBitmap = Bitmap.createScaledBitmap(bitmap, 200, 200, true)
+                if (resizedBitmap != bitmap) {
+                    bitmap.recycle()
+                }
                 val byteStream = ByteArrayOutputStream()
-                // Use high quality PNG instead of JPEG to preserve transparency if any, although JPEG is fine. Let's use PNG.
+                // PNG quality argument is ignored
                 resizedBitmap.compress(Bitmap.CompressFormat.PNG, 100, byteStream)
-                return Asset.createFromBytes(byteStream.toByteArray())
+                val asset = Asset.createFromBytes(byteStream.toByteArray())
+                resizedBitmap.recycle()
+                return asset
             } else {
                 Log.w("WearSyncManager", "BitmapFactory returned null for $uriString")
             }

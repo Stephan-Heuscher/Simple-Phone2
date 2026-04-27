@@ -35,7 +35,7 @@ data class AppSettings(
  * For gentle phone: Remote settings from caregiver override local settings and changes are synced back.
  * For simple phone: Only local SharedPreferences are used.
  */
-class SettingsRepository(private val context: Context) {
+class SettingsRepository @org.jetbrains.annotations.VisibleForTesting internal constructor(private val context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences(
         PREFS_NAME, Context.MODE_PRIVATE
     )
@@ -52,6 +52,20 @@ class SettingsRepository(private val context: Context) {
     val settings: StateFlow<AppSettings> = _settings.asStateFlow()
 
     companion object {
+        @Volatile
+        private var INSTANCE: SettingsRepository? = null
+
+        fun getInstance(context: Context): SettingsRepository {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: SettingsRepository(context.applicationContext).also { INSTANCE = it }
+            }
+        }
+
+        @org.jetbrains.annotations.VisibleForTesting
+        fun resetInstance() {
+            INSTANCE = null
+        }
+
         private const val PREFS_NAME = "simple_phone_prefs"
         private const val KEY_MISSED_CALLS_HOURS = "missed_calls_hours"
         private const val KEY_DARK_MODE_OPTION = "dark_mode_option"
