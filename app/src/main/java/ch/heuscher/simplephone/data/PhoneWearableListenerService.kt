@@ -23,6 +23,14 @@ class PhoneWearableListenerService : WearableListenerService() {
     private var currentRingtone: Ringtone? = null
     private var isRinging = false
     private var originalVolume: Int = -1
+    
+    private val serviceJob = kotlinx.coroutines.SupervisorJob()
+    private val serviceScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main + serviceJob)
+
+    override fun onDestroy() {
+        serviceJob.cancel()
+        super.onDestroy()
+    }
 
     override fun onMessageReceived(messageEvent: MessageEvent) {
         super.onMessageReceived(messageEvent)
@@ -153,7 +161,7 @@ class PhoneWearableListenerService : WearableListenerService() {
         }
 
         // Stop after 15 seconds
-        CoroutineScope(Dispatchers.Main).launch {
+        serviceScope.launch {
             delay(15000)
             currentRingtone?.stop()
             vibrator.cancel()

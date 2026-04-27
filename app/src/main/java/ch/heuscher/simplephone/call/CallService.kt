@@ -62,8 +62,7 @@ class CallService : InCallService() {
 
     companion object {
         // Track recent callers for repeat caller exception (number -> timestamp)
-        private val recentCallers = mutableMapOf<String, Long>()
-        private val notificationIdCounter = java.util.concurrent.atomic.AtomicInteger(1000)
+        private val recentCallers = java.util.concurrent.ConcurrentHashMap<String, Long>()
         private const val REPEAT_CALLER_WINDOW_MS = 15 * 60 * 1000L // 15 minutes
         private const val TAG = "CallService"
         @Volatile private var instance: CallService? = null
@@ -435,7 +434,7 @@ class CallService : InCallService() {
                     // The system aggressively resets the route to earpiece during
                     // call state transitions. We use delayed retries to let it settle.
                     val targetRoute = CallService.watchRequestedAudioRoute
-                    if (watchInitiated && targetRoute != null) {
+                    if ((watchInitiated || watchAnswered) && targetRoute != null) {
                         forceAudioRouteWithRetry(targetRoute)
                     }
                 }
@@ -688,21 +687,6 @@ class CallService : InCallService() {
         
         // Check blocking immediately
         updateCallInfo(call)
-
-        // Track recent callers for repeat caller exception
-        if (call.state == Call.STATE_RINGING) {
-            CallService.callerNumber?.let { number ->
-                val normalized = number.replace(Regex("[^0-9+]"), "")
-                if (normalized.isNotEmpty()) {
-                    val now = System.currentTimeMillis()
-                    recentCallers[normalized] = now
-
-                    // Clean up old entries (15 min window)
-                    val cutoff = now - REPEAT_CALLER_WINDOW_MS
-                    recentCallers.entries.removeAll { it.value < cutoff }
-                }
-            }
-        }
         
         // Only check for blocking on INCOMING calls
         if (call.state == Call.STATE_RINGING) {
@@ -938,7 +922,8 @@ class CallService : InCallService() {
             android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT
         )
         
-        val notificationId = notificationIdCounter.incrementAndGet()
+        val normalizedNumber = number.replace(Regex("[^0-9+]"), "")
+        val notificationId = normalizedNumber.hashCode()
 
         // Ignore Action (Dismiss)
         val ignoreIntent = Intent(context, NotificationReceiver::class.java).apply {
