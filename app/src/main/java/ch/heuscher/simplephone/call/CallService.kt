@@ -922,7 +922,7 @@ class CallService : InCallService() {
             android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT
         )
         
-        val normalizedNumber = number.replace(Regex("[^0-9+]"), "")
+        val normalizedNumber = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.normalize(number)
         val notificationId = normalizedNumber.hashCode()
 
         // Ignore Action (Dismiss)
