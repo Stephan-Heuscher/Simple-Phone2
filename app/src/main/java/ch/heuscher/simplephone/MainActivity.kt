@@ -383,7 +383,7 @@ class MainActivity : ComponentActivity() {
         
         // Cancel missed call notification if exists
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
-        val notificationId = normalizedNumber.hashCode() 
+        val notificationId = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.missedCallNotifId(phoneNumber)
         notificationManager.cancel(notificationId)
         
         try {

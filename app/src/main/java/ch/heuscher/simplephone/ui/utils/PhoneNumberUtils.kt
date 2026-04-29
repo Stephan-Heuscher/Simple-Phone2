@@ -97,4 +97,17 @@ object PhoneNumberHelper {
 
         return false
     }
+
+    /**
+     * Returns a stable notification ID for a given phone number.
+     * Handles unknown/empty numbers by using a constant ID to avoid ID 0 collisions.
+     */
+    fun missedCallNotifId(number: String?): Int {
+        val normalized = normalize(number)
+        return if (normalized.isEmpty()) {
+            "unknown".hashCode() // Consistent ID for all hidden/unknown numbers
+        } else {
+            normalized.hashCode()
+        }
+    }
 }

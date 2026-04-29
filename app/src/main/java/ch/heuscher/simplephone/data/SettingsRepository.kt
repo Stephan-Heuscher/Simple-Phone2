@@ -204,7 +204,7 @@ class SettingsRepository @org.jetbrains.annotations.VisibleForTesting internal c
             onboardingCompleted = prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false),
             lastBlockedNumber = prefs.getString(KEY_LAST_BLOCKED_NUMBER, null),
             raiseToEarToAnswer = getRemoteBool(REMOTE_KEY_RAISE_TO_EAR) ?: prefs.getBoolean(KEY_RAISE_TO_EAR_TO_ANSWER, false),
-            defaultToBluetooth = getRemoteBool(REMOTE_KEY_DEFAULT_TO_BLUETOOTH) ?: prefs.getBoolean(KEY_DEFAULT_TO_BLUETOOTH, true)
+            defaultToBluetooth = getRemoteBool(REMOTE_KEY_DEFAULT_TO_BLUETOOTH) ?: prefs.getBoolean(KEY_DEFAULT_TO_BLUETOOTH, false)
         )
     }
     

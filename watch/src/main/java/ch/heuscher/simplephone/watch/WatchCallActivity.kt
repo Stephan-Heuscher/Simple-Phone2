@@ -251,7 +251,7 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
     }
 
     private fun sendMessageToPhone(path: String, payload: String = "") {
-        CoroutineScope(Dispatchers.IO).launch {
+        androidx.lifecycle.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             try {
                 val nodeClient = Wearable.getNodeClient(this@WatchCallActivity)
                 val nodes = Tasks.await(nodeClient.connectedNodes)

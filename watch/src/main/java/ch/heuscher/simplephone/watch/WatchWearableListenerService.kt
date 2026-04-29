@@ -16,7 +16,7 @@ class WatchWearableListenerService : WearableListenerService() {
                 val jsonPayload = String(messageEvent.data)
                 
                 val activityIntent = Intent(this, WatchCallActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
                     putExtra("SYNC_STATE_JSON", jsonPayload)
                 }
                 startActivity(activityIntent)

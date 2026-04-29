@@ -41,6 +41,7 @@ class PhoneWearableListenerService : WearableListenerService() {
             "/answer_call" -> {
                 Log.d("PhoneWearableListener", "Watch requested to answer call")
                 CallService.watchAnswered = true
+                CallService.watchAnsweredAt = android.os.SystemClock.elapsedRealtime()
                 CallService.answerCall()
             }
             "/reject_call" -> {
@@ -96,6 +97,7 @@ class PhoneWearableListenerService : WearableListenerService() {
 
                 if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.CALL_PHONE) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
                     CallService.watchInitiated = true
+                    CallService.watchInitiatedAt = android.os.SystemClock.elapsedRealtime()
                     
                     val uri = android.net.Uri.parse("tel:$number")
                     

@@ -82,6 +82,8 @@ class CallService : InCallService() {
 
         @Volatile var watchInitiated: Boolean = false
         @Volatile var watchAnswered: Boolean = false
+        @Volatile var watchInitiatedAt: Long = 0
+        @Volatile var watchAnsweredAt: Long = 0
         @Volatile var watchRequestedAudioRoute: Int? = null
 
         // Thread-safe listener list (accessed from main thread + IO coroutines)
@@ -674,10 +676,18 @@ class CallService : InCallService() {
     override fun onCallAdded(call: Call) {
         Log.d(TAG, "Call added: watchInitiated=$watchInitiated")
 
-        // Reset watch flags if this is a fresh call state
+        // Reset watch flags if they are stale (from a previous session that crashed)
+        // or if this is a fresh call state that wasn't watch-initiated within the last 10s.
+        val now = android.os.SystemClock.elapsedRealtime()
         if (CallService.currentCall == null) {
-            watchInitiated = false
-            watchAnswered = false
+            if (watchInitiated && now - watchInitiatedAt > 10000) {
+                Log.d(TAG, "Expiring stale watchInitiated flag")
+                watchInitiated = false
+            }
+            if (watchAnswered && now - watchAnsweredAt > 10000) {
+                Log.d(TAG, "Expiring stale watchAnswered flag")
+                watchAnswered = false
+            }
         }
         
         // Block incoming calls if we already have an active/ringing call
@@ -800,8 +810,14 @@ class CallService : InCallService() {
         }
     }
 
-    fun broadcastCallSyncState() {
+    private val broadcastHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val broadcastRunnable = Runnable {
         sendWearMessage("/sync_call_state", CallService.getSyncStateJson())
+    }
+
+    fun broadcastCallSyncState() {
+        broadcastHandler.removeCallbacks(broadcastRunnable)
+        broadcastHandler.postDelayed(broadcastRunnable, 100)
     }
 
     private fun sendWearMessage(path: String, payload: String) {
@@ -944,8 +960,7 @@ class CallService : InCallService() {
             android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT
         )
         
-        val normalizedNumber = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.normalize(number)
-        val notificationId = normalizedNumber.hashCode()
+        val notificationId = ch.heuscher.simplephone.ui.utils.PhoneNumberHelper.missedCallNotifId(number)
 
         // Ignore Action (Dismiss)
         val ignoreIntent = Intent(context, NotificationReceiver::class.java).apply {
