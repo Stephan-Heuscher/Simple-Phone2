@@ -14,18 +14,14 @@ class WatchWearableListenerService : WearableListenerService() {
         when (messageEvent.path) {
             "/sync_call_state" -> {
                 val jsonPayload = String(messageEvent.data)
-                
+                // singleTask launchMode + SINGLE_TOP routes subsequent updates
+                // through onNewIntent on the existing instance, so no new screen
+                // is pushed on top of the running call activity.
                 val activityIntent = Intent(this, WatchCallActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
                     putExtra("SYNC_STATE_JSON", jsonPayload)
                 }
                 startActivity(activityIntent)
-                
-                val broadcastIntent = Intent("ch.heuscher.simplephone.watch.SYNC_CALL_STATE").apply {
-                    setPackage(packageName)
-                    putExtra("SYNC_STATE_JSON", jsonPayload)
-                }
-                sendBroadcast(broadcastIntent)
             }
         }
     }

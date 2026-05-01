@@ -86,12 +86,15 @@ class PhoneWearableListenerService : WearableListenerService() {
                 CallService.requestAudioStatus()
             }
             "/initiate_call" -> {
-                val number = String(messageEvent.data, Charsets.UTF_8).trim()
-                Log.d("PhoneWearableListener", "Watch requested to initiate call to $number")
-                
-                // Sanity check for phone number characters
+                val rawNumber = String(messageEvent.data, Charsets.UTF_8).trim()
+                // Contacts often include spaces, parentheses, dashes or dots in
+                // the formatted number. Strip those before validating so we
+                // don't silently drop e.g. "+41 79 123 45 67".
+                val number = rawNumber.replace(Regex("[\\s()\\-./]"), "")
+                Log.d("PhoneWearableListener", "Watch requested to initiate call to $rawNumber (cleaned: $number)")
+
                 if (!number.matches(Regex("[0-9+*#,;]+"))) {
-                    Log.e("PhoneWearableListener", "Invalid phone number requested: $number")
+                    Log.e("PhoneWearableListener", "Invalid phone number requested: $rawNumber")
                     return
                 }
 

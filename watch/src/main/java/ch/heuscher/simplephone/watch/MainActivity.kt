@@ -323,6 +323,7 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoadi
         val callIntent = Intent(context, WatchCallActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             putExtra("CALLER_NAME", contactName ?: number)
+            putExtra("CALLER_NUMBER", number)
             putExtra("IS_OUTGOING", true)
         }
         context.startActivity(callIntent)

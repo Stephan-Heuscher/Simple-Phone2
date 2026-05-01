@@ -66,7 +66,7 @@
         <activity
             android:name=".WatchCallActivity"
             android:exported="true"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:showOnLockScreen="true"
             android:showWhenLocked="true"
             android:turnScreenOn="true"

@@ -1,9 +1,7 @@
 package ch.heuscher.simplephone.watch
 
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
@@ -61,20 +59,6 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
     private val _watchInitiated = mutableStateOf(false)
     private val _isOutgoing = mutableStateOf(false)
 
-    private val syncStateReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            val jsonPayload = intent?.getStringExtra("SYNC_STATE_JSON") ?: return
-            handleSyncStateJson(jsonPayload)
-            
-            if (isCallActive && !isDestroyed && !isFinishing) {
-                val bringToFrontIntent = Intent(context, WatchCallActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                }
-                startActivity(bringToFrontIntent)
-            }
-        }
-    }
-
     private fun handleSyncStateJson(jsonString: String) {
         try {
             val json = org.json.JSONObject(jsonString)
@@ -117,12 +101,6 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
         isCallActive = true
         
         handleIntent(intent)
-
-        // Register sync receiver
-        registerReceiver(syncStateReceiver, IntentFilter("ch.heuscher.simplephone.watch.SYNC_CALL_STATE"), RECEIVER_NOT_EXPORTED)
-
-        // Request initial status
-        sendMessageToPhone("/request_audio_status")
 
         setContent {
             MaterialTheme {
@@ -169,17 +147,31 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         handleIntent(intent)
-        sendMessageToPhone("/request_audio_status")
     }
 
     private fun handleIntent(intent: Intent) {
         val jsonPayload = intent.getStringExtra("SYNC_STATE_JSON")
         if (jsonPayload != null) {
             handleSyncStateJson(jsonPayload)
+            return
+        }
+
+        // Outgoing call launched directly from MainActivity — render placeholder
+        // immediately while we wait for the phone's first /sync_call_state.
+        val callerName = intent.getStringExtra("CALLER_NAME")
+        if (callerName != null) {
+            val callerNumber = intent.getStringExtra("CALLER_NUMBER") ?: ""
+            val isOutgoing = intent.getBooleanExtra("IS_OUTGOING", false)
+            _callerName.value = callerName
+            _callerNumber.value = callerNumber
+            _isOutgoing.value = isOutgoing
+            _watchInitiated.value = isOutgoing
+            _callState.intValue = if (isOutgoing) android.telecom.Call.STATE_DIALING else android.telecom.Call.STATE_NEW
+            updatePhoto(callerName, callerNumber)
         } else {
             Log.w("WatchCallActivity", "No SYNC_STATE_JSON in intent — requesting status")
-            sendMessageToPhone("/request_audio_status")
         }
+        sendMessageToPhone("/request_audio_status")
     }
 
     override fun onResume() {
@@ -244,10 +236,6 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         isCallActive = false
-        try {
-            unregisterReceiver(syncStateReceiver)
-        } catch (e: Exception) {
-        }
     }
 
     private fun sendMessageToPhone(path: String, payload: String = "") {
