@@ -111,7 +111,6 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
                     contactPhoto = _contactPhoto.value,
                     callState = _callState.intValue,
                     volumePercent = _volumePercent.intValue,
-                    audioRoute = _audioRoute.intValue,
                     watchInitiated = _watchInitiated.value,
                     isOutgoing = _isOutgoing.value,
                     onAccept = {
@@ -255,7 +254,6 @@ fun WatchCallScreen(
     contactPhoto: Bitmap?,
     callState: Int,
     volumePercent: Int,
-    audioRoute: Int,
     watchInitiated: Boolean,
     isOutgoing: Boolean,
     onAccept: () -> Unit,
@@ -410,9 +408,8 @@ fun WatchCallScreen(
                 Text(text = "+", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.6f), modifier = Modifier.align(Alignment.Center).padding(end = 8.dp))
             }
             
-            // Top overlay: Volume (priority) or Audio source indicator
+            // Volume overlay
             if (volumeOverlayVisible) {
-                // Volume overlay (shown for 6s after +/- tap)
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
@@ -428,6 +425,7 @@ fun WatchCallScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
+                        // Visual volume bar
                         Box(
                             modifier = Modifier
                                 .width(80.dp)
@@ -442,26 +440,6 @@ fun WatchCallScreen(
                             )
                         }
                     }
-                }
-            } else if (!isIncoming) {
-                // Audio source badge (persistent during active call)
-                val isWatchSpeaker = audioRoute == 2 // CallAudioState.ROUTE_BLUETOOTH
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = 12.dp)
-                        .background(
-                            if (isWatchSpeaker) Color(0xFF2E7D32).copy(alpha = 0.85f) else Color.Black.copy(alpha = 0.7f),
-                            CircleShape
-                        )
-                        .padding(horizontal = 14.dp, vertical = 6.dp)
-                ) {
-                    Text(
-                        text = if (isWatchSpeaker) "🔊 Watch" else "📱 Phone",
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
                 }
             }
         }
