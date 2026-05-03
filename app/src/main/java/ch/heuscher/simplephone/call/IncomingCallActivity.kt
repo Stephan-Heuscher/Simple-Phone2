@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.CallEnd
 import androidx.compose.material.icons.filled.Dialpad
 import androidx.compose.material.icons.filled.PhoneInTalk
 import androidx.compose.material.icons.filled.SpeakerPhone
+import androidx.compose.material.icons.filled.Watch
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material3.*
@@ -148,6 +149,9 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
                     onAudioRouteSelected = { route ->
                         CallService.setAudioRoute(route, isManual = true)
                     },
+                    onRouteToWatch = {
+                        CallService.routeToWatch()
+                    },
                     onBluetoothDeviceSelected = { device ->
                         CallService.requestBluetoothAudio(device)
                     },
@@ -266,6 +270,7 @@ fun CallScreen(
     onHangup: () -> Unit,
 
     onAudioRouteSelected: (Int) -> Unit,
+    onRouteToWatch: () -> Unit,
     onBluetoothDeviceSelected: (android.bluetooth.BluetoothDevice) -> Unit,
     onDtmfClick: (Char) -> Unit = {}
 ) {
@@ -329,6 +334,7 @@ fun CallScreen(
             onSilence = onSilence,
             onHangup = onHangup,
             onAudioRouteSelected = onAudioRouteSelected,
+            onRouteToWatch = onRouteToWatch,
             onBluetoothDeviceSelected = onBluetoothDeviceSelected,
             onShowKeypad = { showKeypad = true }
         )
@@ -352,6 +358,7 @@ fun CallScreen(
             onSilence = onSilence,
             onHangup = onHangup,
             onAudioRouteSelected = onAudioRouteSelected,
+            onRouteToWatch = onRouteToWatch,
             onBluetoothDeviceSelected = onBluetoothDeviceSelected,
             onShowKeypad = { showKeypad = true }
         )
@@ -380,6 +387,7 @@ private fun CallScreenPortrait(
     onSilence: () -> Unit,
     onHangup: () -> Unit,
     onAudioRouteSelected: (Int) -> Unit,
+    onRouteToWatch: () -> Unit,
     onBluetoothDeviceSelected: (android.bluetooth.BluetoothDevice) -> Unit,
     onShowKeypad: () -> Unit
 ) {
@@ -468,8 +476,10 @@ private fun CallScreenPortrait(
                 context = context,
                 audioState = audioState!!,
                 shouldHighlightSpeaker = shouldHighlightSpeaker,
-                showKeypadButton = callState == Call.STATE_ACTIVE,
+                showKeypadButton = callState == Call.STATE_ACTIVE && !useSimplifiedScreen,
+                useSimplifiedScreen = useSimplifiedScreen,
                 onAudioRouteSelected = onAudioRouteSelected,
+                onRouteToWatch = onRouteToWatch,
                 onBluetoothDeviceSelected = onBluetoothDeviceSelected,
                 onShowKeypad = onShowKeypad
             )
@@ -527,6 +537,7 @@ private fun CallScreenLandscape(
     onSilence: () -> Unit,
     onHangup: () -> Unit,
     onAudioRouteSelected: (Int) -> Unit,
+    onRouteToWatch: () -> Unit,
     onBluetoothDeviceSelected: (android.bluetooth.BluetoothDevice) -> Unit,
     onShowKeypad: () -> Unit
 ) {
@@ -648,8 +659,10 @@ private fun CallScreenLandscape(
                         context = context,
                         audioState = audioState!!,
                         shouldHighlightSpeaker = shouldHighlightSpeaker,
-                        showKeypadButton = callState == Call.STATE_ACTIVE,
+                        showKeypadButton = callState == Call.STATE_ACTIVE && !useSimplifiedScreen,
+                        useSimplifiedScreen = useSimplifiedScreen,
                         onAudioRouteSelected = onAudioRouteSelected,
+                        onRouteToWatch = onRouteToWatch,
                         onBluetoothDeviceSelected = onBluetoothDeviceSelected,
                         onShowKeypad = onShowKeypad
                     )
@@ -702,7 +715,9 @@ private fun AudioControlsCompactRow(
     audioState: CallAudioState,
     shouldHighlightSpeaker: Boolean,
     showKeypadButton: Boolean,
+    useSimplifiedScreen: Boolean,
     onAudioRouteSelected: (Int) -> Unit,
+    onRouteToWatch: () -> Unit,
     onBluetoothDeviceSelected: (android.bluetooth.BluetoothDevice) -> Unit,
     onShowKeypad: () -> Unit
 ) {
@@ -736,7 +751,7 @@ private fun AudioControlsCompactRow(
         }
         
         // Fallback Bluetooth
-        if (supportedRouteMask and CallAudioState.ROUTE_BLUETOOTH != 0) {
+        if (!useSimplifiedScreen && supportedRouteMask and CallAudioState.ROUTE_BLUETOOTH != 0) {
             val isSelected = route == CallAudioState.ROUTE_BLUETOOTH
             AudioRouteButtonCompact(
                 icon = Icons.Filled.Bluetooth,
@@ -751,7 +766,7 @@ private fun AudioControlsCompactRow(
         }
         
         // Earpiece / Wired Headset
-        if (supportedRouteMask and CallAudioState.ROUTE_EARPIECE != 0 || supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0) {
+        if (!useSimplifiedScreen && (supportedRouteMask and CallAudioState.ROUTE_EARPIECE != 0 || supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0)) {
             val isSelected = route == CallAudioState.ROUTE_EARPIECE || route == CallAudioState.ROUTE_WIRED_HEADSET
             val targetRoute = if (supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0) CallAudioState.ROUTE_WIRED_HEADSET else CallAudioState.ROUTE_EARPIECE
             val label = if (supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0) stringResource(R.string.wired_headset) else stringResource(R.string.earpiece)
@@ -763,6 +778,20 @@ private fun AudioControlsCompactRow(
                 onClick = { 
                     vibrate(context)
                     onAudioRouteSelected(targetRoute) 
+                }
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+        
+        // Watch
+        if (supportedRouteMask and CallAudioState.ROUTE_BLUETOOTH != 0) {
+            AudioRouteButtonCompact(
+                icon = Icons.Filled.Watch,
+                label = stringResource(R.string.watch_audio),
+                isSelected = route == CallAudioState.ROUTE_BLUETOOTH && CallService.watchRequestedAudioRoute == CallAudioState.ROUTE_BLUETOOTH, // roughly guess if it's the watch
+                onClick = { 
+                    vibrate(context)
+                    onRouteToWatch()
                 }
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -794,7 +823,9 @@ private fun AudioControlsVerticalPanel(
     audioState: CallAudioState,
     shouldHighlightSpeaker: Boolean,
     showKeypadButton: Boolean,
+    useSimplifiedScreen: Boolean,
     onAudioRouteSelected: (Int) -> Unit,
+    onRouteToWatch: () -> Unit,
     onBluetoothDeviceSelected: (android.bluetooth.BluetoothDevice) -> Unit,
     onShowKeypad: () -> Unit
 ) {
@@ -818,7 +849,7 @@ private fun AudioControlsVerticalPanel(
     }
     
     // Fallback Bluetooth
-    if (supportedRouteMask and CallAudioState.ROUTE_BLUETOOTH != 0) {
+    if (!useSimplifiedScreen && supportedRouteMask and CallAudioState.ROUTE_BLUETOOTH != 0) {
         val isSelected = route == CallAudioState.ROUTE_BLUETOOTH
         AudioRouteButton(
             icon = Icons.Filled.Bluetooth,
@@ -833,7 +864,7 @@ private fun AudioControlsVerticalPanel(
     }
     
     // Earpiece / Wired Headset  
-    if (supportedRouteMask and CallAudioState.ROUTE_EARPIECE != 0 || supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0) {
+    if (!useSimplifiedScreen && (supportedRouteMask and CallAudioState.ROUTE_EARPIECE != 0 || supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0)) {
         val isSelected = route == CallAudioState.ROUTE_EARPIECE || route == CallAudioState.ROUTE_WIRED_HEADSET
         val targetRoute = if (supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0) CallAudioState.ROUTE_WIRED_HEADSET else CallAudioState.ROUTE_EARPIECE
         val label = if (supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0) stringResource(R.string.wired_headset) else stringResource(R.string.earpiece)
@@ -845,6 +876,20 @@ private fun AudioControlsVerticalPanel(
             onClick = { 
                 vibrate(context)
                 onAudioRouteSelected(targetRoute) 
+            }
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+    }
+    
+    // Watch
+    if (supportedRouteMask and CallAudioState.ROUTE_BLUETOOTH != 0) {
+        AudioRouteButton(
+            icon = Icons.Filled.Watch,
+            label = stringResource(R.string.watch_audio),
+            isSelected = route == CallAudioState.ROUTE_BLUETOOTH && CallService.watchRequestedAudioRoute == CallAudioState.ROUTE_BLUETOOTH, // roughly guess
+            onClick = { 
+                vibrate(context)
+                onRouteToWatch()
             }
         )
         Spacer(modifier = Modifier.height(12.dp))

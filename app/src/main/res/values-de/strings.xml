@@ -62,6 +62,7 @@
     <string name="speaker">Lautsprecher</string>
     <string name="bluetooth">Bluetooth</string>
     <string name="earpiece">Hörer</string>
+    <string name="watch_audio">Uhr</string>
     <string name="advanced_settings">Erweiterte Optionen</string>
 
     <string name="calls">Anrufe</string>

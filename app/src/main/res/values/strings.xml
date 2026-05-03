@@ -74,6 +74,7 @@
     <string name="speaker">Speaker</string>
     <string name="bluetooth">Bluetooth</string>
     <string name="earpiece">Earpiece</string>
+    <string name="watch_audio">Watch</string>
     <string name="advanced_settings">Advanced Options</string>
 
     <string name="calls">Calls</string>

@@ -174,6 +174,11 @@ class CallService : InCallService() {
             }
         }
         
+        fun routeToWatch() {
+            watchRequestedAudioRoute = CallAudioState.ROUTE_BLUETOOTH
+            instance?.forceAudioRouteWithRetry(CallAudioState.ROUTE_BLUETOOTH)
+        }
+        
         /**
          * Silence the ringer - called when volume down is pressed during an incoming call
          */
