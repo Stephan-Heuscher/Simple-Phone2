@@ -110,6 +110,7 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
                     callerNumber = _callerNumber.value,
                     contactPhoto = _contactPhoto.value,
                     callState = _callState.intValue,
+                    volumePercent = _volumePercent.intValue,
                     watchInitiated = _watchInitiated.value,
                     isOutgoing = _isOutgoing.value,
                     onAccept = {
@@ -252,6 +253,7 @@ fun WatchCallScreen(
     callerNumber: String,
     contactPhoto: Bitmap?,
     callState: Int,
+    volumePercent: Int,
     watchInitiated: Boolean,
     isOutgoing: Boolean,
     onAccept: () -> Unit,
@@ -261,6 +263,15 @@ fun WatchCallScreen(
     onVolumeDown: () -> Unit
 ) {
     val isIncoming = callState == android.telecom.Call.STATE_RINGING
+    var lastInteractionTime by remember { mutableLongStateOf(0L) }
+
+    LaunchedEffect(lastInteractionTime) {
+        if (lastInteractionTime > 0) {
+            kotlinx.coroutines.delay(6000)
+            lastInteractionTime = 0L
+        }
+    }
+    val volumeOverlayVisible = lastInteractionTime > 0
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
         // Background photo or initial
@@ -388,13 +399,31 @@ fun WatchCallScreen(
             }
 
             // Visible volume edges
-            Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(0.25f).align(Alignment.CenterStart).clickable { onVolumeDown() }) {
+            Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(0.25f).align(Alignment.CenterStart).clickable { onVolumeDown(); lastInteractionTime = System.currentTimeMillis() }) {
                 Box(modifier = Modifier.align(Alignment.CenterStart).fillMaxHeight(0.4f).width(4.dp).background(Color.White.copy(alpha = 0.2f), shape = CircleShape))
                 Text(text = "-", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.6f), modifier = Modifier.align(Alignment.Center).padding(start = 8.dp))
             }
-            Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(0.25f).align(Alignment.CenterEnd).clickable { onVolumeUp() }) {
+            Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(0.25f).align(Alignment.CenterEnd).clickable { onVolumeUp(); lastInteractionTime = System.currentTimeMillis() }) {
                 Box(modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(0.4f).width(4.dp).background(Color.White.copy(alpha = 0.2f), shape = CircleShape))
                 Text(text = "+", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.6f), modifier = Modifier.align(Alignment.Center).padding(end = 8.dp))
+            }
+            
+            // Volume overlay
+            if (volumeOverlayVisible) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 16.dp)
+                        .background(Color.Black.copy(alpha = 0.7f), CircleShape)
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = "Vol: $volumePercent%",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }
