@@ -34,6 +34,7 @@ import com.google.android.gms.wearable.Wearable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import androidx.lifecycle.lifecycleScope
 import java.util.*
 
 class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
@@ -239,7 +240,7 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
     }
 
     private fun sendMessageToPhone(path: String, payload: String = "") {
-        androidx.lifecycle.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             try {
                 val nodeClient = Wearable.getNodeClient(this@WatchCallActivity)
                 val nodes = Tasks.await(nodeClient.connectedNodes)
