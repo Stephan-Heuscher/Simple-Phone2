@@ -413,16 +413,33 @@ fun WatchCallScreen(
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
-                        .padding(top = 16.dp)
-                        .background(Color.Black.copy(alpha = 0.7f), CircleShape)
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .padding(top = 12.dp)
+                        .background(Color.Black.copy(alpha = 0.85f), CircleShape)
+                        .padding(horizontal = 16.dp, vertical = 10.dp)
                 ) {
-                    Text(
-                        text = "Vol: $volumePercent%",
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "$volumePercent%",
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        // Visual volume bar
+                        Box(
+                            modifier = Modifier
+                                .width(80.dp)
+                                .height(6.dp)
+                                .background(Color.White.copy(alpha = 0.3f), CircleShape)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .fillMaxWidth(fraction = (volumePercent / 100f).coerceIn(0f, 1f))
+                                    .background(Color(0xFF4CAF50), CircleShape)
+                            )
+                        }
+                    }
                 }
             }
         }

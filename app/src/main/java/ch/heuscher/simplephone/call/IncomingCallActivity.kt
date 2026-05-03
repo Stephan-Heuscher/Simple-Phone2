@@ -744,7 +744,13 @@ private fun AudioControlsCompactRow(
                 shouldHighlight = shouldHighlightSpeaker && !isSelected,
                 onClick = { 
                     vibrate(context)
-                    onAudioRouteSelected(CallAudioState.ROUTE_SPEAKER) 
+                    if (isSelected) {
+                        // Toggle off: switch to earpiece or wired headset
+                        val target = if (supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0) CallAudioState.ROUTE_WIRED_HEADSET else CallAudioState.ROUTE_EARPIECE
+                        onAudioRouteSelected(target)
+                    } else {
+                        onAudioRouteSelected(CallAudioState.ROUTE_SPEAKER)
+                    }
                 }
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -842,7 +848,13 @@ private fun AudioControlsVerticalPanel(
             shouldHighlight = shouldHighlightSpeaker && !isSelected,
             onClick = { 
                 vibrate(context)
-                onAudioRouteSelected(CallAudioState.ROUTE_SPEAKER) 
+                if (isSelected) {
+                    // Toggle off: switch to earpiece or wired headset
+                    val target = if (supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0) CallAudioState.ROUTE_WIRED_HEADSET else CallAudioState.ROUTE_EARPIECE
+                    onAudioRouteSelected(target)
+                } else {
+                    onAudioRouteSelected(CallAudioState.ROUTE_SPEAKER)
+                }
             }
         )
         Spacer(modifier = Modifier.height(12.dp))
