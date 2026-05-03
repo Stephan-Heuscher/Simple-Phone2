@@ -361,6 +361,21 @@ fun WatchCallScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Bottom
             ) {
+                val statusText = if (callState == android.telecom.Call.STATE_DIALING) {
+                    stringResource(R.string.watch_calling)
+                } else {
+                    ""
+                }
+                
+                if (statusText.isNotEmpty()) {
+                    Text(
+                        text = statusText,
+                        color = Color.LightGray,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                }
+
                 Text(
                     text = callerName.ifEmpty { callerNumber },
                     color = Color.White,
@@ -372,22 +387,7 @@ fun WatchCallScreen(
                     modifier = Modifier.padding(horizontal = 24.dp)
                 )
 
-                val statusText = if (callState == android.telecom.Call.STATE_DIALING) {
-                    stringResource(R.string.watch_calling)
-                } else {
-                    "" // User requested no call timer, so just blank or caller name
-                }
-                
-                if (statusText.isNotEmpty()) {
-                    Text(
-                        text = statusText,
-                        color = Color.LightGray,
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                } else {
-                    Spacer(modifier = Modifier.height(28.dp))
-                }
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
                     onClick = onHangup,
