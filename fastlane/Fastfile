@@ -94,9 +94,11 @@ platform :android do
            !line.match?(/^(- (chore|docs|test|refactor|style|ci)(\(.*\))?:)/i)
         end.take(10).join("\n")
         final_notes = "#{header}\n#{filtered}"
-        
-        # Strict Truncation
-        final_notes = final_notes[0..485] + "..." if final_notes.length > 490
+      end
+
+      # Strict Truncation for Google Play limits (max 500 chars)
+      if final_notes.length > 499
+        final_notes = final_notes[0...496] + "..."
       end
       
       # Use absolute path to ensure CI runner finds it
@@ -224,7 +226,6 @@ platform :android do
         
         final_notes = ask_gemini(api_key, prompt, raw_commits)
       end
-
       unless final_notes && !final_notes.empty?
         header = case locale
                  when 'de-DE' then "Neuigkeiten:"
@@ -237,7 +238,11 @@ platform :android do
            !line.match?(/^(- (chore|docs|test|refactor|style|ci)(\(.*\))?:)/i)
         end.take(10).join("\n")
         final_notes = "#{header}\n#{filtered}"
-        final_notes = final_notes[0..485] + "..." if final_notes.length > 490
+      end
+
+      # Strict Truncation for Google Play limits (max 500 chars)
+      if final_notes.length > 499
+        final_notes = final_notes[0...496] + "..."
       end
       
       fastfile_dir = File.dirname(__FILE__)
@@ -406,14 +411,17 @@ platform :android do
         
         final_notes = ask_gemini(api_key, prompt, raw_commits)
       end
-
       unless final_notes && !final_notes.empty?
         header = locale == 'de-DE' ? "Neuigkeiten:" : "What's New:"
         filtered = raw_commits.split("\n").select do |line|
            !line.match?(/^(- (chore|docs|test|refactor|style|ci)(\(.*\))?:)/i)
         end.take(10).join("\n")
         final_notes = "#{header}\n#{filtered}"
-        final_notes = final_notes[0..485] + "..." if final_notes.length > 490
+      end
+
+      # Strict Truncation for Google Play limits (max 500 chars)
+      if final_notes.length > 499
+        final_notes = final_notes[0...496] + "..."
       end
       
       fastfile_dir = File.dirname(__FILE__)
