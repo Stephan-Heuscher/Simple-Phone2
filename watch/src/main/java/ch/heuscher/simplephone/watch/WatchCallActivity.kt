@@ -329,9 +329,9 @@ fun WatchCallScreen(
                     Button(
                         onClick = onSilence,
                         modifier = Modifier.size(56.dp),
-                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF1E88E5))
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF2196F3)) // Bright Blue
                     ) {
-                        Text(text = stringResource(R.string.watch_silence), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text(text = stringResource(R.string.watch_silence), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
 
                     // Accept Button
@@ -378,27 +378,23 @@ fun WatchCallScreen(
                     Spacer(modifier = Modifier.height(28.dp))
                 }
 
-                if (!isOutgoing || watchInitiated) {
-                    Button(
-                        onClick = onHangup,
-                        modifier = Modifier.size(64.dp),
-                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFE53935))
-                    ) {
-                        Text(text = "✕", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
-                    }
+                Button(
+                    onClick = onHangup,
+                    modifier = Modifier.size(64.dp),
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFE53935))
+                ) {
+                    Text(text = "✕", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
                 }
             }
 
             // Visible volume edges
-            if (!isOutgoing || watchInitiated) {
-                Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(0.25f).align(Alignment.CenterStart).clickable { onVolumeDown() }) {
-                    Box(modifier = Modifier.align(Alignment.CenterStart).fillMaxHeight(0.4f).width(4.dp).background(Color.White.copy(alpha = 0.2f), shape = CircleShape))
-                    Text(text = "-", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.6f), modifier = Modifier.align(Alignment.Center).padding(start = 8.dp))
-                }
-                Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(0.25f).align(Alignment.CenterEnd).clickable { onVolumeUp() }) {
-                    Box(modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(0.4f).width(4.dp).background(Color.White.copy(alpha = 0.2f), shape = CircleShape))
-                    Text(text = "+", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.6f), modifier = Modifier.align(Alignment.Center).padding(end = 8.dp))
-                }
+            Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(0.25f).align(Alignment.CenterStart).clickable { onVolumeDown() }) {
+                Box(modifier = Modifier.align(Alignment.CenterStart).fillMaxHeight(0.4f).width(4.dp).background(Color.White.copy(alpha = 0.2f), shape = CircleShape))
+                Text(text = "-", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.6f), modifier = Modifier.align(Alignment.Center).padding(start = 8.dp))
+            }
+            Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(0.25f).align(Alignment.CenterEnd).clickable { onVolumeUp() }) {
+                Box(modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(0.4f).width(4.dp).background(Color.White.copy(alpha = 0.2f), shape = CircleShape))
+                Text(text = "+", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.6f), modifier = Modifier.align(Alignment.Center).padding(end = 8.dp))
             }
         }
     }
