@@ -12,6 +12,8 @@
     <string name="watch_accept">Accept</string>
     <string name="watch_hangup">Hang up</string>
     <string name="watch_call_label">Call</string>
+    <string name="watch_incoming_call">Incoming call</string>
+    <string name="watch_calling">Calling…</string>
 
     <!-- Complication -->
     <string name="watch_complication_open">Open Simple Phone</string>

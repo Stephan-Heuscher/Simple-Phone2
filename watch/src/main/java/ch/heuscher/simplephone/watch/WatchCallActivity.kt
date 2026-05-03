@@ -110,9 +110,6 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
                     callerNumber = _callerNumber.value,
                     contactPhoto = _contactPhoto.value,
                     callState = _callState.intValue,
-                    audioRoute = _audioRoute.intValue,
-                    volumePercent = _volumePercent.intValue,
-                    isMuted = _isMuted.value,
                     watchInitiated = _watchInitiated.value,
                     isOutgoing = _isOutgoing.value,
                     onAccept = {
@@ -132,12 +129,6 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
                     },
                     onVolumeDown = {
                         sendMessageToPhone("/volume_down")
-                    },
-                    onToggleMute = {
-                        sendMessageToPhone("/toggle_mute")
-                    },
-                    onSetAudioRoute = { route ->
-                        sendMessageToPhone("/set_audio_route", route.toString())
                     }
                 )
             }
@@ -261,121 +252,108 @@ fun WatchCallScreen(
     callerNumber: String,
     contactPhoto: Bitmap?,
     callState: Int,
-    audioRoute: Int,
-    volumePercent: Int,
-    isMuted: Boolean,
     watchInitiated: Boolean,
     isOutgoing: Boolean,
     onAccept: () -> Unit,
     onSilence: () -> Unit,
     onHangup: () -> Unit,
     onVolumeUp: () -> Unit,
-    onVolumeDown: () -> Unit,
-    onToggleMute: () -> Unit,
-    onSetAudioRoute: (Int) -> Unit
+    onVolumeDown: () -> Unit
 ) {
     val isIncoming = callState == android.telecom.Call.STATE_RINGING
 
-    if (isIncoming) {
-        Column(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+        // Background photo or initial
+        if (contactPhoto != null) {
+            Image(
+                bitmap = contactPhoto.asImageBitmap(),
+                contentDescription = "Contact photo",
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                alignment = androidx.compose.ui.BiasAlignment(0f, if (isIncoming) 0f else -0.3f),
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
             Box(
-                modifier = Modifier.fillMaxWidth().weight(2f),
+                modifier = Modifier.fillMaxSize().background(Color.DarkGray),
                 contentAlignment = Alignment.Center
             ) {
-                if (contactPhoto != null) {
-                    Image(
-                        bitmap = contactPhoto.asImageBitmap(),
-                        contentDescription = "Contact photo",
-                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier.fillMaxSize().background(Color.DarkGray),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = callerName.take(1).uppercase(),
-                            color = Color.White.copy(alpha = 0.2f),
-                            fontSize = 80.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-
-                Box(
-                    modifier = Modifier.fillMaxSize().background(
-                        androidx.compose.ui.graphics.Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.8f)),
-                            startY = 100f
-                        )
-                    ),
-                    contentAlignment = Alignment.BottomCenter
-                ) {
-                    Text(
-                        text = callerName.ifEmpty { callerNumber },
-                        color = Color.White,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(bottom = 12.dp, start = 8.dp, end = 8.dp)
-                    )
-                }
-            }
-
-            Row(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                Box(
-                    modifier = Modifier.fillMaxHeight().weight(1f).background(Color(0xFF1E88E5)).clickable { onSilence() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = stringResource(R.string.watch_silence), color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-                }
-                Box(
-                    modifier = Modifier.fillMaxHeight().weight(1f).background(Color(0xFF43A047)).clickable { onAccept() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = stringResource(R.string.watch_accept), color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-                }
+                Text(
+                    text = (callerName.takeIf { it.isNotEmpty() } ?: "?").take(1).uppercase(),
+                    color = Color.White.copy(alpha = 0.2f),
+                    fontSize = if (isIncoming) 80.sp else 120.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
-    } else {
-        Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-            if (contactPhoto != null) {
-                Image(
-                    bitmap = contactPhoto.asImageBitmap(),
-                    contentDescription = "Contact photo",
-                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                    alignment = androidx.compose.ui.BiasAlignment(0f, -0.3f),
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = (callerName.takeIf { it.isNotEmpty() } ?: "?").take(1).uppercase(),
-                        color = Color.White.copy(alpha = 0.15f),
-                        fontSize = 120.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
 
-            Box(
-                modifier = Modifier.fillMaxSize().background(
-                    androidx.compose.ui.graphics.Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f), Color.Black.copy(alpha = 0.95f)),
-                        startY = 100f
-                    )
+        // Gradient overlay for text readability
+        Box(
+            modifier = Modifier.fillMaxSize().background(
+                androidx.compose.ui.graphics.Brush.verticalGradient(
+                    colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.8f), Color.Black.copy(alpha = 0.95f)),
+                    startY = 100f
                 )
             )
+        )
 
+        if (isIncoming) {
             Column(
-                modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter).padding(bottom = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier.fillMaxSize().padding(bottom = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Bottom
             ) {
                 Text(
                     text = callerName.ifEmpty { callerNumber },
                     color = Color.White,
-                    fontSize = 20.sp,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                
+                Text(
+                    text = stringResource(R.string.watch_incoming_call),
+                    color = Color.LightGray,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Silence Button
+                    Button(
+                        onClick = onSilence,
+                        modifier = Modifier.size(56.dp),
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF1E88E5))
+                    ) {
+                        Text(text = stringResource(R.string.watch_silence), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    // Accept Button
+                    Button(
+                        onClick = onAccept,
+                        modifier = Modifier.size(64.dp),
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF43A047))
+                    ) {
+                        Text(text = "✓", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(bottom = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Bottom
+            ) {
+                Text(
+                    text = callerName.ifEmpty { callerNumber },
+                    color = Color.White,
+                    fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
@@ -383,64 +361,43 @@ fun WatchCallScreen(
                     modifier = Modifier.padding(horizontal = 24.dp)
                 )
 
-                if (!isOutgoing || watchInitiated) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = if (isMuted) "MUTED" else "Vol: $volumePercent%",
-                            color = if (isMuted) Color.Red else Color.Gray,
-                            fontSize = 12.sp,
-                            fontWeight = if (isMuted) FontWeight.Bold else FontWeight.Normal,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        val routeLabel = when(audioRoute) {
-                            2 -> "BT"
-                            4 -> "SPEAKER"
-                            else -> "PHONE"
-                        }
-                        Text(text = "[$routeLabel]", color = Color.Cyan, fontSize = 11.sp, textAlign = TextAlign.Center)
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
+                val statusText = if (callState == android.telecom.Call.STATE_DIALING) {
+                    stringResource(R.string.watch_calling)
+                } else {
+                    "" // User requested no call timer, so just blank or caller name
+                }
+                
+                if (statusText.isNotEmpty()) {
+                    Text(
+                        text = statusText,
+                        color = Color.LightGray,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                } else {
+                    Spacer(modifier = Modifier.height(28.dp))
                 }
 
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (!isOutgoing || watchInitiated) {
-                        Button(onClick = { onSetAudioRoute(2) }, modifier = Modifier.size(36.dp), colors = ButtonDefaults.buttonColors(backgroundColor = if (audioRoute == 2) Color.Blue else Color.DarkGray)) {
-                            Text("BT", fontSize = 10.sp)
-                        }
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Button(onClick = onToggleMute, modifier = Modifier.size(36.dp), colors = ButtonDefaults.buttonColors(backgroundColor = if (isMuted) Color.Red else Color.DarkGray)) {
-                            Text(if (isMuted) "UNMUTE" else "MUTE", fontSize = 8.sp)
-                        }
-                        Spacer(modifier = Modifier.width(4.dp))
-                    }
-
+                if (!isOutgoing || watchInitiated) {
                     Button(
                         onClick = onHangup,
-                        modifier = Modifier.size(if (!isOutgoing || watchInitiated) 44.dp else 56.dp),
+                        modifier = Modifier.size(64.dp),
                         colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFE53935))
                     ) {
-                        Text(text = "✕", color = Color.White, fontSize = if (!isOutgoing || watchInitiated) 18.sp else 24.sp, fontWeight = FontWeight.Bold)
-                    }
-
-                    if (!isOutgoing || watchInitiated) {
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Button(onClick = { onSetAudioRoute(8) }, modifier = Modifier.size(36.dp), colors = ButtonDefaults.buttonColors(backgroundColor = if (audioRoute == 8) Color.Green else Color.DarkGray)) {
-                            Text("SPK", fontSize = 10.sp)
-                        }
+                        Text(text = "✕", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
 
+            // Visible volume edges
             if (!isOutgoing || watchInitiated) {
-                Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(0.3f).align(Alignment.CenterStart).clickable { onVolumeDown() }, contentAlignment = Alignment.CenterStart) {
-                    Text(text = "-", fontSize = 48.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.4f), modifier = Modifier.padding(start = 8.dp))
+                Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(0.25f).align(Alignment.CenterStart).clickable { onVolumeDown() }) {
+                    Box(modifier = Modifier.align(Alignment.CenterStart).fillMaxHeight(0.4f).width(4.dp).background(Color.White.copy(alpha = 0.2f), shape = CircleShape))
+                    Text(text = "-", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.6f), modifier = Modifier.align(Alignment.Center).padding(start = 8.dp))
                 }
-                Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(0.3f).align(Alignment.CenterEnd).clickable { onVolumeUp() }, contentAlignment = Alignment.CenterEnd) {
-                    Text(text = "+", fontSize = 48.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.4f), modifier = Modifier.padding(end = 8.dp))
+                Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(0.25f).align(Alignment.CenterEnd).clickable { onVolumeUp() }) {
+                    Box(modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(0.4f).width(4.dp).background(Color.White.copy(alpha = 0.2f), shape = CircleShape))
+                    Text(text = "+", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.6f), modifier = Modifier.align(Alignment.Center).padding(end = 8.dp))
                 }
             }
         }

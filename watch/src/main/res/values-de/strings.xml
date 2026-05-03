@@ -6,10 +6,12 @@
     <string name="watch_find_phone">Handy suchen</string>
 
     <!-- Call Screen -->
-    <string name="watch_silence">Kein Ton</string>
+    <string name="watch_silence">Stumm</string>
     <string name="watch_accept">Annehmen</string>
     <string name="watch_hangup">Auflegen</string>
     <string name="watch_call_label">Anruf</string>
+    <string name="watch_incoming_call">Eingehender Anruf</string>
+    <string name="watch_calling">Wird angerufen…</string>
 
     <!-- Complication -->
     <string name="watch_complication_open">Simple Phone öffnen</string>
