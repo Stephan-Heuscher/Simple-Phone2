@@ -40,9 +40,12 @@ import java.util.*
 class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
 
     private var isCallActive = true
+    private var bringToFrontRetries = 0
+    private val MAX_BRING_TO_FRONT_RETRIES = 2
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
     private val bringToFrontRunnable = Runnable {
-        if (isCallActive && !isDestroyed && !isFinishing) {
+        if (isCallActive && !isDestroyed && !isFinishing && bringToFrontRetries < MAX_BRING_TO_FRONT_RETRIES) {
+            bringToFrontRetries++
             val bringToFrontIntent = Intent(this@WatchCallActivity, WatchCallActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP
             }
@@ -114,16 +117,20 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
                     watchInitiated = _watchInitiated.value,
                     isOutgoing = _isOutgoing.value,
                     onAccept = {
-                        _callState.intValue = android.telecom.Call.STATE_ACTIVE
+                        // Don't optimistically set STATE_ACTIVE — wait for
+                        // phone confirmation via /sync_call_state to avoid
+                        // showing "on call" when the phone is still ringing.
                         sendMessageToPhone("/answer_call")
                     },
                     onSilence = {
                         sendMessageToPhone("/silence_ringer")
                     },
                     onHangup = {
-                        isCallActive = false
+                        // Don't finish() immediately — the phone will send
+                        // /sync_call_state with STATE_DISCONNECTED which
+                        // triggers finish() at line 89-92. If we finish() now
+                        // and the message fails, the call keeps running.
                         sendMessageToPhone("/end_call")
-                        finish()
                     },
                     onVolumeUp = {
                         sendMessageToPhone("/volume_up")
@@ -170,6 +177,7 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
     override fun onResume() {
         super.onResume()
         handler.removeCallbacks(bringToFrontRunnable)
+        bringToFrontRetries = 0 // Reset retry counter when user returns
     }
 
     override fun onStop() {
@@ -194,9 +202,13 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
                     val contactName = obj.optString("name", "")
                     val contactNumber = obj.optString("number", "").replace(Regex("[^0-9]"), "")
                     
+                    // Symmetric suffix matching: either number ends with the other
+                    val suffixMatch = cleanNumber.length >= 7 && contactNumber.length >= 7 && 
+                        (cleanNumber.endsWith(contactNumber.takeLast(7)) || contactNumber.endsWith(cleanNumber.takeLast(7)))
+                    
                     if ((name.isNotEmpty() && contactName == name) || 
                         (cleanNumber.isNotEmpty() && contactNumber == cleanNumber) ||
-                        (cleanNumber.length >= 7 && contactNumber.isNotEmpty() && cleanNumber.endsWith(contactNumber))) {
+                        suffixMatch) {
                         
                         if (_callerName.value == _callerNumber.value || _callerName.value.isEmpty()) {
                             _callerName.value = contactName

@@ -39,6 +39,7 @@ import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.Wearable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -49,9 +50,12 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
     private val dataClient by lazy { Wearable.getDataClient(this) }
     private var contactsState = mutableStateListOf<SyncedContact>()
     private var isContactsLoading = mutableStateOf(true)
+    private val activityScope = kotlinx.coroutines.CoroutineScope(
+        kotlinx.coroutines.SupervisorJob() + Dispatchers.Main
+    )
 
     private fun saveContactsToPrefs(contacts: List<SyncedContact>) {
-        CoroutineScope(Dispatchers.IO).launch {
+        activityScope.launch(Dispatchers.IO) {
             val prefs = getSharedPreferences("simple_phone_watch", Context.MODE_PRIVATE)
             val jsonArray = org.json.JSONArray()
             for (contact in contacts) {
@@ -167,6 +171,11 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
         dataClient.removeListener(this)
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        activityScope.cancel()
+    }
+
     private fun loadInitialContacts() {
         dataClient.dataItems.addOnSuccessListener { items ->
             var found = false
@@ -220,7 +229,7 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
         try {
             val dataMap = DataMapItem.fromDataItem(dataItem).dataMap
             
-            CoroutineScope(Dispatchers.IO).launch {
+            activityScope.launch(Dispatchers.IO) {
                 try {
                     val favoritesArray = dataMap.getDataMapArrayList("favorites")
 

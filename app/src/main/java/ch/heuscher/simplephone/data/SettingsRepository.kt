@@ -45,6 +45,8 @@ class SettingsRepository @org.jetbrains.annotations.VisibleForTesting internal c
     private val wearSyncManager = WearSyncManager(context)
     
     // Cache of remote settings - these override local settings when present
+    // @Volatile ensures cross-thread visibility (Firestore callback writes, CallService thread reads)
+    @Volatile
     private var remoteCache: Map<String, Any>? = null
     
     // Reactive state of settings

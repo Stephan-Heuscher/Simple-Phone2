@@ -114,12 +114,16 @@ class CallService : InCallService() {
         }
         
         fun answerCall() {
-            val call = currentCall ?: return
+            val call = currentCall ?: run {
+                Log.w(TAG, "answerCall: no currentCall")
+                return
+            }
             call.answer(android.telecom.VideoProfile.STATE_AUDIO_ONLY)
             
             if (watchInitiated || watchAnswered) {
                 watchRequestedAudioRoute = CallAudioState.ROUTE_BLUETOOTH
                 instance?.forceAudioRouteWithRetry(CallAudioState.ROUTE_BLUETOOTH)
+                    ?: Log.w(TAG, "answerCall: instance is null, cannot force BT route")
             } else {
                 val supportedRouteMask = currentAudioState?.supportedRouteMask ?: 0
                 val route = if (supportedRouteMask and CallAudioState.ROUTE_WIRED_HEADSET != 0) {
@@ -154,6 +158,10 @@ class CallService : InCallService() {
                 Log.d(TAG, "setAudioRoute: Current Voice Volume: $vol/$max, Mode: ${am.mode}")
             }
             
+            if (instance == null) {
+                Log.w(TAG, "setAudioRoute: instance is null, cannot set route $route")
+                return
+            }
             @Suppress("DEPRECATION")
             instance?.setAudioRoute(route)
         }
@@ -184,6 +192,7 @@ class CallService : InCallService() {
          */
         fun silenceRinger() {
             instance?.stopRingingExternal()
+                ?: Log.w(TAG, "silenceRinger: instance is null")
         }
 
         fun sendDtmf(digit: Char) {
@@ -429,7 +438,11 @@ class CallService : InCallService() {
             
             if (state == Call.STATE_DISCONNECTED) {
                 cancelOngoingCallNotification()
+                // NOTE: Do NOT clear currentCall/callerNumber/callerName here.
+                // onCallRemoved() is the single source of truth for cleanup
+                // to avoid double-notification and race conditions.
                 CallService.notifyCallStateChanged(call.details.disconnectCause)
+                stopRinging()
             } else {
                 if (state == Call.STATE_ACTIVE || state == Call.STATE_DIALING) {
                     showOngoingCallNotification(call)
@@ -452,15 +465,6 @@ class CallService : InCallService() {
             
             if (state != Call.STATE_RINGING) {
                 stopRinging()
-            }
-            
-            if (state == Call.STATE_DISCONNECTED) {
-                CallService.currentCall = null
-                CallService.callerNumber = null
-                CallService.callerName = null
-                stopRinging()
-                // Inform watch that the call ended
-                broadcastCallSyncState()
             }
         }
         
@@ -522,6 +526,10 @@ class CallService : InCallService() {
         instance = null
         stopRinging()
         stopProximitySensor()
+        // Reset watch flags to prevent stale state if service is recreated
+        watchInitiated = false
+        watchAnswered = false
+        watchRequestedAudioRoute = null
     }
 
     /**
@@ -693,7 +701,15 @@ class CallService : InCallService() {
                 Log.d(TAG, "Expiring stale watchAnswered flag")
                 watchAnswered = false
             }
+            // Always clear stale audio route request when no call is active
+            if (!watchInitiated && !watchAnswered) {
+                watchRequestedAudioRoute = null
+            }
         }
+        
+        // Periodic cleanup of recentCallers map to prevent unbounded growth
+        val cutoff = System.currentTimeMillis() - REPEAT_CALLER_WINDOW_MS
+        recentCallers.entries.removeAll { it.value < cutoff }
         
         // Block incoming calls if we already have an active/ringing call
         val activeCall = CallService.currentCall
@@ -941,8 +957,8 @@ class CallService : InCallService() {
                 val inputStream = context.contentResolver.openInputStream(Uri.parse(contact.imageUri))
                 contactBitmap = BitmapFactory.decodeStream(inputStream)
                 inputStream?.close()
-                // Make it circular for the notification
-                contactBitmap = createCircularBitmap(contactBitmap!!)
+                // Make it circular for the notification (null-safe)
+                contactBitmap?.let { contactBitmap = createCircularBitmap(it) }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load contact photo", e)
             }

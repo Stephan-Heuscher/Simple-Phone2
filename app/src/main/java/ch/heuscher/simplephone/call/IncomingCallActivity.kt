@@ -70,6 +70,7 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
     private var contact by mutableStateOf<Contact?>(null)
     private var audioState by mutableStateOf<CallAudioState?>(null)
     private var shouldSuggestSpeaker by mutableStateOf(false)
+    private val finishHandler = android.os.Handler(android.os.Looper.getMainLooper())
     
     private var textToSpeech: android.speech.tts.TextToSpeech? = null
 
@@ -203,6 +204,7 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
     override fun onDestroy() {
         super.onDestroy()
         CallService.removeCallStateListener(this)
+        finishHandler.removeCallbacksAndMessages(null)
         textToSpeech?.stop()
         textToSpeech?.shutdown()
     }
@@ -238,7 +240,7 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
                 }
                 
                 // Delay finish slightly to allow TTS to start
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                finishHandler.postDelayed({
                     Log.d("IncomingCallActivity", "Calling finish (delayed)")
                     finish()
                 }, 3000)
