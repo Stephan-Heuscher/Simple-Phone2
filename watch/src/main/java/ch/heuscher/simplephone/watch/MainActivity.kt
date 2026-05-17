@@ -57,7 +57,12 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
     private fun saveContactsToPrefs(contacts: List<SyncedContact>) {
         activityScope.launch(Dispatchers.IO) {
             val prefs = getSharedPreferences("simple_phone_watch", Context.MODE_PRIVATE)
+            val photoDir = java.io.File(filesDir, "contact_photos")
+            if (!photoDir.exists()) photoDir.mkdirs()
+            
             val jsonArray = org.json.JSONArray()
+            val savedPhotoFiles = mutableSetOf<String>()
+            
             for (contact in contacts) {
                 val jsonObject = org.json.JSONObject()
                 jsonObject.put("id", contact.id)
@@ -65,41 +70,69 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
                 jsonObject.put("number", contact.number)
                 
                 if (contact.photoBitmap != null) {
-                    val outputStream = java.io.ByteArrayOutputStream()
-                    contact.photoBitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
-                    val base64String = android.util.Base64.encodeToString(outputStream.toByteArray(), android.util.Base64.DEFAULT)
-                    jsonObject.put("photoBase64", base64String)
+                    try {
+                        val photoFile = java.io.File(photoDir, "contact_${contact.id}.jpg")
+                        java.io.FileOutputStream(photoFile).use { fos ->
+                            contact.photoBitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos)
+                        }
+                        jsonObject.put("hasPhoto", true)
+                        savedPhotoFiles.add(photoFile.name)
+                    } catch (e: Exception) {
+                        Log.e("WatchMainActivity", "Failed to save contact photo for ${contact.id}", e)
+                    }
                 }
                 
                 jsonArray.put(jsonObject)
             }
+            
+            // Store only lightweight metadata in SharedPreferences
             prefs.edit().putString("cached_contacts", jsonArray.toString()).apply()
+            
+            // Clean up orphaned photo files from contacts that were removed
+            photoDir.listFiles()?.forEach { file ->
+                if (file.name !in savedPhotoFiles) {
+                    file.delete()
+                }
+            }
         }
     }
 
     private fun loadContactsFromPrefs(): Boolean {
         val prefs = getSharedPreferences("simple_phone_watch", Context.MODE_PRIVATE)
         val jsonString = prefs.getString("cached_contacts", null) ?: return false
+        val photoDir = java.io.File(filesDir, "contact_photos")
         try {
             val jsonArray = org.json.JSONArray(jsonString)
             val cachedContacts = mutableListOf<SyncedContact>()
             for (i in 0 until jsonArray.length()) {
                 val jsonObject = jsonArray.getJSONObject(i)
+                val id = jsonObject.getString("id")
                 
                 var photoBitmap: Bitmap? = null
-                if (jsonObject.has("photoBase64")) {
+                // Load photo from file if it exists
+                if (jsonObject.optBoolean("hasPhoto", false)) {
+                    try {
+                        val photoFile = java.io.File(photoDir, "contact_${id}.jpg")
+                        if (photoFile.exists()) {
+                            photoBitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
+                        }
+                    } catch (e: Exception) {
+                        Log.e("WatchMainActivity", "Failed to load photo file for $id", e)
+                    }
+                } else if (jsonObject.has("photoBase64")) {
+                    // Legacy migration: load from base64 if still in old format
                     try {
                         val base64String = jsonObject.getString("photoBase64")
                         val decodedBytes = android.util.Base64.decode(base64String, android.util.Base64.DEFAULT)
                         photoBitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
                     } catch (e: Exception) {
-                        Log.e("WatchMainActivity", "Failed to decode base64 bitmap", e)
+                        Log.e("WatchMainActivity", "Failed to decode legacy base64 bitmap", e)
                     }
                 }
 
                 cachedContacts.add(
                     SyncedContact(
-                        jsonObject.getString("id"),
+                        id,
                         jsonObject.getString("name"),
                         jsonObject.getString("number"),
                         photoBitmap

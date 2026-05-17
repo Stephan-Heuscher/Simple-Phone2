@@ -214,10 +214,24 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
                             _callerName.value = contactName
                         }
                         
-                        val base64 = obj.optString("photoBase64", "")
-                        if (base64.isNotEmpty()) {
-                            val bytes = android.util.Base64.decode(base64, android.util.Base64.DEFAULT)
-                            _contactPhoto.value = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                        // Load photo from file (new format)
+                        val contactId = obj.optString("id", "")
+                        if (obj.optBoolean("hasPhoto", false) && contactId.isNotEmpty()) {
+                            try {
+                                val photoFile = java.io.File(filesDir, "contact_photos/contact_${contactId}.jpg")
+                                if (photoFile.exists()) {
+                                    _contactPhoto.value = BitmapFactory.decodeFile(photoFile.absolutePath)
+                                }
+                            } catch (e: Exception) {
+                                Log.e("WatchCallActivity", "Failed to load photo file", e)
+                            }
+                        } else {
+                            // Legacy fallback: load from base64 if still in old format
+                            val base64 = obj.optString("photoBase64", "")
+                            if (base64.isNotEmpty()) {
+                                val bytes = android.util.Base64.decode(base64, android.util.Base64.DEFAULT)
+                                _contactPhoto.value = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                            }
                         }
                         return
                     }
