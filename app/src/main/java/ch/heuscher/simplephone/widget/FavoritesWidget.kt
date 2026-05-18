@@ -40,11 +40,10 @@ class FavoritesWidget : AppWidgetProvider() {
             }
             
             // Set up pending intent template for call actions.
-            // Explicitly target MainActivity so the ACTION_CALL routes deterministically
-            // to our dialer instead of relying on (Android 14+ restricted) implicit
-            // intent resolution, which could open the app without placing the call.
+            // Target the invisible WidgetCallActivity so the call is placed
+            // silently without ever showing the main dialer UI.
             val callIntent = Intent(Intent.ACTION_CALL).apply {
-                setClass(context, ch.heuscher.simplephone.MainActivity::class.java)
+                setClass(context, ch.heuscher.simplephone.widget.WidgetCallActivity::class.java)
             }
 
             val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE

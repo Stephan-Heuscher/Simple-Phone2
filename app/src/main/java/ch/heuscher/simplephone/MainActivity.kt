@@ -453,21 +453,24 @@ class MainActivity : ComponentActivity() {
         if (intent.action == Intent.ACTION_VIEW || intent.action == Intent.ACTION_DIAL || intent.action == Intent.ACTION_CALL) {
             if (intent.data?.scheme == "tel") {
                 val number = intent.data?.schemeSpecificPart
-                val viewModel = ViewModelProvider(this)[MainViewModel::class.java]
-                viewModel.setPendingDialerNumber(number)
 
                 if (intent.action == Intent.ACTION_CALL && !number.isNullOrEmpty()) {
+                    // Direct-call path (e.g. from third-party apps). Place the
+                    // call immediately without navigating to the dialer screen.
                     if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
                         makePhoneCall(number)
                     } else {
-                        // Request permission if missing, remembering the number to dial once granted
                         pendingPhoneNumber = number
                         requestPermissionsIfNeeded()
                     }
+                } else {
+                    // ACTION_VIEW / ACTION_DIAL: show the dialer pre-filled with
+                    // the number so the user can review before calling.
+                    val viewModel = ViewModelProvider(this)[MainViewModel::class.java]
+                    viewModel.setPendingDialerNumber(number)
                 }
 
-                // Mark consumed and persist so the activity record / re-delivered
-                // intent won't trigger the call or re-navigate to the dialer again.
+                // Mark consumed so re-delivered intents don't re-trigger.
                 intent.putExtra(EXTRA_INTENT_HANDLED, true)
                 setIntent(intent)
             }

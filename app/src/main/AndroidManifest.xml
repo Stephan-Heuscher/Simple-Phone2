@@ -130,6 +130,15 @@
             android:name=".widget.FavoritesWidgetService"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
 
+        <!-- Transparent trampoline for widget-initiated calls (no visible UI) -->
+        <activity
+            android:name=".widget.WidgetCallActivity"
+            android:exported="false"
+            android:theme="@style/Theme.SimplePhone.Transparent"
+            android:noHistory="true"
+            android:excludeFromRecents="true"
+            android:taskAffinity="" />
+
         <service
             android:name=".data.PhoneWearableListenerService"
             android:exported="true">
