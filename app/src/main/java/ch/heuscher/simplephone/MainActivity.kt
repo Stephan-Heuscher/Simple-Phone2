@@ -82,6 +82,9 @@ class MainActivity : ComponentActivity() {
         private const val CALL_PHONE_PERMISSION_REQUEST = 1001
         private const val CONTACTS_PERMISSION_REQUEST = 1002
         private const val REQUEST_CODE_SET_DEFAULT_DIALER = 1003
+        // Marks a tel: intent as already processed so a recreation (rotation,
+        // process restart, return from background) cannot re-trigger the call.
+        private const val EXTRA_INTENT_HANDLED = "ch.heuscher.simplephone.INTENT_HANDLED"
     }
     
     private var pendingPhoneNumber: String? = null
@@ -108,8 +111,13 @@ class MainActivity : ComponentActivity() {
         // Initialize View Model
         val viewModel = ViewModelProvider(this)[MainViewModel::class.java]
         
-        // Handle incoming intent (e.g. from tel: links)
-        handleIntent(intent)
+        // Handle incoming intent (e.g. from tel: links) only on a fresh launch.
+        // On a recreation the system re-delivers the original launch intent; without
+        // this guard an ACTION_CALL intent would place the call again on every
+        // recreation ("dials on its own").
+        if (savedInstanceState == null) {
+            handleIntent(intent)
+        }
 
         // Initialize Text-to-Speech
         textToSpeech = TextToSpeech(this) { status ->
@@ -439,20 +447,29 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleIntent(intent: Intent) {
+        // Already processed once (e.g. intent re-delivered after a recreation) -> skip.
+        if (intent.getBooleanExtra(EXTRA_INTENT_HANDLED, false)) return
+
         if (intent.action == Intent.ACTION_VIEW || intent.action == Intent.ACTION_DIAL || intent.action == Intent.ACTION_CALL) {
             if (intent.data?.scheme == "tel") {
                 val number = intent.data?.schemeSpecificPart
                 val viewModel = ViewModelProvider(this)[MainViewModel::class.java]
                 viewModel.setPendingDialerNumber(number)
-                
+
                 if (intent.action == Intent.ACTION_CALL && !number.isNullOrEmpty()) {
                     if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
                         makePhoneCall(number)
                     } else {
-                        // Request permission if missing
+                        // Request permission if missing, remembering the number to dial once granted
+                        pendingPhoneNumber = number
                         requestPermissionsIfNeeded()
                     }
                 }
+
+                // Mark consumed and persist so the activity record / re-delivered
+                // intent won't trigger the call or re-navigate to the dialer again.
+                intent.putExtra(EXTRA_INTENT_HANDLED, true)
+                setIntent(intent)
             }
         }
     }

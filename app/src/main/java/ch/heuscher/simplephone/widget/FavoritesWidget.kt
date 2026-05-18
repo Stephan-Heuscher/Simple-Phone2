@@ -39,18 +39,20 @@ class FavoritesWidget : AppWidgetProvider() {
                 setEmptyView(R.id.widget_list, R.id.empty_view)
             }
             
-            // Set up pending intent template for call actions
-            val callIntent = Intent(Intent.ACTION_CALL)
-            
-            var flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                flags = flags or PendingIntent.FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT
+            // Set up pending intent template for call actions.
+            // Explicitly target MainActivity so the ACTION_CALL routes deterministically
+            // to our dialer instead of relying on (Android 14+ restricted) implicit
+            // intent resolution, which could open the app without placing the call.
+            val callIntent = Intent(Intent.ACTION_CALL).apply {
+                setClass(context, ch.heuscher.simplephone.MainActivity::class.java)
             }
-            
+
+            val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+
             val callPendingIntent = PendingIntent.getActivity(
-                context, 
-                0, 
-                callIntent, 
+                context,
+                0,
+                callIntent,
                 flags
             )
             views.setPendingIntentTemplate(R.id.widget_list, callPendingIntent)
