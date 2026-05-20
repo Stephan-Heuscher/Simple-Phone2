@@ -207,4 +207,9 @@
     <string name="settings_default_to_bluetooth_title">Standardmäßig Bluetooth verwenden</string>
     <string name="settings_default_to_bluetooth_desc">Verwendet für Anrufe automatisch ein verbundenes Bluetooth-Gerät, sofern verfügbar.</string>
 
+    <!-- Find Phone Activity -->
+    <string name="find_phone_here_i_am">📱 Hier bin ich!</string>
+    <string name="find_phone_stop">Stopp</string>
+    <string name="find_phone_found">Gefunden!</string>
+
 </resources>

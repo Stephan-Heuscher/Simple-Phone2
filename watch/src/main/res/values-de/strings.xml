@@ -4,6 +4,8 @@
     <string name="watch_emergency_call">Notruf</string>
     <string name="watch_emergency_number">112</string>
     <string name="watch_find_phone">Handy suchen</string>
+    <string name="watch_find_phone_ringing">Dein Handy klingelt!</string>
+    <string name="watch_find_phone_not_nearby">Handy nicht in der Nähe</string>
 
     <!-- Call Screen -->
     <string name="watch_silence">Stumm</string>

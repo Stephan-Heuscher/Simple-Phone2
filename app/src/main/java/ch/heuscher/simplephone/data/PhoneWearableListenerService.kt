@@ -20,24 +20,22 @@ import kotlinx.coroutines.launch
 
 class PhoneWearableListenerService : WearableListenerService() {
 
-    private var currentRingtone: Ringtone? = null
-    private var isRinging = false
-    private var originalVolume: Int = -1
-    
-    private val serviceJob = kotlinx.coroutines.SupervisorJob()
-    private val serviceScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main + serviceJob)
-
-    override fun onDestroy() {
-        serviceJob.cancel()
-        super.onDestroy()
-    }
-
     override fun onMessageReceived(messageEvent: MessageEvent) {
         super.onMessageReceived(messageEvent)
         Log.d("PhoneWearableListener", "Received message: ${messageEvent.path}")
         
         when (messageEvent.path) {
-            "/find_my_phone" -> startRingingAndVibrating()
+            "/find_my_phone" -> {
+                Log.d("PhoneWearableListener", "Watch requested to find phone. Launching FindPhoneActivity.")
+                try {
+                    val intent = android.content.Intent(this, Class.forName("ch.heuscher.simplephone.FindPhoneActivity")).apply {
+                        flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    }
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e("PhoneWearableListener", "Failed to launch FindPhoneActivity", e)
+                }
+            }
             "/answer_call" -> {
                 Log.d("PhoneWearableListener", "Watch requested to answer call")
                 CallService.watchAnswered = true
@@ -120,62 +118,6 @@ class PhoneWearableListenerService : WearableListenerService() {
                     Log.e("PhoneWearableListener", "Missing CALL_PHONE permission")
                 }
             }
-        }
-    }
-
-    private fun startRingingAndVibrating() {
-        if (isRinging) {
-            Log.d("PhoneWearableListener", "Already ringing, ignoring repeat request")
-            return
-        }
-
-        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-            vibratorManager.defaultVibrator
-        } else {
-            @Suppress("DEPRECATION")
-            getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        }
-
-        // Temporarily max out the volume
-        originalVolume = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
-        val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
-        audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0)
-        isRinging = true
-
-        // Play alarm sound
-        val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM) ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
-        currentRingtone = RingtoneManager.getRingtone(applicationContext, alarmUri)
-        currentRingtone?.audioAttributes = AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_ALARM)
-            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-            .build()
-        
-        if (currentRingtone?.isPlaying == false) {
-            currentRingtone?.play()
-        }
-
-        // Vibrate
-        val pattern = longArrayOf(0, 500, 500, 500, 500, 500, 500, 500, 500)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createWaveform(pattern, 1))
-        } else {
-            @Suppress("DEPRECATION")
-            vibrator.vibrate(pattern, 1)
-        }
-
-        // Stop after 15 seconds
-        serviceScope.launch {
-            delay(15000)
-            currentRingtone?.stop()
-            vibrator.cancel()
-            // Restore original volume
-            if (originalVolume != -1) {
-                audioManager.setStreamVolume(AudioManager.STREAM_ALARM, originalVolume, 0)
-            }
-            isRinging = false
-            originalVolume = -1
         }
     }
 }

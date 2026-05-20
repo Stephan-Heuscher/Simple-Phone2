@@ -6,6 +6,8 @@
     <string name="watch_emergency_call">Emergency</string>
     <string name="watch_emergency_number">112</string>
     <string name="watch_find_phone">Find Phone</string>
+    <string name="watch_find_phone_ringing">Your phone is ringing!</string>
+    <string name="watch_find_phone_not_nearby">Phone is not nearby</string>
 
     <!-- Call Screen -->
     <string name="watch_silence">Silence</string>

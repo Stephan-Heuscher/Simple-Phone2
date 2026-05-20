@@ -340,9 +340,22 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
     }
 }
 
+enum class FindPhoneStatus {
+    RINGING,
+    NOT_NEARBY
+}
+
 @Composable
 fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoading: Boolean) {
     var showConfirmDialog by remember { mutableStateOf<String?>(null) }
+    var findPhoneStatus by remember { mutableStateOf<FindPhoneStatus?>(null) }
+
+    LaunchedEffect(findPhoneStatus) {
+        if (findPhoneStatus != null) {
+            kotlinx.coroutines.delay(10000)
+            findPhoneStatus = null
+        }
+    }
     
     val callPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
@@ -452,6 +465,51 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoadi
         }
     }
 
+    // Find Phone Status Dialog
+    androidx.wear.compose.material.dialog.Dialog(
+        showDialog = findPhoneStatus != null,
+        onDismissRequest = { findPhoneStatus = null }
+    ) {
+        val status = findPhoneStatus
+        val titleText = when (status) {
+            FindPhoneStatus.RINGING -> stringResource(R.string.watch_find_phone_ringing)
+            FindPhoneStatus.NOT_NEARBY -> stringResource(R.string.watch_find_phone_not_nearby)
+            else -> ""
+        }
+        val iconColor = when (status) {
+            FindPhoneStatus.RINGING -> Color(0xFF43A047) // Green
+            FindPhoneStatus.NOT_NEARBY -> Color(0xFFE53935) // Red
+            else -> Color.White
+        }
+        
+        androidx.wear.compose.material.dialog.Alert(
+            title = {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+                ) {
+                    Text(
+                        text = titleText,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        fontSize = 18.sp
+                    )
+                }
+            }
+        ) {
+            item {
+                Button(
+                    onClick = { findPhoneStatus = null },
+                    modifier = Modifier.size(ButtonDefaults.LargeButtonSize),
+                    colors = ButtonDefaults.buttonColors(backgroundColor = iconColor)
+                ) {
+                    Text("OK", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+
     ScalingLazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -498,23 +556,56 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoadi
         
         item {
             ActionButton(text = stringResource(R.string.watch_find_phone), color = Color(0xFFFB8C00)) {
-                findMyPhone(context)
+                // vibration feedback
+                val prefs = context.getSharedPreferences("simple_phone_watch", Context.MODE_PRIVATE)
+                val useHaptic = prefs.getBoolean("setting_use_haptic_feedback", true)
+                if (useHaptic) {
+                    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? android.os.Vibrator
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        vibrator?.vibrate(android.os.VibrationEffect.createOneShot(50, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+                    } else {
+                        @Suppress("DEPRECATION")
+                        vibrator?.vibrate(50)
+                    }
+                }
+
+                findMyPhone(context) { status ->
+                    findPhoneStatus = status
+                }
             }
         }
     }
 }
 
-private fun findMyPhone(context: Context) {
+private fun findMyPhone(context: Context, onResult: (FindPhoneStatus) -> Unit) {
     CoroutineScope(Dispatchers.IO).launch {
         try {
             val nodeClient = Wearable.getNodeClient(context)
             val nodes = Tasks.await(nodeClient.connectedNodes)
+            if (nodes.isEmpty()) {
+                withContext(Dispatchers.Main) {
+                    onResult(FindPhoneStatus.NOT_NEARBY)
+                }
+                return@launch
+            }
             val messageClient = Wearable.getMessageClient(context)
+            var sent = false
             for (node in nodes) {
-                messageClient.sendMessage(node.id, "/find_my_phone", ByteArray(0))
+                Tasks.await(messageClient.sendMessage(node.id, "/find_my_phone", ByteArray(0)))
+                sent = true
+            }
+            withContext(Dispatchers.Main) {
+                if (sent) {
+                    onResult(FindPhoneStatus.RINGING)
+                } else {
+                    onResult(FindPhoneStatus.NOT_NEARBY)
+                }
             }
         } catch (e: Exception) {
             Log.e("WatchMainActivity", "Failed to send find phone message", e)
+            withContext(Dispatchers.Main) {
+                onResult(FindPhoneStatus.NOT_NEARBY)
+            }
         }
     }
 }
