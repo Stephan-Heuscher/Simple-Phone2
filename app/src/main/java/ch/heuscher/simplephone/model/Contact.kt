@@ -2,6 +2,26 @@ package ch.heuscher.simplephone.model
 
 import java.time.LocalDateTime
 
+/**
+ * Represents a contact in the phone system, containing identification, contact details, and display preferences.
+ *
+ * @param id The unique identifier of the contact.
+ * @param name The display name of the contact.
+ * @param number The primary phone number of the contact.
+ * @param isFavorite Whether the contact is marked as a favorite. Defaults to false.
+ * @param initial The uppercase starting character of the contact's name, used for display fallback. Defaults to the first character of the name.
+ * @param imageUri Optional URI pointing to the contact's photo. Defaults to null.
+ * @param sortOrder The order of the contact in the favorites list. Defaults to 0.
+ * @param isPrimary Whether this is the primary number among contact numbers. Defaults to false.
+ * @param isSuperPrimary Whether this is the default number for the contact. Defaults to false.
+ * @param allNumbers A list of all phone numbers associated with this contact. Defaults to a list containing the primary number.
+ * @constructor Creates a new [Contact] instance.
+ *
+ * Example:
+ * ```
+ * Contact("1", "Amelia", "0123456789", isFavorite = true, sortOrder = 0)
+ * ```
+ */
 data class Contact(
     val id: String,
     val name: String,

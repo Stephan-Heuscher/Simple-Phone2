@@ -6,6 +6,18 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 
+/**
+ * Triggers a short vibration on the device for the specified duration using the appropriate system API version.
+ *
+ * @param context The Android context used to retrieve the vibration service.
+ * @param duration The duration of the vibration in milliseconds. Defaults to 50ms.
+ * @return Unit (none).
+ *
+ * Example:
+ * ```
+ * vibrate(context)
+ * ```
+ */
 fun vibrate(context: Context, duration: Long = 50) {
     val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
