@@ -415,23 +415,42 @@ fun WatchCallScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Button(
-                    onClick = onHangup,
-                    modifier = Modifier.size(64.dp),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFE53935))
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "✕", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
-                }
-            }
+                    // Volume Down Button
+                    Button(
+                        onClick = { onVolumeDown(); lastInteractionTime = System.currentTimeMillis() },
+                        modifier = Modifier.size(48.dp),
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF2196F3)) // Bright Blue
+                    ) {
+                        Text(text = "-", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                    }
 
-            // Visible volume edges
-            Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(0.25f).align(Alignment.CenterStart).clickable { onVolumeDown(); lastInteractionTime = System.currentTimeMillis() }) {
-                Box(modifier = Modifier.align(Alignment.CenterStart).fillMaxHeight(0.4f).width(4.dp).background(Color.White.copy(alpha = 0.2f), shape = CircleShape))
-                Text(text = "-", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.6f), modifier = Modifier.align(Alignment.Center).padding(start = 8.dp))
-            }
-            Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(0.25f).align(Alignment.CenterEnd).clickable { onVolumeUp(); lastInteractionTime = System.currentTimeMillis() }) {
-                Box(modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(0.4f).width(4.dp).background(Color.White.copy(alpha = 0.2f), shape = CircleShape))
-                Text(text = "+", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.6f), modifier = Modifier.align(Alignment.Center).padding(end = 8.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    // Hangup Button
+                    Button(
+                        onClick = onHangup,
+                        modifier = Modifier.size(64.dp),
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFE53935))
+                    ) {
+                        Text(text = "✕", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    // Volume Up Button
+                    Button(
+                        onClick = { onVolumeUp(); lastInteractionTime = System.currentTimeMillis() },
+                        modifier = Modifier.size(48.dp),
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF2196F3)) // Bright Blue
+                    ) {
+                        Text(text = "+", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
             }
             
             // Volume overlay
