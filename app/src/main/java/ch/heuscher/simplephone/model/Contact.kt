@@ -47,6 +47,16 @@ data class Contact(
     }
 }
 
+/**
+ * Represents an entry in the call history log, capturing details of a single call event.
+ *
+ * @param id The unique identifier of the call log entry.
+ * @param contactId The identifier of the contact associated with this call.
+ * @param timestamp The date and time when the call occurred.
+ * @param type The type of the call (incoming, outgoing, or missed).
+ * @param duration The duration of the call in seconds. Defaults to 0.
+ * @constructor Creates a new [CallLogEntry] instance.
+ */
 data class CallLogEntry(
     val id: String,
     val contactId: String,
@@ -55,15 +65,30 @@ data class CallLogEntry(
     val duration: Long = 0
 )
 
+/**
+ * Defines the type of a call event in the call log.
+ */
 enum class CallType {
-    INCOMING, OUTGOING, MISSED
+    /** Represents an incoming call that was answered. */
+    INCOMING,
+    /** Represents an outgoing call. */
+    OUTGOING,
+    /** Represents an incoming call that was missed or unanswered. */
+    MISSED
 }
 
-// Audio output options for in-call screen
+/**
+ * Defines the available audio routing options during an active phone call.
+ */
 enum class AudioOutput {
+    /** The device's built-in earpiece receiver. */
     EARPIECE,
+    /** The device's built-in speakerphone. */
     SPEAKER,
+    /** A connected Bluetooth audio device (e.g., headset, car system). */
     BLUETOOTH,
+    /** A connected wired headset or headphones. */
     WIRED_HEADSET,
+    /** A connected hearing aid device. */
     HEARING_AID
 }
