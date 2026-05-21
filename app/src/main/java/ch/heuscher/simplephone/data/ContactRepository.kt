@@ -8,6 +8,17 @@ import android.provider.ContactsContract
 import ch.heuscher.simplephone.model.Contact
 import ch.heuscher.simplephone.data.SettingsRepository
 
+/**
+ * Repository class responsible for querying and managing contacts and call logs from the Android system provider.
+ *
+ * @param context The Android context used to access the content resolver and system services.
+ * @constructor Creates a new [ContactRepository] instance.
+ *
+ * Example:
+ * ```
+ * val contactRepository = ContactRepository(context)
+ * ```
+ */
 class ContactRepository(private val context: Context) {
 
     fun getContacts(): List<Contact> {
