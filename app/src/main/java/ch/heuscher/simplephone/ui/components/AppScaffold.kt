@@ -49,6 +49,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 
+/**
+ * Representation of the application's screens/destinations for Jetpack Compose Navigation.
+ * Each screen defines a unique [route] for routing, a [titleRes] string resource for the title bar,
+ * and an [icon] representing the destination.
+ */
 sealed class Screen(val route: String, val titleRes: Int, val icon: ImageVector) {
     object Home : Screen("home", R.string.screen_home, Icons.Filled.Home)
     object Recents : Screen("recents", R.string.screen_recents, Icons.Filled.History)
@@ -61,6 +66,16 @@ sealed class Screen(val route: String, val titleRes: Int, val icon: ImageVector)
 
 }
 
+/**
+ * Main layout scaffold for the application, featuring a large, highly visible top app bar.
+ * It supports standard navigation elements such as an optional back arrow and a settings button,
+ * both of which are styled to trigger actions on immediate press instead of release.
+ *
+ * @param navController The navigation controller used to manage backstack and screen routing.
+ * @param currentScreenTitle The title text displayed prominently in the top bar.
+ * @param onTitleClick Optional callback when the top bar title text is clicked.
+ * @param content Composable slot representing the main body content of the active screen.
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun AppScaffold(
@@ -122,8 +137,15 @@ fun AppScaffold(
 }
 
 /**
- * Accessible icon button that triggers on press (not release)
- * for users with motor disabilities
+ * Accessible icon button that triggers its callback on immediate press (ACTION_DOWN) instead of release (ACTION_UP).
+ * This design prevents accidental double-clicks, button slippage, or missed clicks common among seniors
+ * and users with motor control impairments or hand tremors.
+ *
+ * @param icon The vector asset representing the action of the button.
+ * @param contentDescription Screen reader text description.
+ * @param onClick Callback executed immediately when the button area is pressed.
+ * @param tint Color applied to the icon vector.
+ * @param modifier Modifier applied to the outer layout wrapper.
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable

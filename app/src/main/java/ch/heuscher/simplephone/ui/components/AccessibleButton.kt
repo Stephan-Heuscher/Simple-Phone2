@@ -42,8 +42,15 @@ import ch.heuscher.simplephone.ui.theme.RedHangup
 
 /**
  * Accessible button that triggers on ACTION_DOWN (press) instead of release.
- * This is crucial for users with motor disabilities who may have difficulty
- * holding and releasing a button.
+ * This is crucial for users with motor disabilities (such as tremors, arthritis, or spasticity)
+ * who may have difficulty holding, maintaining contact, and releasing a button precisely.
+ *
+ * @param onClick Callback triggered immediately upon pointer contact/press.
+ * @param modifier Modifier applied to the outer container.
+ * @param backgroundColor Background color of the button in its default state.
+ * @param contentColor Text/Icon color to be displayed inside the button content.
+ * @param contentDescription Screen reader announcement text for accessibility.
+ * @param content Composable slot representing the button's inner visual layout.
  */
 
 @Composable
@@ -77,7 +84,17 @@ fun AccessiblePressButton(
 }
 
 /**
- * Large circular button for call actions (call/hangup)
+ * Large circular button specifically optimized for key telephony actions (e.g., initiating or ending calls).
+ * Like other accessible buttons, this triggers its callback on press rather than release, ensuring
+ * high reliability for users with physical/motor impairment.
+ *
+ * @param icon The vector asset representing the button's action.
+ * @param contentDescription Localized description used by screen readers (TalkBack) to describe the action.
+ * @param onClick Callback triggered immediately when the button is pressed down.
+ * @param modifier Modifier applied to the button layout.
+ * @param backgroundColor Color of the circular background. Defaults to green.
+ * @param iconColor Tint color applied to the icon vector.
+ * @param size Dimensions of the button. Defaults to a large, senior-friendly size of 96.dp.
  */
 
 @Composable
@@ -117,7 +134,12 @@ fun CallActionButton(
 }
 
 /**
- * Green call button to initiate a phone call
+ * Pre-styled green action button specifically configured to initiate a phone call.
+ * Leverages [CallActionButton] with standard dial icons and size presets.
+ *
+ * @param onClick Callback executed immediately when the button is pressed down.
+ * @param modifier Modifier applied to the button layout.
+ * @param size Custom dimension for the button, defaulting to a highly visible 64.dp.
  */
 @Composable
 fun GreenCallButton(
@@ -136,7 +158,12 @@ fun GreenCallButton(
 }
 
 /**
- * Red hangup button to end a phone call
+ * Pre-styled red action button specifically configured to end or reject a phone call.
+ * Leverages [CallActionButton] with standard call-end icons and size presets.
+ *
+ * @param onClick Callback executed immediately when the button is pressed down.
+ * @param modifier Modifier applied to the button layout.
+ * @param size Custom dimension for the button, defaulting to an extra large 96.dp for easy emergency access.
  */
 @Composable
 fun RedHangupButton(

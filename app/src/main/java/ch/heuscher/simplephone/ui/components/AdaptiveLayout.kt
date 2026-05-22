@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
  *   while folded outer display is ~1080px (correctly excluded)
  *   Normal phones are typically 1080px or less (correctly excluded)
  * - Aspect ratio check prevents false triggers on tall portrait screens
+ *
+ * @return True if the display parameters qualify for the two-pane tablet layout, false otherwise.
  */
 @Composable
 fun isTabletLayout(): Boolean {
@@ -43,9 +45,18 @@ fun isTabletLayout(): Boolean {
 }
 
 /**
- * Two-pane adaptive layout container.
- * On tablet/foldable: shows left and right panes side by side (50/50 split).
- * On phone: renders only the singlePaneContent (typically the original stacked layout).
+ * Two-pane adaptive layout container designed for larger screen formats (such as tablets or foldables).
+ * On qualified displays (determined by [isTabletLayout]), it places the [leftPane] and [rightPane]
+ * side-by-side with an equal 50/50 split weight separated by a vertical divider.
+ * On standard phone screens, it falls back to rendering only [singlePaneContent].
+ *
+ * This is particularly useful for seniors using foldables or tablets, allowing them to view
+ * lists and detail views simultaneously without deep navigation stacks.
+ *
+ * @param modifier Modifier applied to the outer layout container.
+ * @param leftPane Composable block representing the left pane (e.g., dialer or lists).
+ * @param rightPane Composable block representing the right pane (e.g., active details or options).
+ * @param singlePaneContent Composable block representing the fallback single-pane screen for standard phones.
  */
 @Composable
 fun TwoPaneLayout(
