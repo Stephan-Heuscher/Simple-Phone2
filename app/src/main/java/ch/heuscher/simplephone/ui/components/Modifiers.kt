@@ -17,6 +17,14 @@ import androidx.compose.ui.semantics.Role
  * 
  * Replaces deprecated pointerInteropFilter for this specific use case.
  * Refactored to use standard clickable for better reliability and accessibility.
+ *
+ * @example
+ * ```kotlin
+ * Modifier.pressClickEffect(
+ *     onClick = { handleClick() },
+ *     onPressedChange = { isPressed -> handlePressedStateChange(isPressed) }
+ * )
+ * ```
  */
 fun Modifier.pressClickEffect(
     enabled: Boolean = true,

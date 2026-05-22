@@ -61,6 +61,14 @@ class DndRingPolicy(
      * 2. If DND is OFF (FILTER_ALL) → always ring
      * 3. If DND is ALARMS or NONE → never ring
      * 4. If DND is PRIORITY → check repeat caller, then priority senders
+     *
+     * @example
+     * ```kotlin
+     * val policy = DndRingPolicy(blockUnknownCallers = false, contactLookup = { null })
+     * val state = DndRingPolicy.DndState(interruptionFilter = NotificationManager.INTERRUPTION_FILTER_ALL)
+     * val decision = policy.shouldRing("+41791234567", state)
+     * // decision.shouldRing == true
+     * ```
      */
     fun shouldRing(callerNumber: String?, dndState: DndState): RingDecision {
         // --- Step 1: Internal "block unknown callers" check ---
