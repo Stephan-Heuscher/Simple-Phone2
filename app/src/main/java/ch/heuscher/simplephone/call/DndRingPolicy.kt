@@ -40,6 +40,12 @@ class DndRingPolicy(
 
     /**
      * Normalize a phone number by stripping everything except digits and '+'.
+     *
+     * @example
+     * ```kotlin
+     * val policy = DndRingPolicy(blockUnknownCallers = false, contactLookup = { null })
+     * val clean = policy.normalizeNumber("+41 79 123 45 67") // Returns "+41791234567"
+     * ```
      */
     fun normalizeNumber(number: String?): String? {
         if (number == null) return null
