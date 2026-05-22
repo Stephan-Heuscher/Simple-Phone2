@@ -60,6 +60,11 @@ object PhoneNumberHelper {
     /**
      * Normalizes a phone number for storage or comparison.
      * Removes all non-dialable characters except '+'.
+     *
+     * @example
+     * ```kotlin
+     * val clean = PhoneNumberHelper.normalize("+41 79 123-4567") // Returns "+41791234567"
+     * ```
      */
     fun normalize(number: String?): String {
         if (number.isNullOrBlank()) return ""
@@ -70,6 +75,11 @@ object PhoneNumberHelper {
      * Compares two phone numbers to see if they represent the same contact.
      * Uses Android's PhoneNumberUtils.compare which handles country codes loosely,
      * but also falls back to strict normalized comparison.
+     *
+     * @example
+     * ```kotlin
+     * val isSame = PhoneNumberHelper.areNumbersSame("+41791234567", "079 123 45 67")
+     * ```
      */
     fun areNumbersSame(number1: String?, number2: String?, context: android.content.Context? = null): Boolean {
         if (number1.isNullOrBlank() || number2.isNullOrBlank()) return false
