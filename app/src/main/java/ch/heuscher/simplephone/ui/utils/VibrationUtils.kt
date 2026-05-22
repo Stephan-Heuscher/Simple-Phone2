@@ -13,8 +13,8 @@ import android.os.VibratorManager
  * @param duration The duration of the vibration in milliseconds. Defaults to 50ms.
  * @return Unit (none).
  *
- * Example:
- * ```
+ * @example
+ * ```kotlin
  * vibrate(context)
  * ```
  */

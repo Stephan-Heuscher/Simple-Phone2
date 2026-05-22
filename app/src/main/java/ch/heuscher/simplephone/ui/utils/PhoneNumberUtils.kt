@@ -15,6 +15,11 @@ object PhoneNumberHelper {
      * Formats a phone number for display.
      * Uses AsYouTypeFormatter for better partial number support.
      * Tries to detect country from SIM/Network if context is provided.
+     *
+     * @example
+     * ```kotlin
+     * val formatted = PhoneNumberHelper.format("+41791234567") // Returns "079 123 45 67" (or matching regional format)
+     * ```
      */
     fun format(number: String?, context: android.content.Context? = null): String {
         if (number.isNullOrBlank()) return ""
@@ -111,6 +116,11 @@ object PhoneNumberHelper {
     /**
      * Returns a stable notification ID for a given phone number.
      * Handles unknown/empty numbers by using a constant ID to avoid ID 0 collisions.
+     *
+     * @example
+     * ```kotlin
+     * val id = PhoneNumberHelper.missedCallNotifId("+41791234567")
+     * ```
      */
     fun missedCallNotifId(number: String?): Int {
         val normalized = normalize(number)
