@@ -38,7 +38,11 @@ import ch.heuscher.simplephone.ui.theme.FavoriteGold
 import ch.heuscher.simplephone.ui.theme.HighContrastBlue
 
 /**
- * Generates a consistent color based on the contact's name
+ * Generates a consistent background color deterministically based on the hash code of the contact's name.
+ * This ensures that a given contact always displays with the same background color.
+ *
+ * @param name The contact's full name.
+ * @return A color selected from a predefined senior-accessible palette.
  */
 private fun getAvatarColor(name: String): Color {
     val colors = listOf(AvatarBlue, AvatarTeal, AvatarPurple, AvatarGreen, AvatarOrange)
@@ -47,8 +51,13 @@ private fun getAvatarColor(name: String): Color {
 }
 
 /**
- * A large, accessible contact avatar with optional favorite star overlay.
- * Shows contact photo if available, otherwise shows initials on a colored background.
+ * A large, accessible contact avatar component featuring a fallback initials display,
+ * custom color coding, and an optional gold star overlay for favorite/starred contacts.
+ *
+ * @param contact The contact model instance whose avatar is being rendered.
+ * @param modifier Modifier applied to the outer avatar box container.
+ * @param size The size dimension of the avatar. Defaults to 72.dp.
+ * @param showFavoriteStar If true, renders a gold star badge in the corner if [contact.isFavorite] is true.
  */
 @Composable
 fun ContactAvatar(
@@ -125,7 +134,12 @@ fun ContactAvatar(
 }
 
 /**
- * A smaller avatar for compact list views
+ * A smaller contact avatar optimized for compact lists or dense detail rows.
+ * Automatically wraps [ContactAvatar] with a preconfigured default size of 56.dp.
+ *
+ * @param contact The contact model instance whose avatar is being rendered.
+ * @param modifier Modifier applied to the outer layout.
+ * @param showFavoriteStar If true, renders the favorite badge in the corner if applicable.
  */
 @Composable
 fun ContactAvatarSmall(
@@ -142,7 +156,12 @@ fun ContactAvatarSmall(
 }
 
 /**
- * A large avatar for in-call screen
+ * An oversized contact avatar optimized for full-screen calls or active caller displays.
+ * Automatically wraps [ContactAvatar] with a preconfigured default size of 160.dp.
+ * Favorite star is omitted to maximize clarity and visual focus on caller details.
+ *
+ * @param contact The contact model instance whose avatar is being rendered.
+ * @param modifier Modifier applied to the outer layout.
  */
 @Composable
 fun ContactAvatarLarge(

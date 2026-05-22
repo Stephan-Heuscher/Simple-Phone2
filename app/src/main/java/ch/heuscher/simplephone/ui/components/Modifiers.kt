@@ -25,6 +25,12 @@ import androidx.compose.ui.semantics.Role
  *     onPressedChange = { isPressed -> handlePressedStateChange(isPressed) }
  * )
  * ```
+ *
+ * @param enabled Whether the press click effect and click capability are enabled.
+ * @param role Accessibility role for screen reader announcements (e.g. [Role.Button]).
+ * @param onClick Callback triggered when the component is pressed/clicked.
+ * @param onPressedChange Callback that receives the current pressed state (true if held down, false otherwise).
+ * @return The modified [Modifier] receiver with the press click action/interaction behavior attached.
  */
 fun Modifier.pressClickEffect(
     enabled: Boolean = true,

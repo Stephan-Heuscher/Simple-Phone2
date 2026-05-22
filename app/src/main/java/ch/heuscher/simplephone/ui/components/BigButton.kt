@@ -19,6 +19,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * A highly visible and accessible large button designed specifically for senior users.
+ * Features a large touch target, oversized font sizes, and an optional large icon.
+ * This is used for primary actions where visibility and ease of tapping are critical.
+ *
+ * @param text The text label displayed in the center of the button in a large size (28.sp).
+ * @param icon An optional icon prepended to the text label.
+ * @param onClick The callback triggered when the button is clicked.
+ * @param color The container background color of the button. Defaults to the primary color scheme.
+ * @param modifier Modifier applied to the outer button structure.
+ */
 @Composable
 fun BigButton(
     text: String,

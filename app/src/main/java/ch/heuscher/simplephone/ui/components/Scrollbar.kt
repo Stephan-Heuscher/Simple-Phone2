@@ -22,6 +22,16 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.layout.layout
 
+/**
+ * A custom vertical scrollbar designed to provide a highly visible and intuitive scroll indicator for [LazyListState].
+ * It avoids standard Compose scroll indicator quirks by using a layout-based positioning, ensuring
+ * senior users have a clear cue of how far they are in lists of contacts or call logs.
+ *
+ * @param modifier Modifier applied to the outer scrollbar track layout.
+ * @param listState The state of the scrollable lazy list to monitor.
+ * @param width The thickness/width of the vertical scrollbar track. Defaults to 8.dp.
+ * @param color The color of the scrollbar thumb. Defaults to a semi-transparent onSurface color.
+ */
 @Composable
 fun VerticalScrollbar(
     modifier: Modifier = Modifier,
@@ -78,6 +88,15 @@ fun VerticalScrollbar(
     }
 }
 
+/**
+ * A custom horizontal scrollbar to indicate horizontal scrolling progress in views using [androidx.compose.foundation.ScrollState].
+ * Primarily designed for horizontal carousels or wide text fields where a clear scroll state cue is beneficial.
+ *
+ * @param modifier Modifier applied to the outer scrollbar track layout.
+ * @param scrollState The state of the horizontal scrollable container to monitor.
+ * @param height The thickness/height of the horizontal scrollbar track. Defaults to 4.dp.
+ * @param color The color of the scrollbar thumb. Defaults to a semi-transparent onSurface color.
+ */
 @Composable
 fun HorizontalScrollbar(
     modifier: Modifier = Modifier,
