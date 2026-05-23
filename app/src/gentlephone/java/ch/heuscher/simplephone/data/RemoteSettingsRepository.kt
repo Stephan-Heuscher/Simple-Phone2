@@ -10,6 +10,12 @@ import java.util.UUID
 /**
  * Manages remote settings from Firebase Firestore for gentle phone.
  * Allows caregivers to remotely configure the phone settings via a web portal.
+ *
+ * @example
+ * ```kotlin
+ * val remoteSettings = RemoteSettingsRepository(context)
+ * val pairingCode = remoteSettings.getPairingCode()
+ * ```
  */
 class RemoteSettingsRepository(private val context: Context) {
     
