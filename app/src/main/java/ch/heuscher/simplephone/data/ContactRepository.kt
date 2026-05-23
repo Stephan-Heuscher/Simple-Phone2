@@ -14,9 +14,10 @@ import ch.heuscher.simplephone.data.SettingsRepository
  * @param context The Android context used to access the content resolver and system services.
  * @constructor Creates a new [ContactRepository] instance.
  *
- * Example:
- * ```
+ * @example
+ * ```kotlin
  * val contactRepository = ContactRepository(context)
+ * val contacts = contactRepository.getContacts()
  * ```
  */
 class ContactRepository(private val context: Context) {
