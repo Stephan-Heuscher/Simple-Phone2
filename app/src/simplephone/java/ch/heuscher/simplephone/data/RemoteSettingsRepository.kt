@@ -5,6 +5,12 @@ import android.content.Context
 /**
  * Stub implementation for simple phone - no remote settings functionality.
  * This class provides the same interface but returns null/empty values.
+ *
+ * @example
+ * ```kotlin
+ * val remoteSettings = RemoteSettingsRepository(context)
+ * val pairingCode = remoteSettings.getPairingCode()
+ * ```
  */
 class RemoteSettingsRepository(context: Context) {
     

@@ -10,7 +10,14 @@ import kotlinx.coroutines.withContext
 import java.util.Date
 
 /**
- * Repository to fetch call logs
+ * Repository to fetch call logs from the Android system provider.
+ *
+ * @example
+ * ```kotlin
+ * val callLogRepository = CallLogRepository(context)
+ * // Within a coroutine scope:
+ * val logs = callLogRepository.getAllCallLogs()
+ * ```
  */
 class CallLogRepository(private val context: Context) {
 

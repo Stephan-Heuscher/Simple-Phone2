@@ -13,6 +13,15 @@ import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
 import java.io.ByteArrayOutputStream
 
+/**
+ * Manages syncing of contacts and application settings to connected WearOS devices.
+ *
+ * @example
+ * ```kotlin
+ * val wearSyncManager = WearSyncManager(context)
+ * wearSyncManager.syncSettings(appSettings)
+ * ```
+ */
 class WearSyncManager(private val context: Context) {
 
     private val dataClient: DataClient = Wearable.getDataClient(context)

@@ -34,6 +34,13 @@ data class AppSettings(
  * Manages app settings and preferences.
  * For gentle phone: Remote settings from caregiver override local settings and changes are synced back.
  * For simple phone: Only local SharedPreferences are used.
+ *
+ * @example
+ * ```kotlin
+ * val settingsRepository = SettingsRepository.getInstance(context)
+ * val currentSettings = settingsRepository.settings.value
+ * val isDarkMode = settingsRepository.darkModeOption
+ * ```
  */
 class SettingsRepository @org.jetbrains.annotations.VisibleForTesting internal constructor(private val context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences(
