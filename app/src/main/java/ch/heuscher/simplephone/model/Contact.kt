@@ -17,9 +17,15 @@ import java.time.LocalDateTime
  * @param allNumbers A list of all phone numbers associated with this contact. Defaults to a list containing the primary number.
  * @constructor Creates a new [Contact] instance.
  *
- * Example:
- * ```
- * Contact("1", "Amelia", "0123456789", isFavorite = true, sortOrder = 0)
+ * @example
+ * ```kotlin
+ * val contact = Contact(
+ *     id = "1",
+ *     name = "Amelia",
+ *     number = "0123456789",
+ *     isFavorite = true,
+ *     sortOrder = 0
+ * )
  * ```
  */
 data class Contact(
@@ -56,6 +62,18 @@ data class Contact(
  * @param type The type of the call (incoming, outgoing, or missed).
  * @param duration The duration of the call in seconds. Defaults to 0.
  * @constructor Creates a new [CallLogEntry] instance.
+ *
+ * @example
+ * ```kotlin
+ * val now = java.time.LocalDateTime.now()
+ * val entry = CallLogEntry(
+ *     id = "1",
+ *     contactId = "contact_123",
+ *     timestamp = now.minusMinutes(15),
+ *     type = CallType.INCOMING,
+ *     duration = 120L
+ * )
+ * ```
  */
 data class CallLogEntry(
     val id: String,
