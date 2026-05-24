@@ -10,6 +10,7 @@ on:
       - 'caregiver-portal/**'
       - 'fastlane/metadata/gentlephone/**'
       - '.github/workflows/deploy-gentle-phone.yml'
+  workflow_dispatch:
 
 permissions:
   contents: write
