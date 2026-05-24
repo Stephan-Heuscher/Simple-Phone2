@@ -21,6 +21,17 @@ import java.util.Date
  */
 class CallLogRepository(private val context: Context) {
 
+    /**
+     * Retrieves all call logs from the device's system call log provider.
+     *
+     * The results are returned as a list of [CallLogEntry] objects, sorted by date in descending order
+     * (most recent first).
+     *
+     * Note: The caller is responsible for ensuring that the [android.Manifest.permission.READ_CALL_LOG]
+     * permission is granted before calling this method.
+     *
+     * @return A list of [CallLogEntry] representing all the call history entries.
+     */
     suspend fun getAllCallLogs(): List<CallLogEntry> = withContext(Dispatchers.IO) {
         val callLogs = mutableListOf<CallLogEntry>()
         val projection = arrayOf(
