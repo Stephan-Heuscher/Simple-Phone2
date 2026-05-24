@@ -42,7 +42,7 @@ class AppLauncherComplicationService : SuspendingComplicationDataSourceService()
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val drawable = androidx.core.content.ContextCompat.getDrawable(this, R.drawable.ic_complication_outline)
+        val drawable = androidx.core.content.ContextCompat.getDrawable(this, R.drawable.ic_complication_filled)
         val bitmap = android.graphics.Bitmap.createBitmap(400, 400, android.graphics.Bitmap.Config.ARGB_8888)
         val canvas = android.graphics.Canvas(bitmap)
         drawable?.setBounds(0, 0, canvas.width, canvas.height)
