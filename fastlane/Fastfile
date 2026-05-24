@@ -137,9 +137,12 @@ platform :android do
     )
 
     # 5. Auto-Increment Version (Properties File)
+    sh("git checkout app/version.properties")
     git_pull
     new_version_name = increment_version_properties(
-      file_path: "app/version.properties"
+      file_path: "app/version.properties",
+      min_code: build_number,
+      min_patch: props['VERSION_PATCH'].to_i
     )
     
     # 6. Commit the Version Bump
@@ -325,9 +328,12 @@ platform :android do
     end
 
     # 4. Auto-Increment Version
+    sh("git checkout app/version.properties")
     git_pull
     new_version_name = increment_version_properties(
-      file_path: "app/version.properties"
+      file_path: "app/version.properties",
+      min_code: build_number,
+      min_patch: props['VERSION_PATCH'].to_i
     )
     
     # 5. Commit the Version Bump
@@ -466,8 +472,13 @@ platform :android do
     puts "✅ gentle phone deployed successfully!"
 
     # Version bump and commit
+    sh("git checkout app/version.properties")
     git_pull
-    new_version_name = increment_version_properties(file_path: "app/version.properties")
+    new_version_name = increment_version_properties(
+      file_path: "app/version.properties",
+      min_code: build_number,
+      min_patch: props['VERSION_PATCH'].to_i
+    )
     
     ENV['GIT_AUTHOR_NAME'] = 'Fastlane Deploy'
     ENV['GIT_AUTHOR_EMAIL'] = 'deploy@fastlane.tools'
@@ -533,19 +544,28 @@ platform :android do
   end
 
   # Helper to increment properties file
-  def increment_version_properties(file_path:)
+  def increment_version_properties(file_path:, min_code: nil, min_patch: nil)
     # Robust path resolution
     fastfile_dir = File.dirname(__FILE__)
     robust_path = File.expand_path("../app/version.properties", fastfile_dir)
     
     props = load_version_properties(file_path: robust_path)
 
-    # Increment
-    props['VERSION_CODE'] = (props['VERSION_CODE'].to_i + 1).to_s
-    props['VERSION_PATCH'] = (props['VERSION_PATCH'].to_i + 1).to_s
-    # Reconstruct Version Name for context
+    next_code = props['VERSION_CODE'].to_i + 1
+    next_patch = props['VERSION_PATCH'].to_i + 1
+
+    if min_code && min_code >= next_code
+      next_code = min_code + 1
+    end
+    if min_patch && min_patch >= next_patch
+      next_patch = min_patch + 1
+    end
+
+    props['VERSION_CODE'] = next_code.to_s
+    props['VERSION_PATCH'] = next_patch.to_s
+    
+    # Reconstruct Version Name
     new_version_name = "#{props['VERSION_MAJOR']}.#{props['VERSION_MINOR']}.#{props['VERSION_PATCH']}"
-    # Update hash
     props['VERSION_NAME'] = new_version_name
     
     save_version_properties(props: props, file_path: robust_path)
