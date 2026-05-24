@@ -281,16 +281,23 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
                     val parsedContacts = newContacts.map { it.first }
                     
                     withContext(Dispatchers.Main) {
-                        // Only clear out and recreate if there are actual updates.
-                        // We avoid flickering the screen if it's already populated by cache.
-                        if (contactsState.isEmpty()) {
-                            contactsState.addAll(parsedContacts)
-                            isContactsLoading.value = false
+                        // Update contactsState with parsedContacts, preserving existing photos if the IDs match
+                        val existingPhotos = contactsState.associate { it.id to it.photoBitmap }
+                        val updatedList = parsedContacts.map { contact ->
+                            contact.copy(photoBitmap = existingPhotos[contact.id])
                         }
+                        // To avoid unnecessary recompositions / flickering, only update if the list actually changed.
+                        if (contactsState != updatedList) {
+                            contactsState.clear()
+                            contactsState.addAll(updatedList)
+                        }
+                        isContactsLoading.value = false
                     }
 
                     // SECOND PASS: Download high-res photos asynchronously without blocking the UI
-                    val updatedContacts = parsedContacts.toMutableList()
+                    val updatedContacts = withContext(Dispatchers.Main) {
+                        contactsState.toList()
+                    }.toMutableList()
                     var anyUpdates = false
                     
                     newContacts.forEachIndexed { index, pair ->
@@ -298,19 +305,19 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
                         if (asset != null) {
                             val bitmap = loadBitmapFromAsset(asset)
                             if (bitmap != null) {
-                                updatedContacts[index] = updatedContacts[index].copy(photoBitmap = bitmap)
+                                if (index < updatedContacts.size) {
+                                    updatedContacts[index] = updatedContacts[index].copy(photoBitmap = bitmap)
+                                }
                                 anyUpdates = true
                                 withContext(Dispatchers.Main) {
                                     if (index < contactsState.size) {
                                         contactsState[index] = contactsState[index].copy(photoBitmap = bitmap)
-                                    } else {
-                                        contactsState.add(updatedContacts[index])
                                     }
                                 }
                             }
                         }
                     }
-                    
+
                     // Save to preferences whether or not there were photo updates, to keep it in sync.
                     saveContactsToPrefs(updatedContacts)
                     
@@ -389,7 +396,7 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoadi
                 // isNearby == true means Bluetooth (direct) connection — audio routing works.
                 // isNearby == false means WLAN/cloud relay only — BT audio can't be routed,
                 // so we must dial directly on the watch for the user to hear anything.
-                val nearbyNode = nodes.firstOrNull { it.isNearby }
+                val nearbyNode = nodes?.firstOrNull { it.isNearby }
                 if (nearbyNode != null) {
                     // Phone is connected via Bluetooth, route through phone
                     val messageClient = Wearable.getMessageClient(context)
@@ -412,14 +419,14 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoadi
                                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
                                 }
                                 context.startActivity(dialIntent)
-                            } catch (e: Exception) {
+                            } catch (e: Throwable) {
                                 Log.e("WatchMainActivity", "Failed to start direct call", e)
                                 android.widget.Toast.makeText(context, context.getString(R.string.watch_error_no_telephony), android.widget.Toast.LENGTH_LONG).show()
                             }
                         }
                     }
                 }
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 Log.e("WatchMainActivity", "Failed to smart call", e)
                 withContext(Dispatchers.Main) {
                     android.widget.Toast.makeText(context, "Call error: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
@@ -591,8 +598,11 @@ private fun findMyPhone(context: Context, onResult: (FindPhoneStatus) -> Unit) {
             val messageClient = Wearable.getMessageClient(context)
             var sent = false
             for (node in nodes) {
-                Tasks.await(messageClient.sendMessage(node.id, "/find_my_phone", ByteArray(0)))
-                sent = true
+                val nodeId = node?.id
+                if (nodeId != null) {
+                    Tasks.await(messageClient.sendMessage(nodeId, "/find_my_phone", "find".toByteArray(Charsets.UTF_8)))
+                    sent = true
+                }
             }
             withContext(Dispatchers.Main) {
                 if (sent) {
@@ -601,7 +611,7 @@ private fun findMyPhone(context: Context, onResult: (FindPhoneStatus) -> Unit) {
                     onResult(FindPhoneStatus.NOT_NEARBY)
                 }
             }
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Log.e("WatchMainActivity", "Failed to send find phone message", e)
             withContext(Dispatchers.Main) {
                 onResult(FindPhoneStatus.NOT_NEARBY)
@@ -617,9 +627,12 @@ private fun initiatePhoneCall(context: Context, number: String) {
             val nodes = Tasks.await(nodeClient.connectedNodes)
             val messageClient = Wearable.getMessageClient(context)
             for (node in nodes) {
-                messageClient.sendMessage(node.id, "/initiate_call", number.toByteArray(Charsets.UTF_8))
+                val nodeId = node?.id
+                if (nodeId != null) {
+                    messageClient.sendMessage(nodeId, "/initiate_call", number.toByteArray(Charsets.UTF_8))
+                }
             }
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Log.e("WatchMainActivity", "Failed to send initiate call message", e)
         }
     }

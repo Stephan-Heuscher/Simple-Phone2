@@ -264,9 +264,12 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
                 val nodes = Tasks.await(nodeClient.connectedNodes)
                 val messageClient = Wearable.getMessageClient(this@WatchCallActivity)
                 for (node in nodes) {
-                    messageClient.sendMessage(node.id, path, payload.toByteArray())
+                    val nodeId = node?.id
+                    if (nodeId != null) {
+                        messageClient.sendMessage(nodeId, path, payload.toByteArray())
+                    }
                 }
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 Log.e("WatchCallActivity", "Failed to send $path", e)
             }
         }

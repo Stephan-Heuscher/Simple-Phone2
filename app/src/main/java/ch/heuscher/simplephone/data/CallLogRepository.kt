@@ -12,7 +12,6 @@ import java.util.Date
 /**
  * Repository to fetch call logs from the Android system provider.
  *
- * @example
  * ```kotlin
  * val callLogRepository = CallLogRepository(context)
  * // Within a coroutine scope:
@@ -21,22 +20,25 @@ import java.util.Date
  */
 class CallLogRepository(private val context: Context) {
 
+    /**
+     * Retrieves all call logs from the device's system call log provider.
+     *
+     * The results are returned as a list of [CallLogEntry] objects, sorted by date in descending order
+     * (most recent first).
+     *
+     * Note: The caller is responsible for ensuring that the [android.Manifest.permission.READ_CALL_LOG]
+     * permission is granted before calling this method.
+     *
+     * @return A list of [CallLogEntry] representing all the call history entries.
+     */
     suspend fun getAllCallLogs(): List<CallLogEntry> = withContext(Dispatchers.IO) {
         val callLogs = mutableListOf<CallLogEntry>()
-        val projection = arrayOf(
-            CallLog.Calls._ID,
-            CallLog.Calls.NUMBER,
-            CallLog.Calls.TYPE,
-            CallLog.Calls.DATE,
-            CallLog.Calls.DURATION,
-            CallLog.Calls.CACHED_NAME
-        )
 
         // Permission check should be done by the caller or UI
         try {
             val cursor: Cursor? = context.contentResolver.query(
                 CallLog.Calls.CONTENT_URI,
-                projection,
+                PROJECTION,
                 null,
                 null,
                 "${CallLog.Calls.DATE} DESC"
@@ -82,5 +84,16 @@ class CallLogRepository(private val context: Context) {
         }
         
         return@withContext callLogs
+    }
+
+    private companion object {
+        private val PROJECTION = arrayOf(
+            CallLog.Calls._ID,
+            CallLog.Calls.NUMBER,
+            CallLog.Calls.TYPE,
+            CallLog.Calls.DATE,
+            CallLog.Calls.DURATION,
+            CallLog.Calls.CACHED_NAME
+        )
     }
 }
