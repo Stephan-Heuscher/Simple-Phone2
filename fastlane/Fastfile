@@ -137,7 +137,9 @@ platform :android do
     )
 
     # 5. Auto-Increment Version (Properties File)
-    sh("git checkout app/version.properties")
+    Dir.chdir(File.expand_path("..", File.dirname(__FILE__))) do
+      sh("git checkout -- app/version.properties")
+    end
     git_pull
     new_version_name = increment_version_properties(
       file_path: "app/version.properties",
@@ -328,7 +330,9 @@ platform :android do
     end
 
     # 4. Auto-Increment Version
-    sh("git checkout app/version.properties")
+    Dir.chdir(File.expand_path("..", File.dirname(__FILE__))) do
+      sh("git checkout -- app/version.properties")
+    end
     git_pull
     new_version_name = increment_version_properties(
       file_path: "app/version.properties",
@@ -472,7 +476,9 @@ platform :android do
     puts "✅ gentle phone deployed successfully!"
 
     # Version bump and commit
-    sh("git checkout app/version.properties")
+    Dir.chdir(File.expand_path("..", File.dirname(__FILE__))) do
+      sh("git checkout -- app/version.properties")
+    end
     git_pull
     new_version_name = increment_version_properties(
       file_path: "app/version.properties",
