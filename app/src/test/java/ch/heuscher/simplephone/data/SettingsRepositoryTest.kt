@@ -15,12 +15,16 @@ class SettingsRepositoryTest {
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var editor: SharedPreferences.Editor
     private lateinit var settingsRepository: SettingsRepository
+    private lateinit var remoteSettings: RemoteSettingsRepository
+    private lateinit var wearSyncManager: WearSyncManager
 
     @Before
     fun setUp() {
         context = mockk(relaxed = true)
         sharedPreferences = mockk(relaxed = true)
         editor = mockk(relaxed = true)
+        remoteSettings = mockk(relaxed = true)
+        wearSyncManager = mockk(relaxed = true)
 
         every { context.getSharedPreferences("simple_phone_prefs", Context.MODE_PRIVATE) } returns sharedPreferences
         every { sharedPreferences.edit() } returns editor
@@ -32,7 +36,7 @@ class SettingsRepositoryTest {
         every { editor.putFloat(any(), any()) } returns editor
         every { editor.apply() } returns Unit
 
-        settingsRepository = SettingsRepository(context)
+        settingsRepository = SettingsRepository(context, remoteSettings, wearSyncManager)
     }
 
     @Test

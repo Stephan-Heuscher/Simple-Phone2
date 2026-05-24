@@ -42,14 +42,14 @@ data class AppSettings(
  * val isDarkMode = settingsRepository.darkModeOption
  * ```
  */
-class SettingsRepository @org.jetbrains.annotations.VisibleForTesting internal constructor(private val context: Context) {
+class SettingsRepository @org.jetbrains.annotations.VisibleForTesting internal constructor(
+    private val context: Context,
+    private val remoteSettings: RemoteSettingsRepository = RemoteSettingsRepository(context),
+    private val wearSyncManager: WearSyncManager = WearSyncManager(context)
+) {
     private val prefs: SharedPreferences = context.getSharedPreferences(
         PREFS_NAME, Context.MODE_PRIVATE
     )
-    
-    // Remote settings repository (Firebase for gentlephone, stub for simplephone)
-    private val remoteSettings = RemoteSettingsRepository(context)
-    private val wearSyncManager = WearSyncManager(context)
     
     // Cache of remote settings - these override local settings when present
     // @Volatile ensures cross-thread visibility (Firestore callback writes, CallService thread reads)
