@@ -12,7 +12,6 @@ import java.util.Date
 /**
  * Repository to fetch call logs from the Android system provider.
  *
- * @example
  * ```kotlin
  * val callLogRepository = CallLogRepository(context)
  * // Within a coroutine scope:
@@ -34,20 +33,12 @@ class CallLogRepository(private val context: Context) {
      */
     suspend fun getAllCallLogs(): List<CallLogEntry> = withContext(Dispatchers.IO) {
         val callLogs = mutableListOf<CallLogEntry>()
-        val projection = arrayOf(
-            CallLog.Calls._ID,
-            CallLog.Calls.NUMBER,
-            CallLog.Calls.TYPE,
-            CallLog.Calls.DATE,
-            CallLog.Calls.DURATION,
-            CallLog.Calls.CACHED_NAME
-        )
 
         // Permission check should be done by the caller or UI
         try {
             val cursor: Cursor? = context.contentResolver.query(
                 CallLog.Calls.CONTENT_URI,
-                projection,
+                PROJECTION,
                 null,
                 null,
                 "${CallLog.Calls.DATE} DESC"
@@ -93,5 +84,16 @@ class CallLogRepository(private val context: Context) {
         }
         
         return@withContext callLogs
+    }
+
+    private companion object {
+        private val PROJECTION = arrayOf(
+            CallLog.Calls._ID,
+            CallLog.Calls.NUMBER,
+            CallLog.Calls.TYPE,
+            CallLog.Calls.DATE,
+            CallLog.Calls.DURATION,
+            CallLog.Calls.CACHED_NAME
+        )
     }
 }
