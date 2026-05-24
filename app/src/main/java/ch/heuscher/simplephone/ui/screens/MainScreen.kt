@@ -62,9 +62,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.input.pointer.pointerInteropFilter
-import android.view.MotionEvent
 import ch.heuscher.simplephone.data.MockData
 import ch.heuscher.simplephone.model.CallLogEntry
 import ch.heuscher.simplephone.model.Contact

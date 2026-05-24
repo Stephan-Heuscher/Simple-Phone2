@@ -1,6 +1,5 @@
 package ch.heuscher.simplephone.ui.components
 
-import android.view.MotionEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -33,16 +32,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextOverflow
@@ -76,7 +72,7 @@ sealed class Screen(val route: String, val titleRes: Int, val icon: ImageVector)
  * @param onTitleClick Optional callback when the top bar title text is clicked.
  * @param content Composable slot representing the main body content of the active screen.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppScaffold(
     navController: NavController,
@@ -147,7 +143,6 @@ fun AppScaffold(
  * @param tint Color applied to the icon vector.
  * @param modifier Modifier applied to the outer layout wrapper.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun AccessibleIconButton(
     icon: ImageVector,
@@ -166,22 +161,13 @@ fun AccessibleIconButton(
             .background(if (isPressed) Color.White.copy(alpha = 0.3f) else Color.Transparent)
             .semantics {
                 this.contentDescription = contentDescription
-                role = Role.Button
+                // role handled by pressClickEffect
             }
-            .pointerInteropFilter { event ->
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        isPressed = true
-                        onClick()
-                        true
-                    }
-                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                        isPressed = false
-                        true
-                    }
-                    else -> false
-                }
-            },
+            .pressClickEffect(
+                role = Role.Button,
+                onClick = onClick,
+                onPressedChange = { isPressed = it }
+            ),
         contentAlignment = androidx.compose.ui.Alignment.Center
     ) {
         Icon(

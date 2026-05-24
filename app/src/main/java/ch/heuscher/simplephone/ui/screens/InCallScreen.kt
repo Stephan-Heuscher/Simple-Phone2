@@ -4,7 +4,7 @@ import androidx.compose.ui.res.stringResource
 import ch.heuscher.simplephone.R
 
 
-import android.view.MotionEvent
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -40,15 +40,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -66,6 +64,7 @@ import ch.heuscher.simplephone.ui.theme.SpeakerInactive
 
 import androidx.compose.ui.platform.LocalContext
 import ch.heuscher.simplephone.ui.utils.vibrate
+import ch.heuscher.simplephone.ui.components.pressClickEffect
 
 /**
  * In-call screen UI - ultra accessible with large buttons and high contrast.
@@ -409,7 +408,6 @@ fun KeypadButton(key: Char, onClick: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun AudioOutputButton(
     audioOutput: AudioOutput,
@@ -453,22 +451,13 @@ fun AudioOutputButton(
                 .background(backgroundColor)
                 .semantics {
                     contentDescription = cdAudioOutput
-                    role = Role.Button
+                    // role handled by pressClickEffect
                 }
-                .pointerInteropFilter { event ->
-                    when (event.action) {
-                        MotionEvent.ACTION_DOWN -> {
-                            isPressed = true
-                            onClick() // Trigger on press!
-                            true
-                        }
-                        MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                            isPressed = false
-                            true
-                        }
-                        else -> false
-                    }
-                },
+                .pressClickEffect(
+                    role = Role.Button,
+                    onClick = onClick,
+                    onPressedChange = { isPressed = it }
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -492,7 +481,6 @@ fun AudioOutputButton(
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun HangupButton(
     onClick: () -> Unit,
@@ -508,22 +496,13 @@ fun HangupButton(
             .background(if (isPressed) RedHangup.copy(alpha = 0.7f) else RedHangup)
             .semantics {
                 contentDescription = cdEndCall
-                role = Role.Button
+                // role handled by pressClickEffect
             }
-            .pointerInteropFilter { event ->
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        isPressed = true
-                        onClick() // Trigger on press!
-                        true
-                    }
-                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                        isPressed = false
-                        true
-                    }
-                    else -> false
-                }
-            },
+            .pressClickEffect(
+                role = Role.Button,
+                onClick = onClick,
+                onPressedChange = { isPressed = it }
+            ),
         contentAlignment = Alignment.Center
     ) {
         Icon(

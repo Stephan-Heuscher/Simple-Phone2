@@ -12,6 +12,7 @@ import android.view.WindowManager
 import android.view.KeyEvent
 import android.telecom.TelecomManager
 import androidx.activity.ComponentActivity
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -76,6 +77,7 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         
         // Removed local WakeLock logic as it is now handled in CallService
         

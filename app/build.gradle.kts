@@ -18,12 +18,12 @@ kotlin {
 
 android {
     namespace = "ch.heuscher.simplephone"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "ch.heuscher.simplephone"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         
         // Version Logic
         val versionProps = Properties()
