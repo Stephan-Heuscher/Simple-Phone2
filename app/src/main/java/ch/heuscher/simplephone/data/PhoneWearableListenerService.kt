@@ -131,11 +131,11 @@ class PhoneWearableListenerService : WearableListenerService() {
 
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-            vibratorManager.defaultVibrator
+            val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+            vibratorManager?.defaultVibrator ?: (getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator)
         } else {
             @Suppress("DEPRECATION")
-            getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+            getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
         }
 
         // Temporarily max out the volume
@@ -157,19 +157,29 @@ class PhoneWearableListenerService : WearableListenerService() {
         }
 
         // Vibrate
-        val pattern = longArrayOf(0, 500, 500, 500, 500, 500, 500, 500, 500)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createWaveform(pattern, 1))
-        } else {
-            @Suppress("DEPRECATION")
-            vibrator.vibrate(pattern, 1)
+        if (vibrator != null) {
+            val pattern = longArrayOf(0, 500, 500, 500, 500, 500, 500, 500, 500)
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    vibrator.vibrate(VibrationEffect.createWaveform(pattern, 1))
+                } else {
+                    @Suppress("DEPRECATION")
+                    vibrator.vibrate(pattern, 1)
+                }
+            } catch (e: Exception) {
+                Log.e("PhoneWearableListener", "Failed to vibrate device", e)
+            }
         }
 
         // Stop after 15 seconds
         serviceScope.launch {
             delay(15000)
             currentRingtone?.stop()
-            vibrator.cancel()
+            try {
+                vibrator?.cancel()
+            } catch (e: Exception) {
+                // Ignore
+            }
             // Restore original volume
             if (originalVolume != -1) {
                 audioManager.setStreamVolume(AudioManager.STREAM_ALARM, originalVolume, 0)
