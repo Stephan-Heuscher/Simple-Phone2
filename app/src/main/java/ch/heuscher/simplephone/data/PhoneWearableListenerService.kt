@@ -24,6 +24,8 @@ import kotlinx.coroutines.launch
  *
  * This service runs in the background on the phone, listening for incoming data layer message events
  * sent from the companion Wear OS application (e.g., call controls, utility actions).
+ * It is automatically instantiated and managed by Google Play Services when a message is received
+ * matching the service's registered intent filters in the AndroidManifest.xml.
  */
 class PhoneWearableListenerService : WearableListenerService() {
 
@@ -31,20 +33,69 @@ class PhoneWearableListenerService : WearableListenerService() {
      * Handles incoming messages from the Wear OS device via the Google Play Services Wearable API.
      *
      * This method acts as the entry point for the cross-device API contract. Based on the path of the
-     * received [MessageEvent], it routes instructions to local device actions or CallService commands.
+     * received [MessageEvent], it routes instructions to local device actions or [CallService] commands.
      *
-     * Explicit cross-device API contract paths handled here include:
-     * - `/find_my_phone`: Launches [FindPhoneActivity] to trigger the device locator helper.
-     * - `/answer_call`: Directs CallService to answer the current active call.
-     * - `/reject_call`: Directs CallService to reject the current incoming call.
-     * - `/silence_ringer`: Directs CallService to silence the phone's ringer.
-     * - `/end_call`: Directs CallService to terminate the active call.
-     * - `/set_audio_route`: Decodes integer audio route from payload and sets it on CallService.
-     * - `/volume_up` / `/volume_down`: Adjusts the phone's voice call volume up or down.
-     * - `/toggle_mute`: Toggles the phone's microphone mute status.
-     * - `/request_audio_status`: Requests CallService to push current audio status back to the wearable.
-     * - `/initiate_call`: Parses and cleans the phone number string from the message payload and places
-     *   an outgoing call (falling back to ACTION_DIAL if permission checks require it).
+     * Detailed specification of cross-device API contract paths handled here:
+     * - `/find_my_phone`:
+     *   - **Description**: Triggers a helper activity to locate the phone.
+     *   - **Payload**: None.
+     *   - **Behavior**: Launches [FindPhoneActivity] with `FLAG_ACTIVITY_NEW_TASK` and `FLAG_ACTIVITY_CLEAR_TOP`
+     *     which plays an audible ringtone/sound and/or triggers vibration to locate the phone.
+     *   - **Failure handling**: Catches and logs exceptions if the activity fails to start.
+     * - `/answer_call`:
+     *   - **Description**: Instructs the phone to answer the current active call.
+     *   - **Payload**: None.
+     *   - **Behavior**: Sets `CallService.watchAnswered = true` and `CallService.watchAnsweredAt` to
+     *     the current elapsed real time, then calls `CallService.answerCall()`.
+     * - `/reject_call`:
+     *   - **Description**: Instructs the phone to reject the current incoming call.
+     *   - **Payload**: None.
+     *   - **Behavior**: Invokes `CallService.rejectCall()`.
+     * - `/silence_ringer`:
+     *   - **Description**: Instructs the phone to silence the active ringer.
+     *   - **Payload**: None.
+     *   - **Behavior**: Invokes `CallService.silenceRinger()`.
+     * - `/end_call`:
+     *   - **Description**: Instructs the phone to hang up/terminate the active call.
+     *   - **Payload**: None.
+     *   - **Behavior**: Invokes `CallService.endCall()`.
+     * - `/set_audio_route`:
+     *   - **Description**: Changes the active audio routing (e.g., to speaker, earpiece, bluetooth).
+     *   - **Payload**: Byte array representing a string-encoded integer corresponding to a `CallAudioState` route.
+     *   - **Behavior**: Decodes the route integer, records it in `CallService.watchRequestedAudioRoute`, and
+     *     invokes `CallService.setAudioRoute(route)`.
+     *   - **Failure handling**: Ignores message if payload cannot be parsed as an integer.
+     * - `/volume_up`:
+     *   - **Description**: Increases the phone's voice call audio stream volume.
+     *   - **Payload**: None.
+     *   - **Behavior**: Adjusts the volume using `AudioManager.STREAM_VOICE_CALL` and `AudioManager.ADJUST_RAISE`.
+     *     Shows the system volume UI and requests updated audio status back to the wearable.
+     * - `/volume_down`:
+     *   - **Description**: Decreases the phone's voice call audio stream volume.
+     *   - **Payload**: None.
+     *   - **Behavior**: Adjusts the volume using `AudioManager.STREAM_VOICE_CALL` and `AudioManager.ADJUST_LOWER`.
+     *     Shows the system volume UI and requests updated audio status back to the wearable.
+     * - `/toggle_mute`:
+     *   - **Description**: Toggles the phone's microphone mute status.
+     *   - **Payload**: None.
+     *   - **Behavior**: Inverts the state of `AudioManager.isMicrophoneMute` and requests updated audio status
+     *     back to the wearable.
+     * - `/request_audio_status`:
+     *   - **Description**: Requests the current audio routing and volume status from the phone.
+     *   - **Payload**: None.
+     *   - **Behavior**: Invokes `CallService.requestAudioStatus()` to send a status update message back to the watch.
+     * - `/initiate_call`:
+     *   - **Description**: Initiates an outgoing voice call to the specified number.
+     *   - **Payload**: Byte array representing a UTF-8 string containing the phone number.
+     *   - **Behavior**:
+     *     1. Decodes and trims the payload string.
+     *     2. Cleans formatting characters (spaces, parentheses, dashes, dots, slashes).
+     *     3. Validates that the number consists of valid dialing characters (`[0-9+*#,;]+`).
+     *     4. Verifies `CALL_PHONE` permission.
+     *     5. If granted, sets `CallService.watchInitiated = true` and `CallService.watchInitiatedAt`, then attempts
+     *        to place the call via `TelecomManager.placeCall()`.
+     *     6. If TelecomManager fails or throws an exception, falls back to launching `Intent.ACTION_DIAL` to open
+     *        the dialer pre-populated with the number.
      *
      * @param messageEvent The message event received containing the path and optional payload data.
      */
