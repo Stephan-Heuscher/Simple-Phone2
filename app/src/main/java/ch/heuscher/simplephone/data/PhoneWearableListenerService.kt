@@ -10,6 +10,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.util.Log
+import ch.heuscher.simplephone.FindPhoneActivity
 import ch.heuscher.simplephone.call.CallService
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.WearableListenerService
@@ -28,7 +29,7 @@ class PhoneWearableListenerService : WearableListenerService() {
             "/find_my_phone" -> {
                 Log.d("PhoneWearableListener", "Watch requested to find phone. Launching FindPhoneActivity.")
                 try {
-                    val intent = android.content.Intent(this, Class.forName("ch.heuscher.simplephone.FindPhoneActivity")).apply {
+                    val intent = android.content.Intent(this, FindPhoneActivity::class.java).apply {
                         flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
                     }
                     startActivity(intent)
