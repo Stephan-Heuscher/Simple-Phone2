@@ -85,7 +85,7 @@ android {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.15.0")
-    implementation("com.google.android.gms:play-services-wearable:19.0.0")
+    implementation("com.google.android.gms:play-services-wearable:20.0.1")
     
     // Compose for Wear OS
     val wearComposeVersion = "1.4.0"
