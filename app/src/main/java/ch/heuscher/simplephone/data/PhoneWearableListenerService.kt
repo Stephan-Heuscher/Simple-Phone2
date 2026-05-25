@@ -19,8 +19,35 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+/**
+ * Background listener service for Google Play Services Wear OS Data Layer messages.
+ *
+ * This service runs in the background on the phone, listening for incoming data layer message events
+ * sent from the companion Wear OS application (e.g., call controls, utility actions).
+ */
 class PhoneWearableListenerService : WearableListenerService() {
 
+    /**
+     * Handles incoming messages from the Wear OS device via the Google Play Services Wearable API.
+     *
+     * This method acts as the entry point for the cross-device API contract. Based on the path of the
+     * received [MessageEvent], it routes instructions to local device actions or CallService commands.
+     *
+     * Explicit cross-device API contract paths handled here include:
+     * - `/find_my_phone`: Launches [FindPhoneActivity] to trigger the device locator helper.
+     * - `/answer_call`: Directs CallService to answer the current active call.
+     * - `/reject_call`: Directs CallService to reject the current incoming call.
+     * - `/silence_ringer`: Directs CallService to silence the phone's ringer.
+     * - `/end_call`: Directs CallService to terminate the active call.
+     * - `/set_audio_route`: Decodes integer audio route from payload and sets it on CallService.
+     * - `/volume_up` / `/volume_down`: Adjusts the phone's voice call volume up or down.
+     * - `/toggle_mute`: Toggles the phone's microphone mute status.
+     * - `/request_audio_status`: Requests CallService to push current audio status back to the wearable.
+     * - `/initiate_call`: Parses and cleans the phone number string from the message payload and places
+     *   an outgoing call (falling back to ACTION_DIAL if permission checks require it).
+     *
+     * @param messageEvent The message event received containing the path and optional payload data.
+     */
     override fun onMessageReceived(messageEvent: MessageEvent) {
         super.onMessageReceived(messageEvent)
         Log.d("PhoneWearableListener", "Received message: ${messageEvent.path}")
