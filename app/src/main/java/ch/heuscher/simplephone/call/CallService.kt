@@ -53,7 +53,7 @@ class CallService : InCallService() {
     private var accelerometerSensor: android.hardware.Sensor? = null
     private var isProximitySensorRegistered = false
     private var isAccelerometerRegistered = false
-    private var isPhoneAtEar = false // Track proximity state for logic updates
+    internal var isPhoneAtEar = false // Track proximity state for logic updates
     private var isPhoneVertical = false // Track if phone is held upright
     private var lastSignificantMovementTime: Long = 0 // Track movement for "raise to ear"
     
@@ -85,6 +85,7 @@ class CallService : InCallService() {
         @Volatile var watchInitiatedAt: Long = 0
         @Volatile var watchAnsweredAt: Long = 0
         @Volatile var watchRequestedAudioRoute: Int? = null
+        @Volatile var isSpeakerManuallySelected: Boolean = false
 
         // Thread-safe listener list (accessed from main thread + IO coroutines)
         private val callStateListeners = CopyOnWriteArrayList<CallStateListener>()
@@ -148,6 +149,7 @@ class CallService : InCallService() {
             // Only clear watch request if it was a manual selection from the phone UI
             if (isManual) {
                 watchRequestedAudioRoute = null
+                isSpeakerManuallySelected = (route == CallAudioState.ROUTE_SPEAKER)
             }
             
             // Log current volume for debugging "no sound"
@@ -274,16 +276,16 @@ class CallService : InCallService() {
         }
     }
     
-    private fun updateSpeakerHighlightState() {
+    internal fun updateSpeakerHighlightState() {
         val currentRoute = CallService.currentAudioState?.route ?: CallAudioState.ROUTE_EARPIECE
         Log.d(TAG, "UpdateGlow: AtEar=$isPhoneAtEar, Route=$currentRoute, State=$callState, Highlight=$shouldHighlightSpeaker")
         
         if (isPhoneAtEar) {
             // Phone is AT EAR
-            // If on SPEAKER, switch to EARPIECE
-            if (currentRoute == CallAudioState.ROUTE_SPEAKER) {
+            // If on SPEAKER, switch to EARPIECE unless manually selected or watch requested
+            if (currentRoute == CallAudioState.ROUTE_SPEAKER && !CallService.isSpeakerManuallySelected && CallService.watchRequestedAudioRoute == null) {
                 Log.d(TAG, "UpdateGlow: Auto-switch to EARPIECE (Near)")
-                setAudioRoute(CallAudioState.ROUTE_EARPIECE)
+                CallService.setAudioRoute(CallAudioState.ROUTE_EARPIECE)
             }
             
             // Never highlight if near
@@ -892,6 +894,7 @@ class CallService : InCallService() {
             callerName = null
             watchInitiated = false
             watchAnswered = false
+            isSpeakerManuallySelected = false
             notifyCallStateChanged(disconnectCause)
             
             // Inform watch that the call ended
@@ -1137,6 +1140,10 @@ class CallService : InCallService() {
         val mask = audioState?.supportedRouteMask ?: 0
         Log.d(TAG, "onCallAudioStateChanged: route=$route, mask=$mask, watchInitiated=$watchInitiated, requestedRoute=${CallService.watchRequestedAudioRoute}")
         CallService.currentAudioState = audioState
+        
+        if (route != CallAudioState.ROUTE_SPEAKER) {
+            CallService.isSpeakerManuallySelected = false
+        }
         
         if (watchInitiated && CallService.watchRequestedAudioRoute != null && CallService.watchRequestedAudioRoute != route) {
             val targetRoute = CallService.watchRequestedAudioRoute!!
