@@ -1,0 +1,6 @@
+{
+  "_comment": "Simple-Phone2 is a pure Android/Gradle app and cannot build on this aarch64 host (no aarch64 aapt2). Every burn fails and re-enqueues un-runnable follow-ups, so ALL burn tasks for this repo are out of scope. The catch-all pattern rejects any task at enqueue time (db_helper.js#addQuotaTask). JIT generation is also blocked via JIT_EXCLUDE_DIRS in burn-manager.mjs; this blocklist additionally catches manual / listener-driven enqueues.",
+  "blocked_patterns": [
+    "."
+  ]
+}
