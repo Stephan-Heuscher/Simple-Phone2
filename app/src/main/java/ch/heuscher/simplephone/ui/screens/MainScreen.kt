@@ -2,6 +2,8 @@ package ch.heuscher.simplephone.ui.screens
 
 import androidx.compose.ui.res.stringResource
 import ch.heuscher.simplephone.R
+import androidx.compose.animation.core.*
+import androidx.compose.ui.draw.alpha
 
 
 import androidx.compose.foundation.background
@@ -93,7 +95,10 @@ fun MainScreen(
     isDefaultDialer: Boolean = true,
     onSetDefaultDialer: () -> Unit = {},
     useHapticFeedback: Boolean = false,
-    contactResolutionMaps: ch.heuscher.simplephone.ui.MainViewModel.ContactResolutionMaps? = null
+    contactResolutionMaps: ch.heuscher.simplephone.ui.MainViewModel.ContactResolutionMaps? = null,
+    isInCall: Boolean = false,
+    activeCallName: String? = null,
+    onReturnToCall: () -> Unit = {}
 ) {
     val favorites = remember(contacts) { contacts.filter { it.isFavorite }.sortedBy { it.sortOrder } }
     val allContacts = remember(contacts) { contacts.sortedBy { it.name } }
@@ -176,6 +181,16 @@ fun MainScreen(
     if (isTablet) {
         // ── Tablet / Foldable: Two-pane side-by-side layout ──
         Column(modifier = Modifier.fillMaxSize().imePadding()) {
+            // Active Call Banner
+            if (isInCall) {
+                ActiveCallBanner(
+                    activeCallName = activeCallName,
+                    onClick = onReturnToCall,
+                    useHapticFeedback = useHapticFeedback,
+                    context = context
+                )
+            }
+
             // Default Dialer Warning Banner (full width)
             if (!isDefaultDialer) {
                 DefaultDialerBanner(
@@ -377,11 +392,20 @@ fun MainScreen(
             }
         }
     } else {
-        // ── Phone: Original single-column layout (unchanged) ──
-        Box(modifier = Modifier.fillMaxSize().imePadding()) {
-            val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+        // ── Phone: Original single-column layout ──
+        Column(modifier = Modifier.fillMaxSize().imePadding()) {
+            if (isInCall) {
+                ActiveCallBanner(
+                    activeCallName = activeCallName,
+                    onClick = onReturnToCall,
+                    useHapticFeedback = useHapticFeedback,
+                    context = context
+                )
+            }
+            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                val listState = androidx.compose.foundation.lazy.rememberLazyListState()
 
-            LazyColumn(modifier = Modifier.fillMaxSize(), state = listState) {
+                LazyColumn(modifier = Modifier.fillMaxSize(), state = listState) {
                 item {
                     SearchBarRow(
                         searchQuery = searchQuery,
@@ -565,6 +589,7 @@ fun MainScreen(
                 modifier = Modifier.align(Alignment.CenterEnd),
                 listState = listState
             )
+            }
         }
     }
 }
@@ -1133,4 +1158,71 @@ fun getRelativeTimeDisplay(context: android.content.Context, timestamp: java.tim
         android.text.format.DateUtils.MINUTE_IN_MILLIS,
         android.text.format.DateUtils.FORMAT_ABBREV_RELATIVE
     ).toString()
+}
+
+@Composable
+fun ActiveCallBanner(
+    activeCallName: String?,
+    onClick: () -> Unit,
+    useHapticFeedback: Boolean,
+    context: android.content.Context,
+    modifier: Modifier = Modifier
+) {
+    // Pulsing animation for the call icon to show it is active/alive
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "alpha"
+    )
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable {
+                if (useHapticFeedback) vibrate(context)
+                onClick()
+            }
+            .background(GreenCall)
+            .padding(horizontal = 24.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Phone,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier
+                .size(36.dp)
+                .alpha(alpha)
+        )
+        
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = stringResource(
+                    R.string.active_call_banner_title,
+                    activeCallName ?: stringResource(R.string.unknown_contact)
+                ),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = stringResource(R.string.active_call_banner_subtitle),
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.9f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
 }

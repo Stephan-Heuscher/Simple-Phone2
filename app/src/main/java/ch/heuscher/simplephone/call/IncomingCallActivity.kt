@@ -121,6 +121,7 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
         // Read setting for simplified call screen
         val settingsRepository = SettingsRepository.getInstance(this)
         val useSimplifiedScreen = settingsRepository.simplifiedContactCallScreen
+        val showDialpadInCall = settingsRepository.showDialpadInCall
         
         setContent {
             
@@ -134,6 +135,7 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
                     audioState = audioState,
                     shouldHighlightSpeaker = shouldSuggestSpeaker, // Mapping to UI param
                     useSimplifiedScreen = useSimplifiedScreen,
+                    showDialpadInCall = showDialpadInCall,
                     onAnswer = {
                         CallService.answerCall()
                         isIncoming = false
@@ -268,6 +270,7 @@ fun CallScreen(
     audioState: CallAudioState?,
     shouldHighlightSpeaker: Boolean = false,
     useSimplifiedScreen: Boolean = false,
+    showDialpadInCall: Boolean = true,
     onAnswer: () -> Unit,
     onReject: () -> Unit,
     onSilence: () -> Unit = {},
@@ -333,6 +336,7 @@ fun CallScreen(
             showAudioControls = showAudioControls,
             shouldHighlightSpeaker = shouldHighlightSpeaker,
             useSimplifiedScreen = useSimplifiedScreen,
+            showDialpadInCall = showDialpadInCall,
             onAnswer = onAnswer,
             onReject = onReject,
             onSilence = onSilence,
@@ -357,6 +361,7 @@ fun CallScreen(
             showAudioControls = showAudioControls,
             shouldHighlightSpeaker = shouldHighlightSpeaker,
             useSimplifiedScreen = useSimplifiedScreen,
+            showDialpadInCall = showDialpadInCall,
             onAnswer = onAnswer,
             onReject = onReject,
             onSilence = onSilence,
@@ -386,6 +391,7 @@ private fun CallScreenPortrait(
     showAudioControls: Boolean,
     shouldHighlightSpeaker: Boolean,
     useSimplifiedScreen: Boolean,
+    showDialpadInCall: Boolean,
     onAnswer: () -> Unit,
     onReject: () -> Unit,
     onSilence: () -> Unit,
@@ -480,7 +486,7 @@ private fun CallScreenPortrait(
                 context = context,
                 audioState = audioState!!,
                 shouldHighlightSpeaker = shouldHighlightSpeaker,
-                showKeypadButton = callState == Call.STATE_ACTIVE && !useSimplifiedScreen,
+                showKeypadButton = callState == Call.STATE_ACTIVE && showDialpadInCall,
                 useSimplifiedScreen = useSimplifiedScreen,
                 onAudioRouteSelected = onAudioRouteSelected,
                 onRouteToWatch = onRouteToWatch,
@@ -536,6 +542,7 @@ private fun CallScreenLandscape(
     showAudioControls: Boolean,
     shouldHighlightSpeaker: Boolean,
     useSimplifiedScreen: Boolean,
+    showDialpadInCall: Boolean,
     onAnswer: () -> Unit,
     onReject: () -> Unit,
     onSilence: () -> Unit,
@@ -663,7 +670,7 @@ private fun CallScreenLandscape(
                         context = context,
                         audioState = audioState!!,
                         shouldHighlightSpeaker = shouldHighlightSpeaker,
-                        showKeypadButton = callState == Call.STATE_ACTIVE && !useSimplifiedScreen,
+                        showKeypadButton = callState == Call.STATE_ACTIVE && showDialpadInCall,
                         useSimplifiedScreen = useSimplifiedScreen,
                         onAudioRouteSelected = onAudioRouteSelected,
                         onRouteToWatch = onRouteToWatch,

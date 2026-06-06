@@ -193,4 +193,12 @@
     <string name="cd_decrease_seconds">வினாடிகளைக் குறைக்கவும்</string>
     <string name="cd_increase_seconds">வினாடிகளை அதிகரிக்கவும்</string>
 
+    <!-- Show Dialpad -->
+    <string name="settings_show_dialpad_title">அழைப்புகளின் போது டயல்பேடைக் காட்டு</string>
+    <string name="settings_show_dialpad_desc">செயலில் உள்ள அழைப்புகளின் போது எண்களை உள்ளிட டயல்பேட் பொத்தானைக் காட்டு (எ.கா. நீட்டிப்பு, சேவை மெனுக்கள்):</string>
+
+    <!-- Active Call Banner -->
+    <string name="active_call_banner_title">செயலில் உள்ள அழைப்பு: %1$s</string>
+    <string name="active_call_banner_subtitle">அழைப்பிற்குத் திரும்ப தட்டவும்</string>
+
 </resources>

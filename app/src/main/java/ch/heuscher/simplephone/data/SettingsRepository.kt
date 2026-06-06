@@ -27,7 +27,8 @@ data class AppSettings(
     val isDemoMode: Boolean,
     val onboardingCompleted: Boolean,
     val lastBlockedNumber: String?,
-    val defaultToBluetooth: Boolean
+    val defaultToBluetooth: Boolean,
+    val showDialpadInCall: Boolean
 )
 
 /**
@@ -92,6 +93,7 @@ class SettingsRepository @org.jetbrains.annotations.VisibleForTesting internal c
         private const val KEY_RINGTONE_SILENCE_TIMEOUT = "ringtone_silence_timeout"
         private const val KEY_RAISE_TO_EAR_TO_ANSWER = "raise_to_ear_to_answer"
         private const val KEY_DEFAULT_TO_BLUETOOTH = "default_to_bluetooth"
+        private const val KEY_SHOW_DIALPAD_IN_CALL = "show_dialpad_in_call"
         
         // Zoom factors per screen size
         private const val KEY_ZOOM_COMPACT = "zoom_compact"
@@ -213,7 +215,8 @@ class SettingsRepository @org.jetbrains.annotations.VisibleForTesting internal c
             onboardingCompleted = prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false),
             lastBlockedNumber = prefs.getString(KEY_LAST_BLOCKED_NUMBER, null),
             raiseToEarToAnswer = getRemoteBool(REMOTE_KEY_RAISE_TO_EAR) ?: prefs.getBoolean(KEY_RAISE_TO_EAR_TO_ANSWER, false),
-            defaultToBluetooth = getRemoteBool(REMOTE_KEY_DEFAULT_TO_BLUETOOTH) ?: prefs.getBoolean(KEY_DEFAULT_TO_BLUETOOTH, false)
+            defaultToBluetooth = getRemoteBool(REMOTE_KEY_DEFAULT_TO_BLUETOOTH) ?: prefs.getBoolean(KEY_DEFAULT_TO_BLUETOOTH, false),
+            showDialpadInCall = prefs.getBoolean(KEY_SHOW_DIALPAD_IN_CALL, true)
         )
     }
     
@@ -364,6 +367,12 @@ class SettingsRepository @org.jetbrains.annotations.VisibleForTesting internal c
         set(value) {
             prefs.edit().putBoolean(KEY_DEFAULT_TO_BLUETOOTH, value).apply()
             updateRemote(REMOTE_KEY_DEFAULT_TO_BLUETOOTH, value)
+        }
+
+    var showDialpadInCall: Boolean
+        get() = settings.value.showDialpadInCall
+        set(value) {
+            prefs.edit().putBoolean(KEY_SHOW_DIALPAD_IN_CALL, value).apply()
         }
 
     // Derived properties for backward compatibility / ease of use

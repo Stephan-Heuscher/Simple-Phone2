@@ -210,6 +210,12 @@
     <!-- Find Phone Activity -->
     <string name="find_phone_here_i_am">📱 Hier bin ich!</string>
     <string name="find_phone_stop">Stopp</string>
-    <string name="find_phone_found">Gefunden!</string>
+    <!-- Show Dialpad -->
+    <string name="settings_show_dialpad_title">Wähltastatur bei Anrufen anzeigen</string>
+    <string name="settings_show_dialpad_desc">Wähltastatur-Schaltfläche bei aktiven Anrufen anzeigen, um Ziffern einzugeben (z. B. Durchwahlen, Menüs):</string>
+
+    <!-- Active Call Banner -->
+    <string name="active_call_banner_title">Aktiver Anruf: %1$s</string>
+    <string name="active_call_banner_subtitle">Tippen, um zum Anruf zurückzukehren</string>
 
 </resources>

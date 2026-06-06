@@ -192,5 +192,12 @@
     <string name="off_label">बंद</string>
     <string name="cd_decrease_seconds">सेकंड कम करें</string>
     <string name="cd_increase_seconds">सेकंड बढ़ाएं</string>
+    <!-- Show Dialpad -->
+    <string name="settings_show_dialpad_title">कॉल के दौरान कीपैड दिखाएं</string>
+    <string name="settings_show_dialpad_desc">नंबर दर्ज करने के लिए सक्रिय कॉल के दौरान डायलपैड बटन दिखाएं (जैसे एक्सटेंशन, सेवा मेनू):</string>
+
+    <!-- Active Call Banner -->
+    <string name="active_call_banner_title">सक्रिय कॉल: %1$s</string>
+    <string name="active_call_banner_subtitle">कॉल पर लौटने के लिए टैप करें</string>
 
 </resources>

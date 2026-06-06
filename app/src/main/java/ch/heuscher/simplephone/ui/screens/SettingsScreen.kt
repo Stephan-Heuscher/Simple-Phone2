@@ -126,6 +126,8 @@ fun SettingsScreen(
     onRaiseToEarToAnswerChange: (Boolean) -> Unit = {},
     defaultToBluetooth: Boolean = true,
     onDefaultToBluetoothChange: (Boolean) -> Unit = {},
+    showDialpadInCall: Boolean = true,
+    onShowDialpadInCallChange: (Boolean) -> Unit = {},
     // gentle phone specific
     pairingCode: String? = null,
     showPairingCode: Boolean = false,
@@ -960,6 +962,36 @@ fun SettingsScreen(
                     isEnabled = defaultToBluetooth,
                     onToggle = { vibrate(); onDefaultToBluetoothChange(!defaultToBluetooth) },
                     label = if (defaultToBluetooth) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
+                )
+            }
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // --- Show Dialpad Section ---
+        item {
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_show_dialpad_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.settings_show_dialpad_desc),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                BigToggleButton(
+                    isEnabled = showDialpadInCall,
+                    onToggle = { vibrate(); onShowDialpadInCallChange(!showDialpadInCall) },
+                    label = if (showDialpadInCall) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
                 )
             }
             HorizontalDivider()

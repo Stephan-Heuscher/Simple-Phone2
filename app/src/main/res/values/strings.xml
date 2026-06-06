@@ -226,6 +226,12 @@
     <!-- Find Phone Activity -->
     <string name="find_phone_here_i_am">📱 Here I am!</string>
     <string name="find_phone_stop">Stop</string>
-    <string name="find_phone_found">Found!</string>
+    <!-- Show Dialpad -->
+    <string name="settings_show_dialpad_title">Show Dialpad during calls</string>
+    <string name="settings_show_dialpad_desc">Show dialpad button during active calls to enter numbers (e.g. extension, service menus):</string>
+
+    <!-- Active Call Banner -->
+    <string name="active_call_banner_title">Active Call: %1$s</string>
+    <string name="active_call_banner_subtitle">Tap to return to call</string>
 
 </resources>

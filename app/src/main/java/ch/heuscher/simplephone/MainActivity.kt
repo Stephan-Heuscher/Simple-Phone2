@@ -56,6 +56,10 @@ import ch.heuscher.simplephone.ui.theme.SimplePhoneTheme
 import ch.heuscher.simplephone.ui.MainViewModel
 import java.util.Locale
 import ch.heuscher.simplephone.widget.FavoritesWidget
+import android.telecom.Call
+import ch.heuscher.simplephone.call.CallService
+import ch.heuscher.simplephone.call.CallStateListener
+import ch.heuscher.simplephone.call.IncomingCallActivity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -563,10 +567,47 @@ fun SimplePhoneApp(
         }
     }
     
-    // In-call state
-    var isInCall by remember { mutableStateOf(false) }
-    var currentCallContact by remember { mutableStateOf<Contact?>(null) }
-    var currentAudioOutput by remember { mutableStateOf(AudioOutput.EARPIECE) }
+    // In-call state tracked from CallService
+    var activeCallState by remember { mutableStateOf(CallService.callState) }
+    var activeCallName by remember { mutableStateOf(CallService.callerName) }
+    var activeCallNumber by remember { mutableStateOf(CallService.callerNumber) }
+
+    DisposableEffect(Unit) {
+        val listener = object : CallStateListener {
+            override fun onCallStateChanged(
+                state: Int,
+                number: String?,
+                name: String?,
+                audioState: android.telecom.CallAudioState?,
+                disconnectCause: android.telecom.DisconnectCause?
+            ) {
+                activeCallState = state
+                if (number != null) activeCallNumber = number
+                if (name != null) activeCallName = name
+            }
+        }
+        CallService.addCallStateListener(listener)
+        onDispose {
+            CallService.removeCallStateListener(listener)
+        }
+    }
+
+    val isInCall = activeCallState == Call.STATE_ACTIVE ||
+            activeCallState == Call.STATE_HOLDING ||
+            activeCallState == Call.STATE_DIALING ||
+            activeCallState == Call.STATE_CONNECTING
+
+    val onReturnToCall: () -> Unit = {
+        val intent = Intent(context, IncomingCallActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                    Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            putExtra("caller_number", activeCallNumber)
+            putExtra("caller_name", activeCallName)
+            putExtra("is_incoming", false)
+        }
+        context.startActivity(intent)
+    }
 
     // Determine current screen title for TopBar
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -607,8 +648,6 @@ fun SimplePhoneApp(
     
     // Function to handle hangup
     val handleHangup: () -> Unit = {
-        isInCall = false
-        currentCallContact = null
         navController.popBackStack()
     }
     
@@ -704,7 +743,10 @@ fun SimplePhoneApp(
                         isDefaultDialer = isDefaultDialer,
                         onSetDefaultDialer = onSetDefaultDialer,
                         useHapticFeedback = settings.useHapticFeedback,
-                        contactResolutionMaps = contactResolutionMaps
+                        contactResolutionMaps = contactResolutionMaps,
+                        isInCall = isInCall,
+                        activeCallName = activeCallName ?: activeCallNumber,
+                        onReturnToCall = onReturnToCall
                     )
                 }
                 composable(Screen.Dialer.route) {
@@ -768,6 +810,8 @@ fun SimplePhoneApp(
                         onRaiseToEarToAnswerChange = { value -> settingsRepository.raiseToEarToAnswer = value },
                         defaultToBluetooth = settings.defaultToBluetooth,
                         onDefaultToBluetoothChange = { value -> settingsRepository.defaultToBluetooth = value },
+                        showDialpadInCall = settings.showDialpadInCall,
+                        onShowDialpadInCallChange = { value -> settingsRepository.showDialpadInCall = value },
                         // gentle phone specific
                         pairingCode = settingsRepository.getPairingCode(),
                         showPairingCode = settingsRepository.isRemoteSettingsEnabled(),
