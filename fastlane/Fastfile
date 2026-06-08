@@ -104,9 +104,11 @@ platform :android do
       # Use absolute path to ensure CI runner finds it
       fastfile_dir = File.dirname(__FILE__)
       new_changelog_path = File.expand_path("metadata/android/#{locale}/changelogs/#{build_number}.txt", fastfile_dir)
+      wear_changelog_path = File.expand_path("metadata/android/#{locale}/changelogs/#{build_number + 100000}.txt", fastfile_dir)
       
       FileUtils.mkdir_p(File.dirname(new_changelog_path))
       File.write(new_changelog_path, final_notes)
+      File.write(wear_changelog_path, final_notes)
       
       puts "--- Generated Release Notes for #{locale} (Version #{build_number}) ---"
       puts final_notes
@@ -252,9 +254,11 @@ platform :android do
       
       fastfile_dir = File.dirname(__FILE__)
       new_changelog_path = File.expand_path("metadata/android/#{locale}/changelogs/#{build_number}.txt", fastfile_dir)
+      wear_changelog_path = File.expand_path("metadata/android/#{locale}/changelogs/#{build_number + 100000}.txt", fastfile_dir)
       
       FileUtils.mkdir_p(File.dirname(new_changelog_path))
       File.write(new_changelog_path, final_notes)
+      File.write(wear_changelog_path, final_notes)
       
       puts "--- Generated Release Notes for #{locale} (Version #{build_number}) ---"
       puts final_notes
@@ -436,9 +440,11 @@ platform :android do
       
       fastfile_dir = File.dirname(__FILE__)
       changelog_path = File.expand_path("metadata/gentlephone/#{locale}/changelogs/#{build_number}.txt", fastfile_dir)
+      wear_changelog_path = File.expand_path("metadata/gentlephone/#{locale}/changelogs/#{build_number + 100000}.txt", fastfile_dir)
       
       FileUtils.mkdir_p(File.dirname(changelog_path))
       File.write(changelog_path, final_notes)
+      File.write(wear_changelog_path, final_notes)
       
       puts "--- gentle phone Release Notes for #{locale} (v#{build_number}) ---"
       puts final_notes
