@@ -506,6 +506,146 @@ platform :android do
     puts "🎉 gentle phone deployment complete! Version: #{new_version_name}"
   end
 
+  desc "Deploy Simple Phone watch app directly to Wear OS Production track"
+  lane :deploy_wear_production do
+    props = load_version_properties(file_path: "app/version.properties")
+    build_number = props['VERSION_CODE'].to_i
+    api_key = ENV['GOOGLE_API_KEY']
+
+    # --- SAFE BUMP LOGIC (checks all tracks to avoid collisions) ---
+    UI.message("Checking Google Play for existing version codes (all tracks)...")
+    begin
+      all_versions = []
+      ['internal', 'production', 'wear:internal', 'wear:production'].each do |track|
+        versions = google_play_track_version_codes(
+          package_name: 'ch.heuscher.simplephone',
+          track: track
+        ) rescue []
+        all_versions.concat(versions)
+      end
+
+      # Wear codes have +100000 offset, normalize to base
+      max_base = all_versions.map { |v| v > 100000 ? v - 100000 : v }.max || 0
+      UI.message("Highest base version: #{max_base}. Local: #{build_number}")
+
+      if build_number <= max_base
+        new_safe_code = max_base + 1
+        UI.important("⚠️ Version collision! Bumping base from #{build_number} to #{new_safe_code}")
+        props['VERSION_CODE'] = new_safe_code.to_s
+        props['VERSION_PATCH'] = (props['VERSION_PATCH'].to_i + (new_safe_code - build_number)).to_s
+        props['VERSION_NAME'] = "#{props['VERSION_MAJOR']}.#{props['VERSION_MINOR']}.#{props['VERSION_PATCH']}"
+        save_version_properties(props: props, file_path: "app/version.properties")
+        build_number = new_safe_code
+      end
+    rescue => e
+      UI.error("Could not fetch versions: #{e.message}")
+    end
+    # --- SAFE BUMP LOGIC END ---
+
+    wear_version_code = build_number + 100000
+
+    # Generate release notes for the wear version code
+    raw_commits = changelog_from_git_commits(
+      commits_count: 15,
+      merge_commit_filtering: "exclude_merges",
+      pretty: "- %s"
+    )
+
+    ['en-US', 'de-DE', 'hi-IN', 'ta-IN'].each do |locale|
+      final_notes = nil
+
+      if api_key
+        language = case locale
+                   when 'de-DE' then "German"
+                   when 'hi-IN' then "Hindi"
+                   when 'ta-IN' then "Tamil"
+                   else "English"
+                   end
+
+        prompt = "Summarize these git commits into a friendly, professional release notes list (bullet points) for the watch companion of 'Simple Phone'. " \
+                 "Target Audience: Seniors. Language: #{language}. " \
+                 "Rules: Exclude technical chores/docs/CI. Focus on user-facing features/fixes for the watch. " \
+                 "CRITICAL: Output must be under 480 characters. No markdown bolding, just plain text bullets."
+
+        final_notes = ask_gemini(api_key, prompt, raw_commits)
+      end
+
+      unless final_notes && !final_notes.empty?
+        header = case locale
+                 when 'de-DE' then "Neuigkeiten:"
+                 when 'hi-IN' then "नया क्या है:"
+                 when 'ta-IN' then "புதியவை:"
+                 else "What's New:"
+                 end
+
+        filtered = raw_commits.split("\n").select do |line|
+           !line.match?(/^(- (chore|docs|test|refactor|style|ci)(\(.*\))?:)/i)
+        end.take(10).join("\n")
+        final_notes = "#{header}\n#{filtered}"
+      end
+
+      if final_notes.length > 499
+        final_notes = final_notes[0...496] + "..."
+      end
+
+      fastfile_dir = File.dirname(__FILE__)
+      changelog_path = File.expand_path("metadata/android/#{locale}/changelogs/#{wear_version_code}.txt", fastfile_dir)
+
+      FileUtils.mkdir_p(File.dirname(changelog_path))
+      File.write(changelog_path, final_notes)
+
+      puts "--- Wear Release Notes for #{locale} (v#{wear_version_code}) ---"
+      puts final_notes
+    end
+
+    # Build the watch AAB only
+    root_dir = File.expand_path("..", File.dirname(__FILE__))
+    gradlew_path = File.join(root_dir, "gradlew")
+    sh "chmod +x #{gradlew_path}"
+    Dir.chdir(root_dir) do
+      cmd = "./gradlew :watch:bundleSimplephoneRelease --stacktrace --no-configuration-cache"
+      puts "Building watch app: #{cmd}"
+      unless system(cmd)
+        raise "Watch build failed! Exit: #{$?.exitstatus}"
+      end
+    end
+
+    watch_aab_path = File.join(root_dir, "watch/build/outputs/bundle/simplephoneRelease/watch-simplephone-release.aab")
+
+    # Upload directly to wear:production (bypasses internal + promotion)
+    puts "🚀 Deploying watch app directly to WEAR PRODUCTION..."
+    upload_to_play_store(
+      track: 'wear:production',
+      package_name: 'ch.heuscher.simplephone',
+      aab: watch_aab_path
+    )
+    puts "✅ Watch app deployed to WEAR PRODUCTION!"
+
+    # Version bump and commit
+    Dir.chdir(File.expand_path("..", File.dirname(__FILE__))) do
+      sh("git checkout -- app/version.properties")
+    end
+    git_pull
+    new_version_name = increment_version_properties(
+      file_path: "app/version.properties",
+      min_code: build_number,
+      min_patch: props['VERSION_PATCH'].to_i
+    )
+
+    ENV['GIT_AUTHOR_NAME'] = 'Fastlane Deploy'
+    ENV['GIT_AUTHOR_EMAIL'] = 'deploy@fastlane.tools'
+    ENV['GIT_COMMITTER_NAME'] = 'Fastlane Deploy'
+    ENV['GIT_COMMITTER_EMAIL'] = 'deploy@fastlane.tools'
+
+    git_commit(
+      path: ["app/version.properties"],
+      message: "chore: bump version to #{new_version_name} [wear production]"
+    )
+    push_to_git_remote
+
+    puts "🎉 Watch app deployed to production! Wear version code: #{wear_version_code}, Version: #{new_version_name}"
+  end
+
   # Helper to ask Gemini
   def ask_gemini(api_key, system_prompt, user_text)
     require 'net/http'
