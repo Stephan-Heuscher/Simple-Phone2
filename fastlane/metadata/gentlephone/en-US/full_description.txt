@@ -17,4 +17,12 @@ Smart Features for Seniors:
 *   No Accidental Swipes: A simple, tap-based interface tailored for motor control challenges.
 *   Privacy Focused: No ads, no tracking. Your data stays on your device.
 
+**Wear OS Companion App:**
+Stay connected right from your wrist! The Wear OS companion app features:
+* Favorite Contacts: View your synchronized favorite contacts with large photos directly on your watch.
+* Quick Calling: Call your favorites or emergency numbers with a single tap.
+* Find My Phone: Easily locate your misplaced phone by triggering a ring from your watch.
+* Watch Face Complication: Add a complication to your favorite watch face to open the app instantly.
+* Optimized Design: Full support for round and square watch shapes, featuring scrollbars and a responsive layout to prevent clipping on the screen edges.
+
 Download gentle phone to restore the joy of simple communication.

@@ -48,4 +48,12 @@ Perfekt für:
 • Menschen mit Sehbeeinträchtigungen
 • Alle, die vereinfachte Technik brauchen
 
+**Wear OS Begleit-App:**
+Bleiben Sie direkt von Ihrem Handgelenk aus in Verbindung! Die Wear OS Begleit-App bietet:
+* Favoriten-Kontakte: Synchronisierte Favoriten mit großen Fotos direkt auf Ihrer Uhr anzeigen.
+* Schnellanrufe: Favoriten oder Notrufnummern mit einem einzigen Tippen anrufen.
+* Telefon finden: Lassen Sie Ihr verlegtes Telefon über Ihre Uhr klingeln, um es schnell zu finden.
+* Zifferblatt-Komplikation: Fügen Sie Ihrem Zifferblatt eine Komplikation hinzu, um die App direkt zu starten.
+* Optimiertes Design: Volle Unterstützung für runde und eckige Uhrenformen durch ein responsives Layout und Scrollbalken für reibungslose Navigation an den Bildschirmrändern.
+
 Laden Sie gentle phone noch heute herunter und geben Sie Ihren Liebsten die Unterstützung, die sie brauchen!

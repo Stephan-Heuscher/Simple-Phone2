@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.MaterialTheme
@@ -301,6 +302,7 @@ fun WatchCallScreen(
         }
     }
     val volumeOverlayVisible = lastInteractionTime > 0
+    val isRound = LocalConfiguration.current.isScreenRound
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
         // Background photo or initial
@@ -338,9 +340,16 @@ fun WatchCallScreen(
 
         if (isIncoming) {
             Column(
-                modifier = Modifier.fillMaxSize().padding(bottom = 16.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        top = if (isRound) 24.dp else 12.dp,
+                        bottom = if (isRound) 24.dp else 12.dp,
+                        start = if (isRound) 16.dp else 8.dp,
+                        end = if (isRound) 16.dp else 8.dp
+                    ),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Bottom
+                verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = callerName.ifEmpty { callerNumber },
@@ -353,31 +362,36 @@ fun WatchCallScreen(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
                 
+                Spacer(modifier = Modifier.height(if (isRound) 8.dp else 4.dp))
+                
                 Text(
                     text = stringResource(R.string.watch_incoming_call),
                     color = Color.LightGray,
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    fontSize = 14.sp
                 )
+                
+                Spacer(modifier = Modifier.height(if (isRound) 20.dp else 12.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Silence Button
                     Button(
                         onClick = onSilence,
-                        modifier = Modifier.size(56.dp),
+                        modifier = Modifier.size(if (isRound) 50.dp else 56.dp),
                         colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF2196F3)) // Bright Blue
                     ) {
                         Text(text = stringResource(R.string.watch_silence), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
 
+                    Spacer(modifier = Modifier.width(if (isRound) 16.dp else 24.dp))
+
                     // Accept Button
                     Button(
                         onClick = onAccept,
-                        modifier = Modifier.size(64.dp),
+                        modifier = Modifier.size(if (isRound) 56.dp else 64.dp),
                         colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF43A047))
                     ) {
                         Text(text = "✓", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
@@ -386,9 +400,16 @@ fun WatchCallScreen(
             }
         } else {
             Column(
-                modifier = Modifier.fillMaxSize().padding(bottom = 16.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        top = if (isRound) 24.dp else 12.dp,
+                        bottom = if (isRound) 24.dp else 12.dp,
+                        start = if (isRound) 16.dp else 8.dp,
+                        end = if (isRound) 16.dp else 8.dp
+                    ),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Bottom
+                verticalArrangement = Arrangement.Center
             ) {
                 val statusText = if (callState == android.telecom.Call.STATE_DIALING) {
                     stringResource(R.string.watch_calling)
@@ -400,9 +421,9 @@ fun WatchCallScreen(
                     Text(
                         text = statusText,
                         color = Color.LightGray,
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(bottom = 4.dp)
+                        fontSize = 14.sp
                     )
+                    Spacer(modifier = Modifier.height(if (isRound) 8.dp else 4.dp))
                 }
 
                 Text(
@@ -416,39 +437,39 @@ fun WatchCallScreen(
                     modifier = Modifier.padding(horizontal = 24.dp)
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(if (isRound) 20.dp else 12.dp))
 
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                    modifier = Modifier.wrapContentWidth(Alignment.CenterHorizontally),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Volume Down Button
                     Button(
                         onClick = { onVolumeDown(); lastInteractionTime = System.currentTimeMillis() },
-                        modifier = Modifier.size(48.dp),
+                        modifier = Modifier.size(if (isRound) 40.dp else 48.dp),
                         colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF2196F3)) // Bright Blue
                     ) {
                         Text(text = "-", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                     }
 
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(if (isRound) 8.dp else 12.dp))
 
                     // Hangup Button
                     Button(
                         onClick = onHangup,
-                        modifier = Modifier.size(64.dp),
+                        modifier = Modifier.size(if (isRound) 56.dp else 64.dp),
                         colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFE53935))
                     ) {
                         Text(text = "✕", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
                     }
 
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(if (isRound) 8.dp else 12.dp))
 
                     // Volume Up Button
                     Button(
                         onClick = { onVolumeUp(); lastInteractionTime = System.currentTimeMillis() },
-                        modifier = Modifier.size(48.dp),
+                        modifier = Modifier.size(if (isRound) 40.dp else 48.dp),
                         colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF2196F3)) // Bright Blue
                     ) {
                         Text(text = "+", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
@@ -461,7 +482,7 @@ fun WatchCallScreen(
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
-                        .padding(top = 12.dp)
+                        .padding(top = if (isRound) 20.dp else 12.dp)
                         .background(Color.Black.copy(alpha = 0.85f), CircleShape)
                         .padding(horizontal = 16.dp, vertical = 10.dp)
                 ) {

@@ -29,4 +29,12 @@ Datenschutz an erster Stelle:
 - Keine Werbung: Ein absolut sauberes, ablenkungsfreies Erlebnis.
 - Open Source: Transparent und sicher.
 
+**Wear OS Begleit-App:**
+Bleiben Sie direkt von Ihrem Handgelenk aus in Verbindung! Die Wear OS Begleit-App bietet:
+* Favoriten-Kontakte: Synchronisierte Favoriten mit großen Fotos direkt auf Ihrer Uhr anzeigen.
+* Schnellanrufe: Favoriten oder Notrufnummern mit einem einzigen Tippen anrufen.
+* Telefon finden: Lassen Sie Ihr verlegtes Telefon über Ihre Uhr klingeln, um es schnell zu finden.
+* Zifferblatt-Komplikation: Fügen Sie Ihrem Lieblingszifferblatt eine Komplikation hinzu, um die App direkt zu starten.
+* Optimiertes Design: Volle Unterstützung für runde und eckige Uhrenformen durch ein responsives Layout und Scrollbalken für reibungslose Navigation an den Bildschirmrändern.
+
 Laden Sie Simple Phone noch heute herunter und machen Sie Kommunikation wieder kinderleicht!

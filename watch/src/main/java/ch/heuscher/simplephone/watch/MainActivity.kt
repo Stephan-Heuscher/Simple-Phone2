@@ -27,9 +27,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
+import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.MaterialTheme
+import androidx.wear.compose.material.PositionIndicator
+import androidx.wear.compose.material.Scaffold
 import androidx.wear.compose.material.Text
 import com.google.android.gms.tasks.Tasks
 import com.google.android.gms.wearable.Asset
@@ -517,67 +520,75 @@ fun SimplePhoneWatchApp(context: Context, contacts: List<SyncedContact>, isLoadi
         }
     }
 
-    ScalingLazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        contentPadding = PaddingValues(bottom = 32.dp),
-        // Use negative spacing so they underlap slightly
-        verticalArrangement = Arrangement.spacedBy((-16).dp)
+    val listState = rememberScalingLazyListState()
+    Scaffold(
+        positionIndicator = {
+            PositionIndicator(scalingLazyListState = listState)
+        }
     ) {
-        item { Spacer(modifier = Modifier.height(32.dp)) }
+        ScalingLazyColumn(
+            state = listState,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            contentPadding = PaddingValues(bottom = 32.dp),
+            // Use negative spacing so they underlap slightly
+            verticalArrangement = Arrangement.spacedBy((-16).dp)
+        ) {
+            item { Spacer(modifier = Modifier.height(32.dp)) }
 
-        if (contacts.isEmpty()) {
-            if (isLoading) {
-                item {
-                    androidx.wear.compose.material.CircularProgressIndicator(
-                        modifier = Modifier.padding(16.dp),
-                        indicatorColor = Color(0xFF1E88E5)
-                    )
-                }
-            } else {
-                item {
-                    Text(
-                        text = stringResource(R.string.watch_no_favorites),
-                        color = Color.Gray,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
-            }
-        } else {
-            items(contacts) { contact ->
-                ContactButton(contact = contact) {
-                    smartCall(contact.number, contact.name)
-                }
-            }
-        }
-
-        item { Spacer(modifier = Modifier.height(16.dp)) }
-
-        item {
-            ActionButton(text = stringResource(R.string.watch_emergency_call), color = Color(0xFFE53935)) {
-                smartCall(context.getString(R.string.watch_emergency_number))
-            }
-        }
-        
-        item {
-            ActionButton(text = stringResource(R.string.watch_find_phone), color = Color(0xFFFB8C00)) {
-                // vibration feedback
-                val prefs = context.getSharedPreferences("simple_phone_watch", Context.MODE_PRIVATE)
-                val useHaptic = prefs.getBoolean("setting_use_haptic_feedback", true)
-                if (useHaptic) {
-                    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? android.os.Vibrator
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                        vibrator?.vibrate(android.os.VibrationEffect.createOneShot(50, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
-                    } else {
-                        @Suppress("DEPRECATION")
-                        vibrator?.vibrate(50)
+            if (contacts.isEmpty()) {
+                if (isLoading) {
+                    item {
+                        androidx.wear.compose.material.CircularProgressIndicator(
+                            modifier = Modifier.padding(16.dp),
+                            indicatorColor = Color(0xFF1E88E5)
+                        )
+                    }
+                } else {
+                    item {
+                        Text(
+                            text = stringResource(R.string.watch_no_favorites),
+                            color = Color.Gray,
+                            modifier = Modifier.padding(16.dp)
+                        )
                     }
                 }
+            } else {
+                items(contacts) { contact ->
+                    ContactButton(contact = contact) {
+                        smartCall(contact.number, contact.name)
+                    }
+                }
+            }
 
-                findMyPhone(context) { status ->
-                    findPhoneStatus = status
+            item { Spacer(modifier = Modifier.height(16.dp)) }
+
+            item {
+                ActionButton(text = stringResource(R.string.watch_emergency_call), color = Color(0xFFE53935)) {
+                    smartCall(context.getString(R.string.watch_emergency_number))
+                }
+            }
+            
+            item {
+                ActionButton(text = stringResource(R.string.watch_find_phone), color = Color(0xFFFB8C00)) {
+                    // vibration feedback
+                    val prefs = context.getSharedPreferences("simple_phone_watch", Context.MODE_PRIVATE)
+                    val useHaptic = prefs.getBoolean("setting_use_haptic_feedback", true)
+                    if (useHaptic) {
+                        val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? android.os.Vibrator
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                            vibrator?.vibrate(android.os.VibrationEffect.createOneShot(50, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+                        } else {
+                            @Suppress("DEPRECATION")
+                            vibrator?.vibrate(50)
+                        }
+                    }
+
+                    findMyPhone(context) { status ->
+                        findPhoneStatus = status
+                    }
                 }
             }
         }
