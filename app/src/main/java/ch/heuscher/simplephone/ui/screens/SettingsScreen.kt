@@ -102,6 +102,8 @@ fun SettingsScreen(
 
     confirmBeforeCall: Boolean = false,
     onConfirmBeforeCallChange: (Boolean) -> Unit = {},
+    confirmBeforeHangup: Boolean = false,
+    onConfirmBeforeHangupChange: (Boolean) -> Unit = {},
     useHapticFeedback: Boolean = true,
     onHapticFeedbackChange: (Boolean) -> Unit = {},
     useVoiceAnnouncements: Boolean = false,
@@ -1022,6 +1024,36 @@ fun SettingsScreen(
                     isEnabled = confirmBeforeCall,
                     onToggle = { vibrate(); onConfirmBeforeCallChange(!confirmBeforeCall) },
                     label = if (confirmBeforeCall) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
+                )
+            }
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // --- Hang Up Confirmation Section ---
+        item {
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.hangup_confirm),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.hangup_confirm_desc),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                BigToggleButton(
+                    isEnabled = confirmBeforeHangup,
+                    onToggle = { vibrate(); onConfirmBeforeHangupChange(!confirmBeforeHangup) },
+                    label = if (confirmBeforeHangup) androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.on) else androidx.compose.ui.res.stringResource(ch.heuscher.simplephone.R.string.off)
                 )
             }
             HorizontalDivider()

@@ -47,6 +47,8 @@
     <string name="mode_dark">DARK</string>
     <string name="call_confirm">Call Confirmation</string>
     <string name="call_confirm_desc">Ask before making a call (prevents accidental calls):</string>
+    <string name="hangup_confirm">Hang Up Confirmation</string>
+    <string name="hangup_confirm_desc">Ask before hanging up a call (prevents accidental hang ups):</string>
     <string name="vibration_feedback">Vibration Feedback</string>
     <string name="vibration_desc">Vibrate when buttons are pressed:</string>
     <string name="voice_announcements">Voice Announcements</string>
@@ -131,6 +133,7 @@
     <string name="demo_mode_dialog_title">Enable Demo Mode?</string>
     <string name="demo_mode_dialog_message">This will replace your current data with example data for demonstration purposes. (will disappear in %d seconds)</string>
     <string name="call_confirmation_title">Call %s?</string>
+    <string name="hangup_confirmation_title">Hang up the call?</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
     

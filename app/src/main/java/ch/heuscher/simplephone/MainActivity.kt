@@ -784,6 +784,8 @@ fun SimplePhoneApp(
 
                         confirmBeforeCall = settings.confirmBeforeCall,
                         onConfirmBeforeCallChange = { settingsRepository.confirmBeforeCall = it },
+                        confirmBeforeHangup = settings.confirmBeforeHangup,
+                        onConfirmBeforeHangupChange = { settingsRepository.confirmBeforeHangup = it },
                         useHapticFeedback = settings.useHapticFeedback,
                         onHapticFeedbackChange = { settingsRepository.useHapticFeedback = it },
                         useVoiceAnnouncements = settings.useVoiceAnnouncements,

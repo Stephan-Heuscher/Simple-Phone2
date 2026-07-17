@@ -47,6 +47,8 @@
     <string name="mode_dark">डार्क</string>
     <string name="call_confirm">कॉल पुष्टि</string>
     <string name="call_confirm_desc">कॉल करने से पहले पूछें (आकस्मिक कॉल रोकता है):</string>
+    <string name="hangup_confirm">कॉल काटने की पुष्टि</string>
+    <string name="hangup_confirm_desc">कॉल काटने से पहले पूछें (गलती से कॉल कटने से रोकता है):</string>
     <string name="vibration_feedback">कंपन प्रतिक्रिया</string>
     <string name="vibration_desc">बटन दबाने पर कंपन करें:</string>
     <string name="voice_announcements">आवाज़ घोषणाएं</string>
@@ -130,6 +132,7 @@
     <string name="demo_mode_dialog_title">डेमो मोड सक्षम करें?</string>
     <string name="demo_mode_dialog_message">यह आपके वर्तमान डेटा को प्रदर्शन उद्देश्यों के लिए उदाहरण डेटा से बदल देगा। (%d सेकंड में गायब हो जाएगा)</string>
     <string name="call_confirmation_title">%s को कॉल करें?</string>
+    <string name="hangup_confirmation_title">कॉल समाप्त करें?</string>
     <string name="yes">हाँ</string>
     <string name="no">नहीं</string>
     

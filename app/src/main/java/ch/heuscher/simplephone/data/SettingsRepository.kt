@@ -16,6 +16,7 @@ data class AppSettings(
     val missedCallsHours: Int,
     val darkModeOption: Int,
     val confirmBeforeCall: Boolean,
+    val confirmBeforeHangup: Boolean,
     val useHapticFeedback: Boolean,
     val useVoiceAnnouncements: Boolean,
     val blockUnknownCallers: Boolean,
@@ -80,6 +81,7 @@ class SettingsRepository @org.jetbrains.annotations.VisibleForTesting internal c
         private const val KEY_MISSED_CALLS_HOURS = "missed_calls_hours"
         private const val KEY_DARK_MODE_OPTION = "dark_mode_option"
         private const val KEY_CONFIRM_BEFORE_CALL = "confirm_before_call"
+        private const val KEY_CONFIRM_BEFORE_HANGUP = "confirm_before_hangup"
         private const val KEY_USE_HAPTIC_FEEDBACK = "use_haptic_feedback"
         private const val KEY_USE_VOICE_ANNOUNCEMENTS = "use_voice_announcements"
         private const val KEY_FAVORITES_ORDER = "favorites_order"
@@ -119,6 +121,7 @@ class SettingsRepository @org.jetbrains.annotations.VisibleForTesting internal c
         private const val REMOTE_KEY_DARK_MODE = "darkMode"
         private const val REMOTE_KEY_DISPLAY_MODE = "displayMode"
         private const val REMOTE_KEY_CONFIRM_BEFORE_CALL = "confirmBeforeCall"
+        private const val REMOTE_KEY_CONFIRM_BEFORE_HANGUP = "confirmBeforeHangup"
         private const val REMOTE_KEY_HAPTIC_FEEDBACK = "hapticFeedback"
         private const val REMOTE_KEY_VOICE_ANNOUNCEMENTS = "voiceAnnouncements"
         private const val REMOTE_KEY_BLOCK_UNKNOWN = "blockUnknown"
@@ -204,6 +207,7 @@ class SettingsRepository @org.jetbrains.annotations.VisibleForTesting internal c
             missedCallsHours = getRemoteInt(REMOTE_KEY_MISSED_CALLS_HOURS) ?: prefs.getInt(KEY_MISSED_CALLS_HOURS, DEFAULT_MISSED_CALLS_HOURS),
             darkModeOption = getRemoteInt(REMOTE_KEY_DARK_MODE) ?: prefs.getInt(KEY_DARK_MODE_OPTION, DARK_MODE_SYSTEM),
             confirmBeforeCall = getRemoteBool(REMOTE_KEY_CONFIRM_BEFORE_CALL) ?: prefs.getBoolean(KEY_CONFIRM_BEFORE_CALL, false),
+            confirmBeforeHangup = getRemoteBool(REMOTE_KEY_CONFIRM_BEFORE_HANGUP) ?: prefs.getBoolean(KEY_CONFIRM_BEFORE_HANGUP, false),
             useHapticFeedback = getRemoteBool(REMOTE_KEY_HAPTIC_FEEDBACK) ?: prefs.getBoolean(KEY_USE_HAPTIC_FEEDBACK, true),
             useVoiceAnnouncements = getRemoteBool(REMOTE_KEY_VOICE_ANNOUNCEMENTS) ?: prefs.getBoolean(KEY_USE_VOICE_ANNOUNCEMENTS, false),
             blockUnknownCallers = getRemoteBool(REMOTE_KEY_BLOCK_UNKNOWN) ?: prefs.getBoolean(KEY_BLOCK_UNKNOWN_CALLERS, false),
@@ -287,6 +291,14 @@ class SettingsRepository @org.jetbrains.annotations.VisibleForTesting internal c
         set(value) {
             prefs.edit().putBoolean(KEY_CONFIRM_BEFORE_CALL, value).apply()
             updateRemote(REMOTE_KEY_CONFIRM_BEFORE_CALL, value)
+            wearSyncManager.syncSettings(loadSettings())
+        }
+
+    var confirmBeforeHangup: Boolean
+        get() = settings.value.confirmBeforeHangup
+        set(value) {
+            prefs.edit().putBoolean(KEY_CONFIRM_BEFORE_HANGUP, value).apply()
+            updateRemote(REMOTE_KEY_CONFIRM_BEFORE_HANGUP, value)
             wearSyncManager.syncSettings(loadSettings())
         }
 

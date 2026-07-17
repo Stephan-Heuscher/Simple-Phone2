@@ -36,6 +36,8 @@
     <string name="mode_dark">DUNKEL</string>
     <string name="call_confirm">Anruferbestätigung</string>
     <string name="call_confirm_desc">Vor Anruf fragen (verhindert versehentliche Anrufe):</string>
+    <string name="hangup_confirm">Auflegebestätigung</string>
+    <string name="hangup_confirm_desc">Vor dem Auflegen fragen (verhindert versehentliches Auflegen):</string>
     <string name="vibration_feedback">Vibrationsfeedback</string>
     <string name="vibration_desc">Vibrieren bei Tastendruck:</string>
     <string name="voice_announcements">Sprachansagen</string>
@@ -133,6 +135,7 @@
     <string name="demo_mode_dialog_title">Demo-Modus aktivieren?</string>
     <string name="demo_mode_dialog_message">Dies ersetzt Ihre aktuellen Daten zu Demonstrationszwecken durch Beispieldaten. (wird in %d Sekunden ausgeblendet)</string>
     <string name="call_confirmation_title">%s anrufen?</string>
+    <string name="hangup_confirmation_title">Anruf beenden?</string>
     <string name="yes">Ja</string>
     <string name="no">Nein</string>
 

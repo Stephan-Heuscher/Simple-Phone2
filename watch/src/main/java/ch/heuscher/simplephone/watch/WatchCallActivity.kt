@@ -108,6 +108,10 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
         handleIntent(intent)
 
         setContent {
+            val prefs = remember { getSharedPreferences("simple_phone_watch", Context.MODE_PRIVATE) }
+            val confirmBeforeHangup = remember { prefs.getBoolean("setting_confirm_before_hangup", false) }
+            var showHangupConfirmDialog by remember { mutableStateOf(false) }
+
             MaterialTheme {
                 WatchCallScreen(
                     callerName = _callerName.value,
@@ -127,11 +131,11 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
                         sendMessageToPhone("/silence_ringer")
                     },
                     onHangup = {
-                        // Don't finish() immediately — the phone will send
-                        // /sync_call_state with STATE_DISCONNECTED which
-                        // triggers finish() at line 89-92. If we finish() now
-                        // and the message fails, the call keeps running.
-                        sendMessageToPhone("/end_call")
+                        if (confirmBeforeHangup) {
+                            showHangupConfirmDialog = true
+                        } else {
+                            sendMessageToPhone("/end_call")
+                        }
                     },
                     onVolumeUp = {
                         sendMessageToPhone("/volume_up")
@@ -140,6 +144,43 @@ class WatchCallActivity : androidx.fragment.app.FragmentActivity() {
                         sendMessageToPhone("/volume_down")
                     }
                 )
+
+                if (showHangupConfirmDialog) {
+                    androidx.wear.compose.material.dialog.Dialog(
+                        showDialog = showHangupConfirmDialog,
+                        onDismissRequest = { showHangupConfirmDialog = false }
+                    ) {
+                        androidx.wear.compose.material.dialog.Alert(
+                            title = {
+                                Text(
+                                    text = stringResource(R.string.watch_hangup_confirm),
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        ) {
+                            item {
+                                Button(
+                                    onClick = {
+                                        showHangupConfirmDialog = false
+                                        sendMessageToPhone("/end_call")
+                                    },
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+                                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFE53935))
+                                ) { Text(stringResource(R.string.yes), color = Color.White) }
+                            }
+                            item {
+                                Button(
+                                    onClick = { showHangupConfirmDialog = false },
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+                                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF2196F3))
+                                ) { Text(stringResource(R.string.no), color = Color.White) }
+                            }
+                            item { Spacer(modifier = Modifier.height(16.dp)) }
+                        }
+                    }
+                }
             }
         }
     }

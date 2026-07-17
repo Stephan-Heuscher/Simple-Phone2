@@ -102,6 +102,7 @@ class WearSyncManager(private val context: Context) {
         try {
             val putDataMapReq = PutDataMapRequest.create("/settings")
             putDataMapReq.dataMap.putBoolean("confirm_before_call", settings.confirmBeforeCall)
+            putDataMapReq.dataMap.putBoolean("confirm_before_hangup", settings.confirmBeforeHangup)
             putDataMapReq.dataMap.putBoolean("silence_call_on_touch", settings.silenceCallOnTouch)
             putDataMapReq.dataMap.putBoolean("block_unknown_callers", settings.blockUnknownCallers)
             putDataMapReq.dataMap.putBoolean("use_haptic_feedback", settings.useHapticFeedback)

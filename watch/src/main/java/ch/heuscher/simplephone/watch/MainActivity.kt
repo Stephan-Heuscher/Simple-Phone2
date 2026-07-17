@@ -250,6 +250,7 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
             val prefs = getSharedPreferences("simple_phone_watch", Context.MODE_PRIVATE)
             prefs.edit().apply {
                 putBoolean("setting_confirm_before_call", dataMap.getBoolean("confirm_before_call", false))
+                putBoolean("setting_confirm_before_hangup", dataMap.getBoolean("confirm_before_hangup", false))
                 putBoolean("setting_silence_call_on_touch", dataMap.getBoolean("silence_call_on_touch", false))
                 putBoolean("setting_block_unknown_callers", dataMap.getBoolean("block_unknown_callers", false))
                 putBoolean("setting_use_haptic_feedback", dataMap.getBoolean("use_haptic_feedback", true))

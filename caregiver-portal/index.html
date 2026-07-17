@@ -479,6 +479,18 @@
                         </label>
                     </div>
 
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <h3>📞 Confirm Hangup</h3>
+                            <p>Ask before hanging up calls</p>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="confirmBeforeHangup"
+                                onchange="saveSetting('confirmBeforeHangup', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
                     <!-- Haptic Feedback -->
                     <div class="setting-row">
                         <div class="setting-label">
@@ -869,6 +881,9 @@
             }
             if (settings.confirmBeforeCall !== undefined) {
                 document.getElementById('confirmBeforeCall').checked = settings.confirmBeforeCall;
+            }
+            if (settings.confirmBeforeHangup !== undefined) {
+                document.getElementById('confirmBeforeHangup').checked = settings.confirmBeforeHangup;
             }
             if (settings.hapticFeedback !== undefined) {
                 document.getElementById('hapticFeedback').checked = settings.hapticFeedback;

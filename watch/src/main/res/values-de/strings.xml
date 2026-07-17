@@ -18,4 +18,7 @@
     <!-- Complication -->
     <string name="watch_complication_open">Simple Phone öffnen</string>
     <string name="watch_complication_label">Telefon</string>
+    <string name="watch_hangup_confirm">Anruf beenden?</string>
+    <string name="yes">Ja</string>
+    <string name="no">Nein</string>
 </resources>

@@ -43,6 +43,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.foundation.shape.RoundedCornerShape
+import ch.heuscher.simplephone.ui.components.pressClickEffect
 import androidx.core.app.ActivityCompat
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -124,6 +127,7 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
         val showDialpadInCall = settingsRepository.showDialpadInCall
         
         setContent {
+            var showHangupConfirmDialog by remember { mutableStateOf(false) }
             
             SimplePhoneTheme(darkThemeOption = 2) { // Force Dark Mode for calls
                 CallScreen(
@@ -148,8 +152,12 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
                         CallService.silenceRinger()
                     },
                     onHangup = {
-                        CallService.endCall()
-                        finish()
+                        if (settingsRepository.confirmBeforeHangup) {
+                            showHangupConfirmDialog = true
+                        } else {
+                            CallService.endCall()
+                            finish()
+                        }
                     },
                     onAudioRouteSelected = { route ->
                         CallService.setAudioRoute(route, isManual = true)
@@ -164,6 +172,19 @@ class IncomingCallActivity : ComponentActivity(), CallStateListener {
                         CallService.sendDtmf(digit)
                     }
                 )
+
+                if (showHangupConfirmDialog) {
+                    HangupConfirmationDialog(
+                        onConfirm = {
+                            showHangupConfirmDialog = false
+                            CallService.endCall()
+                            finish()
+                        },
+                        onDismiss = {
+                            showHangupConfirmDialog = false
+                        }
+                    )
+                }
             }
         }
     }
@@ -1383,5 +1404,82 @@ fun DtmfKeyButton(key: Char, onClick: () -> Unit) {
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+}
+
+@Composable
+fun HangupConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp)),
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            Column(
+                modifier = Modifier.padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = stringResource(R.string.hangup_confirmation_title),
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                Spacer(modifier = Modifier.height(32.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // No button (keep call)
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(80.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(HighContrastBlue)
+                            .pressClickEffect(
+                                onClick = onDismiss,
+                                onPressedChange = {}
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            stringResource(R.string.no),
+                            style = MaterialTheme.typography.displaySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                    
+                    // Yes button (confirm hangup)
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(80.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(RedHangup)
+                            .pressClickEffect(
+                                onClick = onConfirm,
+                                onPressedChange = {}
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            stringResource(R.string.yes),
+                            style = MaterialTheme.typography.displaySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+        }
     }
 }
